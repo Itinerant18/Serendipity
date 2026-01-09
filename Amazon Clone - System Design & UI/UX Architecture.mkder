@@ -1,0 +1,1126 @@
+# Amazon Clone - Complete System Design & UI/UX Architecture
+
+## 🎯 System Overview
+
+### High-Level Architecture
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     CLIENT LAYER (Frontend)                  │
+├─────────────────────────────────────────────────────────────┤
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │  Buyer   │  │  Seller  │  │  Admin   │  │  Guest   │   │
+│  │Interface │  │Dashboard │  │ Panel    │  │ Browser  │   │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                            ↕ HTTP/WebSocket
+┌─────────────────────────────────────────────────────────────┐
+│                    APPLICATION LAYER                         │
+├─────────────────────────────────────────────────────────────┤
+│  Next.js App Router + API Routes                            │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐           │
+│  │ Auth API   │  │ Product    │  │ Order      │           │
+│  │ /api/auth  │  │ API        │  │ API        │           │
+│  └────────────┘  └────────────┘  └────────────┘           │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐           │
+│  │ Cart API   │  │ Seller API │  │ Admin API  │           │
+│  └────────────┘  └────────────┘  └────────────┘           │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                  REAL-TIME LAYER                             │
+├─────────────────────────────────────────────────────────────┤
+│  WebSocket Server (Socket.io / Pusher)                      │
+│  • Order Notifications                                       │
+│  • Live Inventory Updates                                    │
+│  • Admin Dashboard Sync                                      │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                   DATABASE LAYER                             │
+├─────────────────────────────────────────────────────────────┤
+│  Supabase (PostgreSQL)                                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │  users   │  │ products │  │  orders  │  │  seller  │  │
+│  │          │  │          │  │          │  │ profiles │  │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                 EXTERNAL SERVICES                            │
+├─────────────────────────────────────────────────────────────┤
+│  • Razorpay (Payment Gateway - Mock)                        │
+│  • Email Service (Order Confirmations)                       │
+│  • CDN (Image Storage)                                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🗄️ Database Schema Design
+
+### Entity Relationship Diagram
+
+```
+┌─────────────────┐
+│     users       │
+├─────────────────┤
+│ id (PK)         │
+│ email           │
+│ password_hash   │
+│ name            │
+│ isAdmin         │◄──────────┐
+│ is_seller       │            │
+│ created_at      │            │
+└─────────────────┘            │
+         │                     │
+         │ 1:1                 │
+         ▼                     │
+┌─────────────────┐            │
+│ seller_profiles │            │
+├─────────────────┤            │
+│ id (PK)         │            │
+│ user_id (FK)    │            │
+│ store_name      │            │
+│ description     │            │
+│ created_at      │            │
+└─────────────────┘            │
+         │                     │
+         │ 1:N                 │
+         ▼                     │
+┌─────────────────┐            │
+│    products     │            │
+├─────────────────┤            │
+│ id (PK)         │            │
+│ name            │            │
+│ description     │            │
+│ price           │            │
+│ image_url       │            │
+│ category        │            │
+│ brand           │            │
+│ stock           │            │
+│ rating          │            │
+│ seller_id (FK)  │────────┐   │
+│ created_by (FK) │────────┼───┘
+│ created_at      │        │ (admin or seller)
+└─────────────────┘        │
+         │                 │
+         │ N:M             │
+         ▼                 │
+┌─────────────────┐        │
+│  order_items    │        │
+├─────────────────┤        │
+│ id (PK)         │        │
+│ order_id (FK)   │────┐   │
+│ product_id (FK) │    │   │
+│ quantity        │    │   │
+│ price           │    │   │
+└─────────────────┘    │   │
+                       │   │
+                       ▼   │
+┌─────────────────┐        │
+│     orders      │        │
+├─────────────────┤        │
+│ id (PK)         │        │
+│ user_id (FK)    │────────┘
+│ order_number    │
+│ total_amount    │
+│ tax             │
+│ shipping        │
+│ status          │
+│ shipping_addr   │ (JSONB)
+│ created_at      │
+└─────────────────┘
+```
+
+---
+
+## 🎨 UI/UX DESIGN ARCHITECTURE
+
+### Design System Foundation
+
+#### 1. Color Palette
+```
+Primary Colors:
+├─ Amazon Orange: #FF9900
+├─ Dark Blue:      #232F3E
+└─ Light Blue:     #37475A
+
+Secondary Colors:
+├─ Success Green:  #067D62
+├─ Warning Yellow: #FFA724
+├─ Error Red:      #C7511F
+└─ Info Blue:      #007185
+
+Neutral Colors:
+├─ White:          #FFFFFF
+├─ Light Gray:     #F3F3F3
+├─ Medium Gray:    #E7E7E7
+├─ Dark Gray:      #565959
+└─ Black:          #0F1111
+```
+
+#### 2. Typography Scale
+```
+Font Family: 
+├─ Primary: "Amazon Ember", Arial, sans-serif
+└─ Mono: "Courier New", monospace
+
+Sizes:
+├─ h1: 32px / 2rem    (Bold)     - Page Titles
+├─ h2: 28px / 1.75rem (Bold)     - Section Headers
+├─ h3: 24px / 1.5rem  (SemiBold) - Card Titles
+├─ h4: 20px / 1.25rem (SemiBold) - Subsections
+├─ body: 14px / 0.875rem (Regular) - Body Text
+├─ small: 12px / 0.75rem (Regular) - Captions
+└─ tiny: 10px / 0.625rem (Regular) - Labels
+```
+
+#### 3. Spacing System (8px Grid)
+```
+xs:  4px   (0.25rem)
+sm:  8px   (0.5rem)
+md:  16px  (1rem)
+lg:  24px  (1.5rem)
+xl:  32px  (2rem)
+2xl: 48px  (3rem)
+3xl: 64px  (4rem)
+```
+
+#### 4. Component Library
+```
+Atoms (Basic Building Blocks):
+├─ Button (Primary, Secondary, Tertiary)
+├─ Input (Text, Email, Password, Number)
+├─ Icon (Lucide React)
+├─ Badge (Status, Count)
+├─ Avatar
+└─ Spinner
+
+Molecules (Component Combinations):
+├─ SearchBar
+├─ ProductCard
+├─ CartItem
+├─ OrderCard
+├─ StatCard
+└─ NotificationToast
+
+Organisms (Complex Components):
+├─ Header (with Auth, Cart, Search)
+├─ Footer
+├─ ProductGrid
+├─ CategoryNav
+├─ OrderTimeline
+└─ SellerSidebar
+
+Templates (Page Layouts):
+├─ MainLayout (Header + Content + Footer)
+├─ DashboardLayout (Sidebar + Content)
+└─ CheckoutLayout (Steps + Summary)
+```
+
+---
+
+## 🖼️ UI/UX Detailed Design
+
+### 1. BUYER INTERFACE
+
+#### A. Home Page (`/`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [Logo]  [Search Bar........................] [Cart] [User▼] │ Header
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ╔═══════════════════════════════════════════════════════╗  │
+│  ║         HERO SECTION                                  ║  │
+│  ║  "Find your next favorite thing"                      ║  │
+│  ║  [Browse Products →]                                  ║  │
+│  ╚═══════════════════════════════════════════════════════╝  │
+│                                                               │
+│  Categories                                                   │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐              │
+│  │📱Elect │ │👕Fashion│ │🏠 Home │ │📚Books │              │
+│  │ronics  │ │        │ │        │ │        │              │
+│  └────────┘ └────────┘ └────────┘ └────────┘              │
+│                                                               │
+│  Featured Products                          [View All →]     │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ [Image]  │ │ [Image]  │ │ [Image]  │ │ [Image]  │      │
+│  │ Title    │ │ Title    │ │ Title    │ │ Title    │      │
+│  │ $99.99   │ │ $149.99  │ │ $79.99   │ │ $199.99  │      │
+│  │ ⭐⭐⭐⭐⭐  │ │ ⭐⭐⭐⭐   │ │ ⭐⭐⭐⭐⭐  │ │ ⭐⭐⭐⭐   │      │
+│  │ [Add ➕] │ │ [Add ➕] │ │ [Add ➕] │ │ [Add ➕] │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+UX Principles:
+✓ Above-the-fold hero with clear CTA
+✓ Category quick access (max 6 visible)
+✓ Lazy-loaded product grid
+✓ Persistent header with search
+✓ Hover effects on product cards
+```
+
+#### B. Product Detail Page (`/product/:id`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    [← Back to Products]                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ┌─────────────────────┐   ┌──────────────────────────────┐│
+│  │                     │   │ Premium Wireless Headphones  ││
+│  │   Product Image     │   │                              ││
+│  │     [Main]          │   │ by AudioTech                 ││
+│  │                     │   │ ⭐⭐⭐⭐⭐ (4.8) 1,234 reviews││
+│  │   [thumb][thumb]    │   │                              ││
+│  │   [thumb][thumb]    │   │ $199.99                      ││
+│  │                     │   │ ̶$̶2̶4̶9̶.̶9̶9̶ (20% off)        ││
+│  │                     │   │                              ││
+│  └─────────────────────┘   │ Sold by: Tech Paradise       ││
+│                             │                              ││
+│                             │ Quantity: [−] 1 [+]         ││
+│                             │                              ││
+│                             │ [Add to Cart] [Buy Now]     ││
+│                             │                              ││
+│                             │ ✓ Free Delivery             ││
+│                             │ ✓ 30-Day Returns            ││
+│                             └──────────────────────────────┘│
+│                                                               │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ Product Details                                         ││
+│  │ • High-quality wireless audio                           ││
+│  │ • Active noise cancellation                             ││
+│  │ • 30-hour battery life                                  ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+UX Enhancements:
+✓ Image zoom on hover
+✓ Thumbnail gallery
+✓ Prominent pricing with discount
+✓ Trust signals (seller, returns)
+✓ Sticky "Add to Cart" on scroll
+✓ Related products below
+```
+
+#### C. Shopping Cart (`/cart`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Shopping Cart (3 items)                                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Cart Items                          Order Summary           │
+│  ┌───────────────────────┐           ┌──────────────────┐   │
+│  │[img] Product Name     │           │Items (3):  $398  │   │
+│  │      by Seller        │           │Tax:        $39.8 │   │
+│  │      $199.99          │           │Shipping:   FREE  │   │
+│  │      Qty: [−]2[+]     │           ├──────────────────┤   │
+│  │      [🗑️ Remove]       │           │Total:      $438  │   │
+│  └───────────────────────┘           │                  │   │
+│                                       │[Checkout ────→]  │   │
+│  ┌───────────────────────┐           └──────────────────┘   │
+│  │[img] Product Name     │                                   │
+│  │      $99.99           │                                   │
+│  │      Qty: [−]1[+]     │   Continue Shopping               │
+│  │      [🗑️ Remove]       │   [← Browse Products]            │
+│  └───────────────────────┘                                   │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+UX Features:
+✓ Real-time total updates
+✓ Quick quantity adjustment
+✓ Clear remove option
+✓ Sticky order summary (desktop)
+✓ Save for later option
+✓ Recommended products
+```
+
+#### D. Checkout Flow (`/checkout/shipping`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Checkout                                                     │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│  1. Shipping → 2. Payment → 3. Confirmation                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Shipping Address              Your Order                     │
+│  ┌───────────────────┐        ┌──────────────────┐          │
+│  │ Full Name         │        │ 3 items    $438  │          │
+│  │ [_______________] │        │                  │          │
+│  │                   │        │ [item]           │          │
+│  │ Address           │        │ [item]           │          │
+│  │ [_______________] │        │ [item]           │          │
+│  │                   │        └──────────────────┘          │
+│  │ City              │                                       │
+│  │ [_______________] │                                       │
+│  │                   │                                       │
+│  │ Postal Code       │                                       │
+│  │ [_______________] │                                       │
+│  │                   │                                       │
+│  │ Country           │                                       │
+│  │ [▼ Select_______] │                                       │
+│  │                   │                                       │
+│  │ [Continue to Pay] │                                       │
+│  └───────────────────┘                                       │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+UX Considerations:
+✓ Progress indicator
+✓ Inline validation
+✓ Order summary always visible
+✓ Save address for future
+✓ Mobile-optimized forms
+✓ Auto-fill support
+```
+
+---
+
+### 2. SELLER INTERFACE
+
+#### A. Seller Dashboard (`/seller`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [Logo] Tech Paradise Dashboard                    [User▼]  │
+├──────────────┬──────────────────────────────────────────────┤
+│              │  Dashboard Overview                          │
+│ 📊 Dashboard │                                              │
+│              │  ┌──────────┐ ┌──────────┐ ┌──────────┐    │
+│ 📦 Inventory │  │💰 Sales  │ │📦 Orders │ │📊 Active │    │
+│              │  │$12,450   │ │    45    │ │   23     │    │
+│ 🔔 Orders    │  │+15% ↗    │ │ +8% ↗    │ │ Products │    │
+│   (Real-time)│  └──────────┘ └──────────┘ └──────────┘    │
+│              │                                              │
+│ 👤 Profile   │  Recent Orders                              │
+│              │  ┌─────────────────────────────────────────┐│
+│              │  │ORD-123  $199.99  2 min ago  [View →]  ││
+│              │  │ORD-124  $299.99  1 hr ago   [View →]  ││
+│              │  │ORD-125  $99.99   3 hrs ago  [View →]  ││
+│              │  └─────────────────────────────────────────┘│
+│              │                                              │
+│              │  Sales Chart                                │
+│              │  ┌─────────────────────────────────────────┐│
+│              │  │     📈 [Line Chart]                     ││
+│              │  │                                         ││
+│              │  └─────────────────────────────────────────┘│
+└──────────────┴──────────────────────────────────────────────┘
+
+Design Features:
+✓ Collapsible sidebar
+✓ KPI cards with trend indicators
+✓ Real-time order feed
+✓ Visual analytics
+✓ Quick action buttons
+```
+
+#### B. Inventory Management (`/seller/inventory`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Inventory Management                  [+ Add New Product]  │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  [🔍 Search products...]  [Filter: All▼] [Sort: Recent▼]    │
+│                                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ Thumbnail  Name           Price   Stock   Actions     │  │
+│  ├───────────────────────────────────────────────────────┤  │
+│  │ [img]   Headphones      $199.99   50    [✏️] [🗑️]    │  │
+│  │ [img]   Phone Case      $29.99    100   [✏️] [🗑️]    │  │
+│  │ [img]   Laptop Stand    $49.99    25    [✏️] [🗑️]    │  │
+│  │ [img]   USB Cable       $12.99    200   [✏️] [🗑️]    │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  [← Prev]  Page 1 of 3  [Next →]                            │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+UX Features:
+✓ Bulk actions
+✓ Quick edit inline
+✓ Stock warnings (low inventory)
+✓ Image thumbnails
+✓ Sortable columns
+✓ Filter by category/status
+```
+
+#### C. Real-Time Orders (`/seller/orders`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Live Orders Feed                    🟢 REAL-TIME ACTIVE    │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ 🔔 NEW ORDER RECEIVED!                                  ││
+│  │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ││
+│  │ Order: ORD-123456789                                    ││
+│  │ Amount: $199.99                                         ││
+│  │ Time: Just now                                          ││
+│  │ [View Details →]                                        ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                               │
+│  Order History                                                │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ ORD-123   $199.99   2 min ago    Pending   [Details]   ││
+│  │ ORD-122   $299.99   1 hr ago     Shipped   [Details]   ││
+│  │ ORD-121   $99.99    3 hrs ago    Delivered [Details]   ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                               │
+│  ⏳ Waiting for new orders...                                │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+Real-Time UX:
+✓ Pulsing indicator (live connection)
+✓ Sound notification
+✓ Toast notification
+✓ Auto-scroll to new orders
+✓ Status badges
+✓ Connection status indicator
+```
+
+---
+
+### 3. ADMIN INTERFACE
+
+#### A. Admin Dashboard (`/admin`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Admin Panel                                       [User▼]   │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  System Overview                                              │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
+│  │💰 Sales  │ │📦 Orders │ │📊 Product│ │👥 Users  │       │
+│  │$54,320   │ │   156    │ │    89    │ │   234    │       │
+│  │+23% ↗    │ │ +12% ↗   │ │ +5% ↗    │ │ +18% ↗   │       │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
+│                                                               │
+│  Quick Actions                                                │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌──────────────┐  │
+│  │   📦 Products   │ │   👥 Users      │ │  📊Analytics │  │
+│  │   Manage All    │ │   Coming Soon   │ │  Coming Soon │  │
+│  │   [Manage →]    │ │   [View →]      │ │  [View →]    │  │
+│  └─────────────────┘ └─────────────────┘ └──────────────┘  │
+│                                                               │
+│  Recent Activity                                              │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ • User "john@email.com" placed order ORD-123            ││
+│  │ • Seller "Tech Paradise" added 5 new products           ││
+│  │ • Order ORD-120 was marked as delivered                 ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+Admin UX:
+✓ God-view statistics
+✓ Quick action cards
+✓ Activity log
+✓ System health indicators
+✓ Responsive layout
+```
+
+#### B. Product Management (`/admin/products`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Product Management                    [+ Create Product]   │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  [🔍 Search...]  [Filter: All▼] [Category▼] [Seller▼]       │
+│                                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ ID    Image  Name        Price   Cat.   Stock  Actions│  │
+│  ├───────────────────────────────────────────────────────┤  │
+│  │ 001  [img]  iPhone 15   $999.99  Elect   45   [✏️][🗑️]│  │
+│  │ 002  [img]  Headphones  $199.99  Elect   30   [✏️][🗑️]│  │
+│  │ 003  [img]  T-Shirt     $29.99   Fashion 100  [✏️][🗑️]│  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  Showing 1-10 of 89 products              [← 1 2 3 4 5 →]  │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+
+Admin Features:
+✓ Advanced filtering
+✓ Bulk operations
+✓ Product preview
+✓ Seller information
+✓ Stock management
+✓ Global edit capabilities
+```
+
+---
+
+## 🎭 UX PATTERNS & INTERACTIONS
+
+### 1. Micro-interactions
+
+```
+Button States:
+├─ Default:    bg-[#FF9900] 
+├─ Hover:      bg-[#E88B00] + scale(1.02)
+├─ Active:     bg-[#D17B00] + scale(0.98)
+├─ Disabled:   bg-gray-300 + opacity-50
+└─ Loading:    Spinner animation
+
+Card Hover:
+├─ Shadow:     elevation 0 → 8px
+├─ Transform:  translateY(0) → translateY(-4px)
+└─ Transition: 200ms ease-out
+
+Input Focus:
+├─ Border:     gray → blue (2px)
+├─ Shadow:     0 → 0 0 0 3px rgba(255,153,0,0.2)
+└─ Transition: 150ms ease
+```
+
+### 2. Loading States
+
+```
+Page Load:
+┌─────────────────┐
+│ ┌─────────────┐ │
+│ │ ▓▓▓▓▓▓░░░░░ │ │ Skeleton Loader
+│ │ ▓▓▓░░░░░░░░ │ │
+│ │ ▓▓▓▓▓▓▓░░░░ │ │
+│ └─────────────┘ │
+└─────────────────┘
+
+Infinite Scroll:
+[Products...]
+[Spinner]
+[Load more products...]
+```
+
+### 3. Feedback Mechanisms
+
+```
+Success Toast (Top-right):
+┌────────────────────────────┐
+│ ✓ Item added to cart!      │
+│ [View Cart →] [Dismiss ×]  │
+└────────────────────────────┘
+Duration: 3s, Auto-dismiss
+
+Error Toast:
+┌────────────────────────────┐
+│ ✗ Payment failed           │
+│ Please try again           │
+└────────────────────────────┘
+Duration: 5s, Manual dismiss
+
+Real-time Notification:
+┌────────────────────────────┐
+│ 🔔 New order received!     │
+│ ORD-123456 - $199.99       │
+│ [View →]                   │
+└────────────────────────────┘
+Duration: Persistent until action
+```
+
+### 4. Navigation Patterns
+
+```
+Mobile Drawer Menu:
+┌──────┐
+│ ☰    │ → Tap
+└──────┘
+        ↓
+┌─────────────────┐
+│ [×]             │
+│                 │
+│ 🏠 Home         │
+│ 📦 Orders       │
+│ 🛒 Cart         │
+│ 👤 Account      │
+│                 │
+│ ─────────────── │
+│ 🏪 Sell         │
+│ 👨‍💼 Admin       │
+└─────────────────┘
+
+Breadcrumbs:
+Home > Electronics > Headphones > Wireless > Product Name
+```
+
+---
+
+## 📱 RESPONSIVE DESIGN STRATEGY
+
+### Breakpoint System
+```
+Mobile:     320px - 767px   (Stack everything)
+Tablet:     768px - 1023px  (2-column layout)
+Desktop:    1024px - 1439px (3-column layout)
+Wide:       1440px+         (4-column layout)
+```
+
+### Mobile-First Components
+
+#### Product Grid Responsive:
+```
+Mobile (1 column):
+┌──────┐
+│ Prod │
+└──────┘
+┌──────┐
+│ Prod │
+└──────┘
+
+Tablet (2 columns):
+┌──────┐ ┌──────┐
+│ Prod │ │ Prod │
+└──────┘ └──────┘
+
+Desktop (4 columns):
+┌────┐ ┌────┐ ┌────┐ ┌────┐
+│Prod│ │Prod│ │Prod│ │Prod│
+└────┘ └────┘ └────┘ └────┘
+```
+
+#### Navigation Transform:
+```
+Mobile:
+┌─────────────────┐
+│ ☰ Logo    🛒 👤 │
+└─────────────────┘
+
+Desktop:
+┌─────────────────────────────────────────┐
+│ Logo [Search.......] Shop Cart Account │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## 🔐 SECURITY & AUTHENTICATION UX
+
+### Auth Flow Design
+```
+Sign Up:
+┌─────────────────────┐
+│ Create Account      │
+│ ─────────────────── │
+│ Name    [________]  │
+│ Email   [________]  │
+│ Password [______]   │
+│         👁️ Show     │
+│                     │
+│ ✓ I agree to Terms  │
+│                     │
+│ [Create Account]    │
+│                     │
+│ Have account?       │
+│ [Sign In →]         │
+└─────────────────────┘
+
+Password Strength:
+[████████░░] Strong
+Requirements:
+✓ 8+ characters
+✓ Uppercase letter
+✗ Number
+✗ Special character
+```
+
+---
+
+## ⚡ PERFORMANCE OPTIMIZATION
+
+### UX Performance Strategies
+
+```
+1. Perceived Performance:
+   ├─ Skeleton screens (< 200ms)
+   ├─ Optimistic UI updates
+   ├─ Progressive image loading
+   └─ Lazy load below fold
+
+2. Image Optimization:
+   ├─ WebP format with fallback
+   ├─ Responsive images (srcset)
+   ├─ Blur placeholder
+   └─ Lazy loading (Intersection Observer)
+
+3. Code Splitting:
+   ├─ Route-based splitting
+   ├─ Component lazy loading
+   ├─ Dynamic imports
+   └─ Tree shaking
+
+4. Caching Strategy:
+   ├─ Static assets: 1 year
+   ├─ API responses: 5 minutes
+   ├─ Product images: 1 week
+   └─ User data: Session only
+```
+
+---
+
+## 🎯 ACCESSIBILITY (A11Y)
+
+### WCAG 2.1 AA Compliance
+
+```
+1. Keyboard Navigation:
+   ├─ Tab order logical
+   ├─ Focus indicators visible
+   ├─ Skip to main content
+   └─ Escape closes modals
+
+2. Screen Reader Support:
+   ├─ Semantic HTML
+   ├─ ARIA labels
+   ├─ Alt text for images
+   └─ Live regions for updates
+
+3. Color Contrast:
+   ├─ Text: 4.5:1 minimum
+   ├─ Large text: 3:1 minimum
+   ├─ Interactive: 3:1 minimum
+   └─ Test with tools
+
+4. Forms:
+   ├─ Label associations
+   ├─ Error identification
+   ├─ Input instructions
+   └─ Required field indicators
+```
+
+---
+
+## 🎨 UI COMPONENT SPECIFICATIONS
+
+### Primary Button
+```css
+.btn-primary {
+  background: #FF9900;
+  color: #FFFFFF;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 200ms ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-primary:hover {
+  background: #E88B00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+```
+
+### Product Card
+```css
+.product-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #E7E7E7;
+  transition: all 200ms ease;
+}
+
+.product-card:hover {
+  border-color: #FF9900;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  transform: translateY(-4px);
+}
+
+.product-image {
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.product-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0F1111;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #067D62;
+}
+```
+
+---
+
+## 🔄 STATE MANAGEMENT ARCHITECTURE
+
+```
+Global State (Context/Redux):
+├─ User Authentication
+│  ├─ user: { id, email, name, role }
+│  ├─ isAuthenticated: boolean
+│  └─ token: string
+│
+├─ Shopping Cart
+│  ├─ items: Product[]
+│  ├─ totalItems: number
+│  ├─ totalAmount: number
+│  └─ actions: { add, remove, update }
+│
+├─ Notifications
+│  ├─ toasts: Toast[]
+│  ├─ realTimeOrders: Order[]
+│  └─ webSocketStatus: 'connected' | 'disconnected'
+│
+└─ UI State
+   ├─ theme: 'light' | 'dark'
+   ├─ sidebarOpen: boolean
+   └─ modalStack: Modal[]
+
+Local State (Component):
+├─ Form inputs
+├─ UI toggles
+├─ Temporary data
+└─ Animation states
+```
+
+---
+
+## 🌐 API INTEGRATION UX
+
+### API Loading States
+```
+Initial Load:
+┌─────────────────┐
+│ [Skeleton Grid] │
+│ Loading...      │
+└─────────────────┘
+
+Success:
+┌─────────────────┐
+│ [Product Data]  │
+│ [Product Data]  │
+└─────────────────┘
+
+Error:
+┌─────────────────┐
+│ ⚠️ Failed to load│
+│ [Retry →]       │
+└─────────────────┘
+
+Empty State:
+┌─────────────────┐
+│ 📦 No products  │
+│ [Add First →]   │
+└─────────────────┘
+```
+
+---
+
+## 📊 ANALYTICS & TRACKING
+
+### User Journey Tracking
+```
+Events to Track:
+├─ Page Views
+│  ├─ Home visit
+│  ├─ Product view
+│  └─ Checkout steps
+│
+├─ User Actions
+│  ├─ Add to cart
+│  ├─ Remove from cart
+│  ├─ Purchase complete
+│  └─ Search query
+│
+├─ Seller Actions
+│  ├─ Product created
+│  ├─ Inventory updated
+│  └─ Order viewed
+│
+└─ Admin Actions
+   ├─ Product managed
+   ├─ User updated
+   └─ Stats viewed
+```
+
+---
+
+## 🎬 ANIMATION GUIDELINES
+
+### Motion Design Principles
+```
+Duration Guidelines:
+├─ Micro: 100-200ms (hovers, clicks)
+├─ Small: 200-300ms (tooltips, dropdowns)
+├─ Medium: 300-500ms (modals, slides)
+└─ Large: 500-800ms (page transitions)
+
+Easing Functions:
+├─ Ease-out: UI appearing
+├─ Ease-in: UI disappearing
+├─ Ease-in-out: Moving between states
+└─ Spring: Playful interactions
+
+Examples:
+.fade-in {
+  animation: fadeIn 300ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+  animation: slideIn 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+```
+
+---
+
+## 🌟 UNIQUE UX FEATURES
+
+### 1. Real-Time Order Animation
+```
+When order received:
+1. Sound notification (ding.mp3)
+2. Toast slides from top-right
+3. Confetti animation (celebrate.js)
+4. Order card fades in
+5. Pulse animation on sidebar icon
+```
+
+### 2. Smart Search
+```
+As you type:
+├─ Instant suggestions
+├─ Category filtering
+├─ Recent searches
+├─ Popular products
+└─ Typo correction
+```
+
+### 3. Cart Persistence
+```
+Cart saved:
+├─ LocalStorage backup
+├─ Sync on login
+├─ Expire after 30 days
+└─ Merge guest + user carts
+```
+
+---
+
+## 🎯 CONVERSION OPTIMIZATION
+
+### UX Psychology Tactics
+```
+1. Scarcity:
+   "Only 3 left in stock!"
+   "5 people viewing this"
+
+2. Social Proof:
+   "1,234 people bought this"
+   "⭐⭐⭐⭐⭐ (4.8/5)"
+
+3. Urgency:
+   "Sale ends in 2:45:30"
+   "Order in next 1hr for delivery"
+
+4. Trust Signals:
+   "✓ Free Returns"
+   "✓ Secure Payment"
+   "✓ Fast Shipping"
+
+5. Progress:
+   "🚚 Your order is being packed"
+   "📦 Out for delivery"
+   "✅ Delivered!"
+```
+
+---
+
+## 🔍 SEARCH UX DESIGN
+
+```
+Search Bar (Desktop):
+┌──────────────────────────────────────┐
+│ 🔍 Search products...         [All▼] │
+└──────────────────────────────────────┘
+
+Search Results:
+┌──────────────────────────────────────┐
+│ Showing results for "wireless"       │
+│ Found 45 products                     │
+│                                       │
+│ Filters:                              │
+│ □ Electronics (30)                    │
+│ □ Accessories (15)                    │
+│                                       │
+│ Price Range:                          │
+│ [$0 ═══════╤═══ $500]                │
+│                                       │
+│ [Apply Filters]                       │
+└──────────────────────────────────────┘
+```
+
+---
+
+## ✅ UX QUALITY CHECKLIST
+
+### Before Launch:
+- [ ] All CTAs clearly visible
+- [ ] Loading states for all async operations
+- [ ] Error handling with user-friendly messages
+- [ ] Empty states designed
+- [ ] Mobile navigation tested
+- [ ] Touch targets minimum 44x44px
+- [ ] Form validation with inline feedback
+- [ ] Success confirmations
+- [ ] Undo options for destructive actions
+- [ ] Consistent spacing throughout
+- [ ] Typography hierarchy clear
+- [ ] Color contrast passes WCAG AA
+- [ ] Focus indicators visible
+- [ ] Keyboard navigation works
+- [ ] Screen reader tested
+- [ ] Performance budget met (< 3s load)
+- [ ] Images optimized
+- [ ] Real-time features stable
+- [ ] Cross-browser tested
+- [ ] User testing completed
+
+---
+
+## 🎨 DESIGN SYSTEM SUMMARY
+
+**Core Philosophy:** 
+*"Fast, Familiar, Delightful"*
+
+- Amazon-inspired but modernized
+- Mobile-first responsive design
+- Real-time feedback loops
+- Accessibility as foundation
+- Performance-optimized
+- Conversion-focused UX patterns
+
+**Tech Stack Integration:**
+- Next.js 14 (App Router)
+- Tailwind CSS (Utility-first)
+- shadcn/ui (Component library)
+- Framer Motion (Animations)
+- Socket.io (Real-time)
+- Supabase (Backend)
+
+---
+
+**Status: Production-Ready UI/UX System 🚀**
