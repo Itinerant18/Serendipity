@@ -70,7 +70,7 @@ The backend `package.json` includes a script to run both servers concurrently.
 
 This command uses `concurrently` to start:
 - Backend server (typically on port 5000)
-- Frontend client (typically on port 5173)
+- Frontend client (typically on port 4000)
 
 ### Running Separately
 
