@@ -10,6 +10,7 @@ import {
   Star,
   ChevronDown,
 } from "lucide-react";
+import { formatCurrency } from "@/utils/format";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -69,7 +70,7 @@ export default function SearchPage() {
           product_photos: [p.image],
           product_rating: p.rating || 4.5,
           product_num_reviews: p.num_reviews || 0,
-          offer: { price: `$${p.price}` }
+          offer: { price: formatCurrency(p.price) }
         }));
         setProducts(mappedData);
       }

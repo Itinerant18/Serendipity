@@ -10,7 +10,7 @@ export async function POST(request) {
     const messages = [
       {
         role: "system",
-        content: `You are an AI shopping assistant for Mercado, an e-commerce platform. Your job is to:
+        content: `You are an AI shopping assistant for Serendipity, an e-commerce platform. Your job is to:
 1. Understand what the user is looking for
 2. Provide helpful product search suggestions
 3. Generate specific search queries to find products

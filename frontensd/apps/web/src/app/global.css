@@ -4,6 +4,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Amazon Clone Design System ===== */
+:root {
+  /* Primary Colors */
+  --amazon-orange: #FF9900;
+  --amazon-orange-hover: #E88B00;
+  --amazon-orange-active: #D17B00;
+  --amazon-dark-blue: #232F3E;
+  --amazon-light-blue: #37475A;
+
+  /* Secondary Colors */
+  --success-green: #067D62;
+  --warning-yellow: #FFA724;
+  --error-red: #C7511F;
+  --info-blue: #007185;
+
+  /* Neutral Colors */
+  --neutral-white: #FFFFFF;
+  --neutral-light: #F3F3F3;
+  --neutral-medium: #E7E7E7;
+  --neutral-dark: #565959;
+  --neutral-black: #0F1111;
+
+  /* Brand Accent (Current Theme) */
+  --brand-primary: #D97534;
+  --brand-primary-hover: #C86429;
+  --brand-secondary: #febd69;
+  --brand-bg-light: #FFF8F0;
+  --brand-bg-cream: #F4E4D7;
+}
+
+/* Font Families */
+.font-inter {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.font-playfair {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
 /* Custom Animations */
 @keyframes fadeIn {
   from {

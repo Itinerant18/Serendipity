@@ -1,173 +1,265 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, ShoppingCart, Menu, X, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
+import {
+    Search,
+    ShoppingCart,
+    User,
+    Menu,
+    X,
+    ChevronDown,
+    LogOut,
+    Package,
+    Store,
+    Settings
+} from "lucide-react";
 
-export default function Header({
-    searchQuery,
-    setSearchQuery,
-    cartCount: propCartCount
-}) {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [internalCartCount, setInternalCartCount] = useState(0);
-    const { user } = useAuth();
+export default function Header({ cartCount }) {
+    const { user, isAuthenticated, signOut } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
 
-    // Use prop if provided, otherwise local state (though mostly controlled by parent or localStorage)
-    // For simplicity, let's rely on localStorage if prop is not passed, or passed as 0 initially
+    // Handle scroll for sticky header effect
     useEffect(() => {
-        if (propCartCount !== undefined) {
-            setInternalCartCount(propCartCount);
-        } else {
-            const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-            setInternalCartCount(cart.length);
-        }
-    }, [propCartCount]);
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
-        if (searchQuery?.trim()) {
-            window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            setSearchQuery("");
         }
     };
 
-    // Internal search state if not provided (for pages that don't need to control it)
-    const [internalSearch, setInternalSearch] = useState("");
-    const activeSearch = searchQuery !== undefined ? searchQuery : internalSearch;
-    const setActiveSearch = setSearchQuery || setInternalSearch;
-
-    const onSearchSubmit = (e) => {
-        e.preventDefault();
-        if (activeSearch.trim()) {
-            window.location.href = `/search?q=${encodeURIComponent(activeSearch)}`;
-        }
+    const handleSignOut = () => {
+        signOut();
+        setIsUserMenuOpen(false);
+        navigate("/");
     };
+
+    const navLinks = [
+        { name: "Shop", href: "/search" },
+        { name: "Orders", href: "/orders" },
+    ];
 
     return (
-        <header className="bg-gradient-to-r from-[#D97534] to-[#A0522D] sticky top-0 z-50 shadow-lg">
+        <header
+            className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
+                ? "bg-[#232f3e] shadow-lg"
+                : "bg-[#232f3e]"
+                }`}
+        >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16 sm:h-20">
-                    <a href="/" className="flex items-center space-x-2">
-                        <div className="font-playfair font-bold text-2xl sm:text-3xl text-white tracking-tight">
-                            Mercado
-                        </div>
-                    </a>
+                <div className="flex items-center justify-between h-16">
+                    {/* Logo */}
+                    <Link
+                        to="/"
+                        className="flex items-center gap-2 text-white font-bold text-xl hover:text-[#febd69] transition-colors"
+                    >
+                        <Store className="w-7 h-7 text-[#febd69]" />
+                        <span className="font-playfair hidden sm:block">Serendipity</span>
+                    </Link>
 
+                    {/* Search Bar - Desktop */}
                     <form
-                        onSubmit={onSearchSubmit}
-                        className="hidden md:flex flex-1 max-w-2xl mx-8"
+                        onSubmit={handleSearch}
+                        className="hidden md:flex flex-1 max-w-xl mx-8"
                     >
                         <div className="relative w-full">
                             <input
                                 type="text"
-                                value={activeSearch}
-                                onChange={(e) => setActiveSearch(e.target.value)}
-                                placeholder="Search for products..."
-                                className="w-full px-5 py-3 rounded-full text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#FFF8F0] font-inter text-sm shadow-md"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search products..."
+                                className="w-full px-4 py-2.5 pl-4 pr-12 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#febd69] transition-all"
                             />
                             <button
                                 type="submit"
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#D97534] hover:bg-[#C86429] text-white p-2 rounded-full transition-colors"
+                                className="absolute right-0 top-0 h-full px-4 bg-[#febd69] hover:bg-[#f3a847] rounded-r-lg transition-colors"
                             >
-                                <Search className="w-5 h-5" />
+                                <Search className="w-5 h-5 text-[#232f3e]" />
                             </button>
                         </div>
                     </form>
 
-                    <div className="flex items-center space-x-4">
-                        <div className="hidden sm:flex items-center space-x-3">
-                            {user ? (
-                                <div className="flex items-center space-x-3">
-                                    <a href="/orders" className="text-white hover:text-orange-100 font-inter text-sm font-medium">Orders</a>
-                                    {!user.is_seller && (
-                                        <a href="/seller/register" className="text-white hover:text-orange-100 font-inter text-sm font-medium bg-[#8B4513] px-3 py-1.5 rounded-full hover:bg-[#7A3E0F] transition-colors">
-                                            Become a Seller
-                                        </a>
-                                    )}
-                                    {user.is_seller && (
-                                        <a href="/seller/dashboard" className="text-white hover:text-orange-100 font-inter text-sm font-medium">
-                                            Seller Dashboard
-                                        </a>
-                                    )}
-                                    <a href="/account/logout" className="text-white hover:text-orange-100 font-inter text-sm font-medium flex items-center">
-                                        <span className="mr-1">Hello, {user.name || "User"}</span>
-                                    </a>
-                                </div>
-                            ) : (
-                                <a href="/account/signin" className="text-white hover:text-orange-100 font-inter text-sm font-medium">Sign In</a>
-                            )}
-                        </div>
+                    {/* Right Section */}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        {/* Nav Links - Desktop */}
+                        <nav className="hidden lg:flex items-center gap-6">
+                            {navLinks.map((link) => (
+                                <Link
+                                    key={link.name}
+                                    to={link.href}
+                                    className={`text-sm font-medium transition-colors ${location.pathname === link.href
+                                        ? "text-[#febd69]"
+                                        : "text-gray-300 hover:text-white"
+                                        }`}
+                                >
+                                    {link.name}
+                                </Link>
+                            ))}
+                        </nav>
 
-                        <a
-                            href="/cart"
-                            className="relative text-white hover:text-[#FFF8F0] transition-colors"
+                        {/* Cart */}
+                        <Link
+                            to="/cart"
+                            className="relative p-2 text-gray-300 hover:text-white transition-colors"
                         >
-                            <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7" />
-                            {internalCartCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-[#8B4513] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-bounce">
-                                    {internalCartCount}
-                                </span>
-                            )}
-                        </a>
+                            <ShoppingCart className="w-6 h-6" />
+                            <span className="absolute -top-1 -right-1 bg-[#febd69] text-[#232f3e] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                {cartCount || 0}
+                            </span>
+                        </Link>
+
+                        {/* User Menu */}
+                        {isAuthenticated ? (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center gap-2 p-2 text-gray-300 hover:text-white transition-colors"
+                                >
+                                    <User className="w-6 h-6" />
+                                    <span className="hidden sm:block text-sm font-medium">
+                                        {user?.name || "Account"}
+                                    </span>
+                                    <ChevronDown className="w-4 h-4 hidden sm:block" />
+                                </button>
+
+                                {/* Dropdown */}
+                                {isUserMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-2 animate-fadeIn">
+                                        <div className="px-4 py-2 border-b border-gray-100">
+                                            <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
+                                            <p className="text-xs text-gray-500">{user?.email}</p>
+                                        </div>
+
+                                        <Link
+                                            to="/orders"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <Package className="w-4 h-4" />
+                                            My Orders
+                                        </Link>
+
+                                        {user?.isSeller && (
+                                            <Link
+                                                to="/seller"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Store className="w-4 h-4" />
+                                                Seller Dashboard
+                                            </Link>
+                                        )}
+
+                                        {user?.isAdmin && (
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Settings className="w-4 h-4" />
+                                                Admin Panel
+                                            </Link>
+                                        )}
+
+                                        <div className="border-t border-gray-100 mt-2 pt-2">
+                                            <button
+                                                onClick={handleSignOut}
+                                                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <Link
+                                to="/account/signin"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#febd69] hover:bg-[#f3a847] text-[#232f3e] font-semibold rounded-lg transition-colors text-sm"
+                            >
+                                <User className="w-4 h-4" />
+                                <span className="hidden sm:block">Sign In</span>
+                            </Link>
+                        )}
+
+                        {/* Mobile Menu Button */}
                         <button
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden text-white"
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors"
                         >
-                            {mobileMenuOpen ? (
-                                <X className="w-6 h-6" />
-                            ) : (
-                                <Menu className="w-6 h-6" />
-                            )}
+                            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
                     </div>
                 </div>
 
-                {/* Mobile Search & Menu */}
-                {mobileMenuOpen && (
-                    <div className="md:hidden pb-4">
-                        <div className="space-y-4">
-                            <form onSubmit={onSearchSubmit}>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={activeSearch}
-                                        onChange={(e) => setActiveSearch(e.target.value)}
-                                        placeholder="Search products..."
-                                        className="w-full px-4 py-2 rounded-full text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#FFF8F0] font-inter text-sm"
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#D97534]"
-                                    >
-                                        <Search className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </form>
-                            <div className="flex flex-col space-y-2">
-                                {user ? (
-                                    <>
-                                        <a href="/orders" className="text-white font-inter text-sm">My Orders</a>
-                                        {!user.is_seller && (
-                                            <a href="/seller/register" className="text-white font-inter text-sm bg-[#8B4513] px-3 py-2 rounded-full hover:bg-[#7A3E0F] transition-colors">
-                                                Become a Seller
-                                            </a>
-                                        )}
-                                        {user.is_seller && (
-                                            <a href="/seller/dashboard" className="text-white font-inter text-sm">
-                                                Seller Dashboard
-                                            </a>
-                                        )}
-                                        <a href="/account/logout" className="text-white font-inter text-sm">Sign Out</a>
-                                    </>
-                                ) : (
-                                    <a href="/account/signin" className="text-white font-inter text-sm">Sign In</a>
-                                )}
-                                <a href="/admin" className="text-white font-inter text-sm">Admin Dashboard</a>
-                            </div>
-                        </div>
+                {/* Mobile Search */}
+                <form
+                    onSubmit={handleSearch}
+                    className="md:hidden pb-4"
+                >
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search products..."
+                            className="w-full px-4 py-2.5 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#febd69]"
+                        />
+                        <button
+                            type="submit"
+                            className="absolute right-0 top-0 h-full px-4 bg-[#febd69] hover:bg-[#f3a847] rounded-r-lg transition-colors"
+                        >
+                            <Search className="w-5 h-5 text-[#232f3e]" />
+                        </button>
                     </div>
-                )}
+                </form>
             </div>
+
+            {/* Mobile Menu */}
+            {isMenuOpen && (
+                <div className="lg:hidden bg-[#37475A] border-t border-gray-600 animate-slideInLeft">
+                    <nav className="px-4 py-4 space-y-2">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.name}
+                                to={link.href}
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.href
+                                    ? "bg-[#febd69] text-[#232f3e]"
+                                    : "text-gray-300 hover:bg-gray-600 hover:text-white"
+                                    }`}
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
+
+                        {!isAuthenticated && (
+                            <Link
+                                to="/seller/signup"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="block px-4 py-3 rounded-lg text-sm font-medium text-[#febd69] hover:bg-gray-600 transition-colors"
+                            >
+                                Become a Seller
+                            </Link>
+                        )}
+                    </nav>
+                </div>
+            )}
         </header>
     );
 }

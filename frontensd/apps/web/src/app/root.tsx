@@ -460,7 +460,13 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        {/* Global app stylesheet */}
         <link rel="stylesheet" href={globalStylesheet} suppressHydrationWarning />
+        {/* Global fonts */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap"
+        />
         <script type="module" src="/src/__create/dev-error-overlay.js"></script>
         <link rel="icon" href="/src/__create/favicon.png" />
         {LoadFontsSSR ? <LoadFontsSSR /> : null}

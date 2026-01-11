@@ -12,6 +12,7 @@ const api = new Hono();
 // Get current directory
 const __dirname = join(fileURLToPath(new URL('.', import.meta.url)), '../src/app/api');
 if (globalThis.fetch) {
+  // @ts-ignore - fetch signature mismatch
   globalThis.fetch = updatedFetch;
 }
 
@@ -64,6 +65,10 @@ function getHonoPath(routeFile: string): { name: string; pattern: string }[] {
   return transformedParts;
 }
 
+
+// Type for Next.js-style route handlers
+type NextLikeHandler = (req: Request, ctx: { params: Record<string, string> }) => Promise<Response>;
+
 // Import and register all routes
 async function registerRoutes() {
   const routeFiles = (
@@ -83,7 +88,7 @@ async function registerRoutes() {
   for (const routeFile of routeFiles) {
     try {
       const routeUrl = pathToFileURL(routeFile).href;
-      const route = await import(/* @vite-ignore */ `${routeUrl}?update=${Date.now()}`);
+      const route = (await import(/* @vite-ignore */ `${routeUrl}?update=${Date.now()}`)) as Record<string, NextLikeHandler>;
 
       const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
       for (const method of methods) {
@@ -95,12 +100,12 @@ async function registerRoutes() {
               const params = c.req.param();
               if (import.meta.env.DEV) {
                 const routeUrl = pathToFileURL(routeFile).href;
-                const updatedRoute = await import(
+                const updatedRoute = (await import(
                   /* @vite-ignore */ `${routeUrl}?update=${Date.now()}`
-                );
-                return await updatedRoute[method](c.req.raw, { params });
+                )) as Record<string, NextLikeHandler>;
+                return await updatedRoute[method](c.req.raw as unknown as Request, { params });
               }
-              return await route[method](c.req.raw, { params });
+              return await route[method](c.req.raw as unknown as Request, { params });
             };
             const methodLowercase = method.toLowerCase();
             switch (methodLowercase) {

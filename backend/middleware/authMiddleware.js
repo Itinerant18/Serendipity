@@ -35,7 +35,16 @@ const protect = asyncHandler(async (req, res, next) => {
         .eq('id', user.id)
         .single();
 
-      req.user = { ...user, ...profile };
+      const merged = { ...user, ...profile };
+
+      // Normalize role flags & seller profile id to camelCase while preserving originals
+      req.user = {
+        ...merged,
+        isAdmin: merged.isAdmin ?? merged.is_admin ?? false,
+        isSeller: merged.isSeller ?? merged.is_seller ?? false,
+        sellerProfileId: merged.sellerProfileId ?? merged.seller_profile_id ?? null,
+      };
+
       next();
     } catch (error) {
       console.error(error);

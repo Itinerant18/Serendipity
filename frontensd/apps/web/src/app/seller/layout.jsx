@@ -3,25 +3,68 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
-import { LayoutDashboard, Package, ShoppingCart, User, LogOut, Store } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, User, LogOut, Store, Loader2 } from "lucide-react";
 
 export default function SellerLayout({ children }) {
-    const { user, isAuthenticated, logout } = useAuth();
+    const { user, isAuthenticated, signOut } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    const pathname = location.pathname;
+    const isAuthPage = pathname.startsWith("/seller/login") || pathname.startsWith("/seller/signup");
+
+    // Wait for client-side hydration
+    useEffect(() => {
+        // Small delay to allow Zustand to hydrate from localStorage
+        const timer = setTimeout(() => {
+            setIsHydrated(true);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
+        // Don't redirect until hydrated
+        if (!isHydrated) return;
+
+        // Public seller auth pages should NOT be guarded or redirected
+        if (isAuthPage) return;
+
         if (!isAuthenticated) {
-            navigate("/account/signin?redirect=/seller");
-        } else if (user && !user.isSeller && !location.pathname.includes("/seller/register")) {
-            // If logged in but not a seller, redirect to seller registration
+            // For protected seller area, require login
+            navigate("/seller/login");
+        } else if (user && !user.isSeller && !pathname.includes("/seller/register")) {
+            // Logged-in customer but not yet a seller → send to seller registration flow
             navigate("/seller/register");
         }
-    }, [isAuthenticated, user, navigate, location.pathname]);
+    }, [isAuthenticated, user, navigate, pathname, isAuthPage, isHydrated]);
 
-    if (!isAuthenticated || (user && !user.isSeller && !location.pathname.includes("/seller/register"))) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800">Authorization checking...</div>;
+    // Completely bypass sidebar + guards on public seller auth routes
+    if (isAuthPage) {
+        return <>{children}</>;
+    }
+
+    // Seller registration page has its own layout & requires login but no sidebar
+    if (pathname.includes("/seller/register")) {
+        return <>{children}</>;
+    }
+
+    // Show loading while hydrating
+    if (!isHydrated) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader2 className="w-8 h-8 animate-spin text-[#D97534]" />
+            </div>
+        );
+    }
+
+    if (!isAuthenticated || (user && !user.isSeller && !pathname.includes("/seller/register"))) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader2 className="w-8 h-8 animate-spin text-[#D97534]" />
+            </div>
+        );
     }
 
     const navigation = [
@@ -53,8 +96,8 @@ export default function SellerLayout({ children }) {
                                 key={item.name}
                                 href={item.href}
                                 className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors ${isActive
-                                        ? "bg-[#febd69] text-black"
-                                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                                    ? "bg-[#febd69] text-black"
+                                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
                                     }`}
                             >
                                 <item.icon className="w-5 h-5 mr-3" />
@@ -64,7 +107,13 @@ export default function SellerLayout({ children }) {
                     })}
                 </nav>
                 <div className="absolute bottom-0 w-64 p-4 border-t border-gray-700">
-                    <button onClick={logout} className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-300 hover:bg-red-900 hover:text-white rounded-md transition-colors">
+                    <button
+                        onClick={() => {
+                            signOut();
+                            navigate('/seller/login');
+                        }}
+                        className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-300 hover:bg-red-900 hover:text-white rounded-md transition-colors"
+                    >
                         <LogOut className="w-5 h-5 mr-3" />
                         Sign Out
                     </button>

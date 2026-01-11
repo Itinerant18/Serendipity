@@ -4,7 +4,7 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const asyncHandler = require('express-async-handler');
 const { protect } = require('../middleware/authMiddleware');
-const supabase = require('../config/supabase');
+const { supabase } = require('../config/supabase');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({

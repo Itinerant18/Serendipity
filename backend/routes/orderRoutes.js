@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
 const asyncHandler = require('express-async-handler');
-const supabase = require('../config/supabase');
+const { supabase } = require('../config/supabase');
 
 const router = express.Router();
 
@@ -31,19 +31,14 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
   // 1. Create Order
-  // Note: Frontend sends 'shipping' object with address fields. Backend schema expects separate columns or json? 
-  // Based on existing route code: shipping_address (string/json?), shipping_city...
-  // Let's assume the DB has columns matching the INSERT from frontend API:
-  // shipping_name, shipping_address, shipping_city, shipping_state, shipping_zip, shipping_country
-
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
       user_id: req.user.id,
       order_number: orderNumber,
-      total_amount: totalPrice || 0, // Frontend calc logic was in route, better to trust backend or passed value?
+      total_amount: totalPrice || 0,
       stripe_session_id: stripeSessionId || null,
-      payment_status: 'pending', // Default
+      payment_status: 'pending',
       shipping_name: shipping?.name,
       shipping_address: shipping?.address,
       shipping_city: shipping?.city,
@@ -52,15 +47,14 @@ router.post('/', protect, asyncHandler(async (req, res) => {
       shipping_country: shipping?.country || 'US',
       is_paid: false,
       is_delivered: false,
-      // Map legacy fields if table requires them (based on old code)
-      tax_price: taxPrice || 0,
-      shipping_price: shippingPrice || 0,
       payment_method: 'Stripe'
     })
     .select()
     .single();
 
   if (orderError) {
+    console.error('Order creation error:', orderError);
+    res.status(500);
     throw new Error(orderError.message);
   }
 
@@ -87,6 +81,34 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     .from('saved_carts')
     .delete()
     .eq('user_id', req.user.id);
+
+  // 4. Real-time Notifications for Sellers
+  try {
+    const productIds = items.map(item => item.product_id || item.product);
+
+    // Fetch unique seller user IDs for these products
+    const { data: productsData } = await supabase
+      .from('products')
+      .select('seller_profile:seller_profiles(user_id)')
+      .in('id', productIds);
+
+    if (productsData) {
+      const sellerUserIds = [...new Set(productsData.map(p => p.seller_profile?.user_id).filter(Boolean))];
+
+      sellerUserIds.forEach(sellerUserId => {
+        req.io.to(sellerUserId).emit('NEW_ORDER', {
+          orderId: order.id,
+          orderNumber: order.order_number,
+          totalAmount: order.total_amount,
+          message: 'You have a new order!'
+        });
+        console.log(`Notification sent to seller room: ${sellerUserId}`);
+      });
+    }
+  } catch (socketErr) {
+    console.error('Socket notification error:', socketErr);
+    // Don't fail the request if notification fails
+  }
 
   res.status(201).json({ ...order, _id: order.id, orderNumber: order.order_number });
 }));

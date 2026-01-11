@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const supabase = require('../config/supabase');
+const { supabase } = require('../config/supabase');
 const { protect } = require('../middleware/authMiddleware');
 const asyncHandler = require('express-async-handler');
 

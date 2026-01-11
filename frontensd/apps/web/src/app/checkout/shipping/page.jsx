@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import useAuth from "@/utils/useAuth";
+import { formatCurrency } from "@/utils/format";
 
 export default function ShippingPage() {
     const { user, token, isAuthenticated } = useAuth();
@@ -98,7 +99,7 @@ export default function ShippingPage() {
                 key: "rzp_test_PLACEHOLDER", // Replace with env var if possible
                 amount: rzpOrder.amount,
                 currency: rzpOrder.currency,
-                name: "Mercado",
+                name: "Serendipity",
                 description: "Order #" + orderData.orderNumber,
                 order_id: rzpOrder.id,
                 handler: async function (response) {
@@ -209,7 +210,7 @@ export default function ShippingPage() {
                         <div className="pt-6 border-t border-gray-100 mt-6">
                             <div className="flex justify-between items-center mb-6">
                                 <span className="font-playfair text-xl text-gray-600">Total Amount</span>
-                                <span className="font-playfair font-bold text-2xl text-[#8B4513]">${calculateTotal()}</span>
+                                <span className="font-playfair font-bold text-2xl text-[#8B4513]">{formatCurrency(calculateTotal())}</span>
                             </div>
 
                             <button

@@ -5,6 +5,7 @@ import { Search, ShoppingCart, Menu, X, Package, User } from "lucide-react";
 import useAuth from "@/utils/useAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { formatCurrency } from "@/utils/format";
 
 export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,7 +137,7 @@ export default function OrdersPage() {
                   <div className="mt-2 sm:mt-0">
                     <p className="font-inter text-sm text-gray-600">Total</p>
                     <p className="font-playfair font-bold text-xl text-[#8B4513]">
-                      ${parseFloat(order.total_amount).toFixed(2)}
+                      {formatCurrency(order.total_amount)}
                     </p>
                   </div>
                   <div className="mt-2 sm:mt-0">
@@ -169,7 +170,7 @@ export default function OrdersPage() {
                           {item.product_title}
                         </p>
                         <p className="font-inter text-sm text-gray-600">
-                          Quantity: {item.quantity} × {item.price}
+                          Quantity: {item.quantity} × {typeof item.price === "string" ? item.price : formatCurrency(item.price)}
                         </p>
                       </div>
                     </div>

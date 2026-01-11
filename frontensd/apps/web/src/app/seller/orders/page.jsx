@@ -2,107 +2,193 @@
 
 import React, { useEffect, useState } from "react";
 import useAuth from "@/utils/useAuth";
-import { createClient } from "@supabase/supabase-js";
-import { Bell, ShoppingBag, Clock } from "lucide-react";
+import useSocket from "@/utils/useSocket";
+import { Bell, Clock, Wifi, WifiOff, Filter, RefreshCw } from "lucide-react";
+import { formatCurrency } from "@/utils/format";
+import OrderCard from "@/components/OrderCard";
 
-// Initialize Supabase client for Realtime (using anon key from environment is standard for client-side)
-// Note: We need the project URL and ANON key.
-// Ideally usage `useAuth` user session for RLS but enabling Realtime often requires public listen or authenticated listen.
-// For now we assume we use the process.env if available or we need to pass it from config.
-// Let's try to grab from existing config or environment.
 export default function SellerOrdersPage() {
     const { token, user } = useAuth();
     const [orders, setOrders] = useState([]);
-    const [realtimeEvent, setRealtimeEvent] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
+    const [filter, setFilter] = useState("all");
 
-    // Initial Fetch
-    const fetchMyOrders = async () => {
-        // We need an endpoint to fetch ALL orders for this seller.
-        // Currently `sellerRoutes` doesn't have `GET /orders`.
-        // We only have stats.
-        // Let's rely on Realtime for "New" orders for this demo, or we need to implement `GET /api/seller/orders`.
-        // To save time, we'll implement a basic Empty state + Realtime listener.
-        // OR we can fetch standard stats.
-    };
+    // Real-time order notifications via Socket.io
+    useSocket((event, data) => {
+        if (event === 'NEW_ORDER') {
+            console.log('New order received:', data);
 
-    useEffect(() => {
-        // Initialize Supabase Client strictly on Client-Side
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://wosxyoivsiqzyufhcyhy.supabase.co";
-        const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+            // Play notification sound
+            try {
+                new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3').play();
+            } catch (e) {
+                console.log('Audio play failed', e);
+            }
 
-        if (!supabaseKey) {
-            console.error("Supabase Key missing - Realtime disabled");
-            return;
+            // Add to orders list with isNew flag
+            const newOrder = {
+                id: data.orderId,
+                order_number: data.orderNumber,
+                total_amount: data.totalAmount,
+                created_at: new Date().toISOString(),
+                status: 'pending',
+                isNew: true
+            };
+
+            setOrders(prev => [newOrder, ...prev]);
+
+            // Remove isNew flag after 5 seconds
+            setTimeout(() => {
+                setOrders(prev => prev.map(o =>
+                    o.id === data.orderId ? { ...o, isNew: false } : o
+                ));
+            }, 5000);
         }
+        setIsConnected(true);
+    });
 
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        // Subscribe to Realtime
-        const channel = supabase
-            .channel('realtime-orders')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'orders' },
-                (payload) => {
-                    console.log('New Order Received!', payload);
-                    handleNewOrder(payload.new);
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
+    // Fetch existing orders
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                // Note: This endpoint needs to be created on the backend
+                // For now, we'll show empty state and rely on real-time
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch orders", error);
+                setLoading(false);
+            }
         };
-    }, []);
 
-    const handleNewOrder = async (orderRow) => {
-        // Fetch full order details to see if it belongs to this seller
-        // For MVP, we'll just prepend it to the list as a "Live Feed".
-        setRealtimeEvent(orderRow);
-        setOrders(prev => [orderRow, ...prev]);
+        if (token) fetchOrders();
+    }, [token]);
 
-        // Play sound or notification
-        new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3').play().catch(e => console.log('Audio play failed', e));
-    };
+    const filteredOrders = orders.filter(order => {
+        if (filter === "all") return true;
+        return order.status === filter;
+    });
+
+    const filterOptions = [
+        { value: "all", label: "All Orders" },
+        { value: "pending", label: "Pending" },
+        { value: "shipped", label: "Shipped" },
+        { value: "delivered", label: "Delivered" }
+    ];
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold font-playfair text-[#232f3e]">Live Order Feed</h1>
-                <div className="flex items-center text-green-600 bg-green-50 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    REAL-TIME ACTIVE
+
+                {/* Connection Status */}
+                <div className={`flex items-center px-4 py-2 rounded-full text-sm font-bold transition-all ${isConnected
+                    ? "bg-green-100 text-green-700 shadow-sm"
+                    : "bg-gray-100 text-gray-500"
+                    }`}>
+                    {isConnected ? (
+                        <>
+                            <span className="relative flex h-2.5 w-2.5 mr-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                            </span>
+                            <Wifi className="w-4 h-4 mr-1.5" />
+                            REAL-TIME ACTIVE
+                        </>
+                    ) : (
+                        <>
+                            <WifiOff className="w-4 h-4 mr-1.5" />
+                            Connecting...
+                        </>
+                    )}
                 </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[400px]">
-                {orders.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full py-20 text-gray-500">
-                        <Clock className="w-12 h-12 mb-4 text-gray-300" />
-                        <p className="text-lg">Waiting for new orders...</p>
-                        <p className="text-sm text-gray-400">New orders containing your products will appear here instantly.</p>
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+                <Filter className="w-4 h-4 text-gray-400" />
+                {filterOptions.map(option => (
+                    <button
+                        key={option.value}
+                        onClick={() => setFilter(option.value)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === option.value
+                            ? "bg-[#D97534] text-white shadow-md"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                    >
+                        {option.label}
+                    </button>
+                ))}
+                <button
+                    onClick={() => window.location.reload()}
+                    className="ml-auto p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                    title="Refresh"
+                >
+                    <RefreshCw className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* Orders Container */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                {loading ? (
+                    <div className="p-8 text-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#D97534] mx-auto"></div>
+                        <p className="text-gray-500 mt-4">Loading orders...</p>
+                    </div>
+                ) : filteredOrders.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                        <div className="relative">
+                            <Clock className="w-16 h-16 text-gray-200" />
+                            {isConnected && (
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-lg mt-4 font-medium">Waiting for new orders...</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                            Orders containing your products will appear here instantly.
+                        </p>
+                        <div className="mt-6 flex items-center text-xs text-gray-400">
+                            <Bell className="w-3 h-3 mr-1" />
+                            Sound notifications enabled
+                        </div>
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-100">
-                        {orders.map((order) => (
-                            <div key={order.id} className="p-4 hover:bg-orange-50 transition-colors flex items-center justify-between border-l-4 border-l-[#febd69]">
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                                        <ShoppingBag className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-gray-900">New Order #{order.order_number || order.id.slice(0, 8)}</p>
-                                        <p className="text-sm text-gray-500">Total: <span className="text-green-600 font-bold">${order.total_amount}</span></p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleTimeString()}</p>
-                                    <button className="text-[#d97534] text-sm font-medium hover:underline">View Details</button>
-                                </div>
+                        {filteredOrders.map((order, index) => (
+                            <div key={order.id || index} className="p-4">
+                                <OrderCard
+                                    order={order}
+                                    isNew={order.isNew}
+                                    onViewDetails={() => console.log('View order:', order.id)}
+                                />
                             </div>
                         ))}
                     </div>
                 )}
+            </div>
+
+            {/* Stats Summary */}
+            <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white rounded-lg p-4 text-center border border-gray-100">
+                    <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+                    <p className="text-xs text-gray-500">Total Orders Today</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 text-center border border-gray-100">
+                    <p className="text-2xl font-bold text-yellow-600">
+                        {orders.filter(o => o.status === 'pending').length}
+                    </p>
+                    <p className="text-xs text-gray-500">Pending</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 text-center border border-gray-100">
+                    <p className="text-2xl font-bold text-green-600">
+                        {formatCurrency(orders.reduce((sum, o) => sum + (o.total_amount || 0), 0))}
+                    </p>
+                    <p className="text-xs text-gray-500">Revenue Today</p>
+                </div>
             </div>
         </div>
     );
