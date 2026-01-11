@@ -1,4 +1,4 @@
-# Serendipity (Amazon Clone)
+# Serendipity (Finding something good unintentionaly)
 
 A full-stack e-commerce application built with the MERN stack (MongoDB, Express, React, Node.js) and Supabase.
 
