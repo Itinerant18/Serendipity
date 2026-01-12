@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
+import useCartStore from "@/utils/cartStore";
 import {
     Search,
     ShoppingCart,
@@ -16,8 +17,9 @@ import {
     Settings
 } from "lucide-react";
 
-export default function Header({ cartCount }) {
+export default function Header() {
     const { user, isAuthenticated, signOut } = useAuth();
+    const cartCount = useCartStore((state) => state.getCartCount());
     const navigate = useNavigate();
     const location = useLocation();
     const [searchQuery, setSearchQuery] = useState("");
@@ -143,6 +145,15 @@ export default function Header({ cartCount }) {
                                             <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                                             <p className="text-xs text-gray-500">{user?.email}</p>
                                         </div>
+
+                                        <Link
+                                            to="/profile"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <User className="w-4 h-4" />
+                                            My Account
+                                        </Link>
 
                                         <Link
                                             to="/orders"

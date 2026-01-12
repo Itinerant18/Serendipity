@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Store, AlertCircle, CheckCircle, ShieldCheck } from "lucide-react";
 import useAuth from "@/utils/useAuth";
 
 export default function SellerLoginPage() {
+    const navigate = useNavigate();
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +62,7 @@ export default function SellerLoginPage() {
             if (setToken) setToken(data.token);
             if (setIsAuthenticated) setIsAuthenticated(true);
 
-            window.location.href = "/seller";
+            navigate("/seller");
         } catch (err) {
             setError(err.message || "Something went wrong. Please try again.");
             setLoading(false);

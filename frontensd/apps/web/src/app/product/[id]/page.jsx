@@ -17,21 +17,19 @@ import {
 import { formatCurrency } from "@/utils/format";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import useCartStore from "@/utils/cartStore";
 
 export default function ProductPage({ params }) {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [cartCount, setCartCount] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [addedToCart, setAddedToCart] = useState(false);
     const [stockInfo, setStockInfo] = useState({ count: 0, status: "out" });
+    const addToCartStore = useCartStore((state) => state.addToCart);
 
     useEffect(() => {
-        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-        setCartCount(cart.length);
-
         fetchProduct();
     }, [params.id]);
 
@@ -78,27 +76,43 @@ export default function ProductPage({ params }) {
     };
 
     const addToCart = () => {
-        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-        const existingIndex = cart.findIndex(
-            (item) => item.product_id === product.product.product_id,
-        );
+        // Construct the product object expected by the store logic
+        const item = {
+            id: product.product.product_id,
+            product: product.product.product_id, // Store expects 'product' as ID usually or checks _id/id
+            name: product.product.product_title,
+            price: parseFloat(product.product.offer?.price.replace(/[^0-9.]/g, '') || 0), // extract number if needed, but store might handle it. 
+            // Wait, HomePage passed: { id, name, price, image } to addToCart
+            // And Store does: { ...product, product: product._id || product.id, qty: 1 }
+            // So we should pass a clean object
+            image: product.product.product_photos[0],
+            // We need to handle quantity - the store adds 1, 
+            // but here we have a quantity selector.
+            // The current simple store 'addToCart' adds 1 or increments 1.
+            // I should modify store to accept quantity or just call it N times or fix the store.
+            // For now, I will update the store to accept quantity if I can, but since I can't edit store in this turn cleanly without checking context...
+            // Actually I CREATED the store. I know what it does.
+            // It does: { ...item, qty: item.qty + 1 }
+            // It does NOT support adding N items at once in the current implementation.
+            // I will just loop for now or simple assume 1 for this turn, OR better, I'll update the store later to support quantity. 
+            // Let's just call it once for now to enable the button working.
+        };
 
-        if (existingIndex >= 0) {
-            cart[existingIndex].quantity += quantity;
-        } else {
-            cart.push({
-                product_id: product.product.product_id,
-                title: product.product.product_title,
-                price: product.product.offer?.price || formatCurrency(0),
-                image: product.product.product_photos[0],
-                quantity: quantity,
+        // Actually, let's fix the calls. If the user selected quantity 3, calling it 3 times is ugly but works for a quick fix.
+        // A better fix is to update the store to accept quantity.
+        // But for this "Real-time updates" task, simply connecting it is the step.
+        // I'll implement a loop to match the quantity selected by user.
+
+        for (let i = 0; i < quantity; i++) {
+            addToCartStore({
+                id: product.product.product_id,
+                name: product.product.product_title,
+                price: parseFloat(product.product.offer?.price?.replace(/[^\d.]/g, '') || 0),
+                image: product.product.product_photos[0]
             });
         }
 
-        localStorage.setItem("cart", JSON.stringify(cart));
-        setCartCount(cart.length);
         setAddedToCart(true);
-
         setTimeout(() => setAddedToCart(false), 2000);
     };
 
@@ -150,7 +164,6 @@ export default function ProductPage({ params }) {
             <Header
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
-                cartCount={cartCount}
             />
 
             {/* Product Section */}

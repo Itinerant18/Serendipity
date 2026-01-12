@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import useAuthStore from './authStore';
+import { supabase } from '@/lib/supabase';
 
 function useAuth() {
   const { user, token, isAuthenticated, login, logout, updateUser, setUser, setToken, setIsAuthenticated } = useAuthStore();
@@ -124,8 +125,20 @@ function useAuth() {
 
   // Mock implementations for social auth to prevent crashes if used
   const signInWithGoogle = useCallback(async () => {
-    console.warn('Google Auth not implemented in backend yet');
-    return { success: false, error: 'Google Auth not implemented' };
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Google login error:', error);
+      return { success: false, error: error.message };
+    }
   }, []);
 
   const signInWithFacebook = useCallback(async () => {

@@ -208,4 +208,64 @@ router.delete('/product-media', protect, protectSeller, async (req, res) => {
     }
 });
 
+// @desc    Upload profile image (accessible to all authenticated users)
+// @route   POST /api/upload/profile-image
+// @access  Private (Authenticated Users)
+router.post('/profile-image', protect, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const file = req.file;
+        const userId = req.user.id;
+
+        // Check file size limits for images
+        const maxSize = 5 * 1024 * 1024; // 5MB for profile images
+
+        if (file.size > maxSize) {
+            return res.status(400).json({
+                message: 'File too large. Maximum size: 5MB'
+            });
+        }
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const ext = file.originalname.split('.').pop();
+        const filename = `profiles/${userId}-${timestamp}.${ext}`;
+
+        // Upload to Supabase Storage
+        const { data, error } = await supabaseAdmin.storage
+            .from('product-media') // Reusing the same bucket for now, ideally should differ
+            .upload(filename, file.buffer, {
+                contentType: file.mimetype,
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) {
+            console.error('Supabase upload error:', error);
+            return res.status(500).json({ message: 'Upload failed', error: error.message });
+        }
+
+        // Get public URL
+        const { data: urlData } = supabaseAdmin.storage
+            .from('product-media')
+            .getPublicUrl(filename);
+
+        res.json({
+            success: true,
+            url: urlData.publicUrl,
+            filename: filename,
+            type: 'image',
+            size: file.size,
+            mimeType: file.mimetype
+        });
+
+    } catch (error) {
+        console.error('Upload error:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
 module.exports = router;

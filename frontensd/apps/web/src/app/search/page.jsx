@@ -18,7 +18,6 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cartCount, setCartCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -29,9 +28,6 @@ export default function SearchPage() {
   const [condition, setCondition] = useState("");
 
   useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    setCartCount(cart.length);
-
     // Get query from URL
     const params = new URLSearchParams(window.location.search);
     const query = params.get("q") || "";
@@ -98,7 +94,6 @@ export default function SearchPage() {
       <Header
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        cartCount={cartCount}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

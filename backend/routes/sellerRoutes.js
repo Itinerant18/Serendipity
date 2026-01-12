@@ -442,7 +442,7 @@ router.get('/orders', protect, protectSeller, async (req, res) => {
 // @access  Private (Seller)
 router.get('/analytics/weekly', protect, protectSeller, async (req, res) => {
     try {
-        const sellerProfileId = req.user.sellerProfileId;
+        const sellerProfileId = req.seller.profileId;
 
         // 1. Get all product IDs
         const { data: products } = await supabase
@@ -456,15 +456,16 @@ router.get('/analytics/weekly', protect, protectSeller, async (req, res) => {
 
         const productIds = products.map(p => p.id);
 
-        // 2. Get order items from last 7 days
+        // 2. Get order items from last 7 days by joining with orders
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+        // Use a join to get order_items with order's created_at
         const { data: orderItems, error } = await supabase
             .from('order_items')
-            .select('price, quantity, created_at')
+            .select('price, qty, order_id, orders!inner(created_at)')
             .in('product_id', productIds)
-            .gte('created_at', sevenDaysAgo.toISOString());
+            .gte('orders.created_at', sevenDaysAgo.toISOString());
 
         if (error) throw error;
 
@@ -481,9 +482,9 @@ router.get('/analytics/weekly', protect, protectSeller, async (req, res) => {
 
         if (orderItems) {
             orderItems.forEach(item => {
-                const date = new Date(item.created_at);
+                const date = new Date(item.orders.created_at);
                 const dayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
-                const amount = parseFloat(item.price) * item.quantity;
+                const amount = parseFloat(item.price) * item.qty;
 
                 if (dailySales[dayStr] !== undefined) {
                     dailySales[dayStr] += amount;

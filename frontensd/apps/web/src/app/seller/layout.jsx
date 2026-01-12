@@ -34,9 +34,10 @@ export default function SellerLayout({ children }) {
         if (!isAuthenticated) {
             // For protected seller area, require login
             navigate("/seller/login");
-        } else if (user && !user.isSeller && !pathname.includes("/seller/register")) {
+        } else if (user && !user.isSeller && !pathname.includes("/seller/signup")) {
+            console.log("Redirecting to signup. User:", user);
             // Logged-in customer but not yet a seller → send to seller registration flow
-            navigate("/seller/register");
+            navigate("/seller/signup");
         }
     }, [isAuthenticated, user, navigate, pathname, isAuthPage, isHydrated]);
 
@@ -46,7 +47,7 @@ export default function SellerLayout({ children }) {
     }
 
     // Seller registration page has its own layout & requires login but no sidebar
-    if (pathname.includes("/seller/register")) {
+    if (pathname.includes("/seller/signup")) {
         return <>{children}</>;
     }
 
@@ -59,7 +60,7 @@ export default function SellerLayout({ children }) {
         );
     }
 
-    if (!isAuthenticated || (user && !user.isSeller && !pathname.includes("/seller/register"))) {
+    if (!isAuthenticated || (user && !user.isSeller && !pathname.includes("/seller/signup"))) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <Loader2 className="w-8 h-8 animate-spin text-[#D97534]" />
@@ -75,7 +76,7 @@ export default function SellerLayout({ children }) {
     ];
 
     // If on registration page, don't show sidebar
-    if (location.pathname.includes("/seller/register")) {
+    if (location.pathname.includes("/seller/signup")) {
         return <>{children}</>;
     }
 

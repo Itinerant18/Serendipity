@@ -119,9 +119,12 @@ export default function SellerInventoryPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.category}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                            <button className="text-blue-600 hover:text-blue-900 border border-blue-200 p-1 rounded hover:bg-blue-50">
+                                            <Link
+                                                to={`/seller/inventory/edit/${product._id}`}
+                                                className="text-blue-600 hover:text-blue-900 border border-blue-200 p-1 rounded hover:bg-blue-50"
+                                            >
                                                 <Edit className="w-4 h-4" />
-                                            </button>
+                                            </Link>
                                             <button
                                                 onClick={() => handleDelete(product._id)}
                                                 className="text-red-600 hover:text-red-900 border border-red-200 p-1 rounded hover:bg-red-50"

@@ -113,6 +113,23 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   res.status(201).json({ ...order, _id: order.id, orderNumber: order.order_number });
 }));
 
+// @desc    Get logged in user orders
+// @route   GET /api/orders/myorders
+// @access  Private
+router.get('/myorders', protect, asyncHandler(async (req, res) => {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('user_id', req.user.id);
+
+  if (error) {
+    res.status(500);
+    throw new Error(error.message);
+  }
+
+  res.json(orders);
+}));
+
 router.get('/:id', protect, asyncHandler(async (req, res) => {
   // Fetch order with user details and partial order items logic if needed
   // Supabase join syntax: user:users(...)
@@ -132,23 +149,6 @@ router.get('/:id', protect, asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Order not found');
   }
-}));
-
-// @desc    Get logged in user orders
-// @route   GET /api/orders/myorders
-// @access  Private
-router.get('/myorders', protect, asyncHandler(async (req, res) => {
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('user_id', req.user.id);
-
-  if (error) {
-    res.status(500);
-    throw new Error(error.message);
-  }
-
-  res.json(orders);
 }));
 
 // @desc    Get all orders (Admin) or Stats

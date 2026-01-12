@@ -15,10 +15,10 @@ export default function Footer() {
             { name: "Home & Kitchen", href: "/search?category=Home%20%26%20Kitchen" },
         ],
         account: [
-            { name: "My Account", href: "/account" },
-            { name: "My Orders", href: "/orders" },
+            { name: "My Account", href: "/profile" },
+            { name: "My Orders", href: "/profile/orders" },
+            { name: "Addresses", href: "/profile/addresses" },
             { name: "Cart", href: "/cart" },
-            { name: "Wishlist", href: "/wishlist" },
         ],
         sell: [
             { name: "Become a Seller", href: "/seller/signup" },

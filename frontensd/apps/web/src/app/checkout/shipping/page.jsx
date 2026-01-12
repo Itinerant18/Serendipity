@@ -38,8 +38,11 @@ export default function ShippingPage() {
     const calculateTotal = () => {
         return cart
             .reduce((total, item) => {
-                const price = parseFloat(item.price.replace(/[^0-9.]/g, "")) || 0;
-                return total + price * item.quantity;
+                // Handle both number and formatted string prices
+                const priceValue = typeof item.price === 'number'
+                    ? item.price
+                    : parseFloat(String(item.price).replace(/[^0-9.]/g, "")) || 0;
+                return total + priceValue * item.quantity;
             }, 0)
             .toFixed(2);
     };

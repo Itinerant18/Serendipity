@@ -38,6 +38,11 @@ app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use('/api/seller', require('./routes/sellerRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 
+// Profile Routes
+app.use('/api/profile', require('./routes/profileRoutes'));
+app.use('/api/profile/addresses', require('./routes/addressRoutes'));
+app.use('/api/profile/payment-methods', require('./routes/paymentMethodRoutes'));
+
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 app.use(notFound);

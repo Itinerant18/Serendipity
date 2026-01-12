@@ -9,11 +9,13 @@ import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import ProductCard from "@/components/ProductCard";
 import { EmojiCategoryCard, defaultCategories } from "@/components/CategoryCard";
+import useCartStore from "@/utils/cartStore";
 
 export default function HomePage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const addToCart = useCartStore((state) => state.addToCart);
 
     useEffect(() => {
         fetchProducts();
@@ -39,9 +41,9 @@ export default function HomePage() {
     };
 
     const handleAddToCart = (product) => {
-        // TODO: Implement cart functionality
-        console.log("Add to cart:", product);
-        alert(`Added "${product.name}" to cart!`);
+        addToCart(product);
+        // Optional: Toast notification here instead of alert
+        // alert(`Added "${product.name}" to cart!`); 
     };
 
     // Get featured products (first 8)
