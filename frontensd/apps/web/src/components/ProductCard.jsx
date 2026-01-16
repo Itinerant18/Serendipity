@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Star, ShoppingCart, Heart } from "lucide-react";
+// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 
 /**
@@ -42,15 +42,15 @@ export default function ProductCard({
         for (let i = 0; i < 5; i++) {
             if (i < fullStars) {
                 stars.push(
-                    <Star key={i} className="w-4 h-4 fill-[#FFA41C] text-[#FFA41C]" />
+                    <i key={i} className="fa-solid fa-star text-base text-[#FFA41C]"></i>
                 );
             } else if (i === fullStars && hasHalfStar) {
                 stars.push(
-                    <Star key={i} className="w-4 h-4 fill-[#FFA41C]/50 text-[#FFA41C]" />
+                    <i key={i} className="fa-solid fa-star text-base text-[#FFA41C]" style={{ opacity: 0.5 }}></i>
                 );
             } else {
                 stars.push(
-                    <Star key={i} className="w-4 h-4 text-gray-300" />
+                    <i key={i} className="fa-regular fa-star text-base text-gray-300"></i>
                 );
             }
         }
@@ -94,7 +94,7 @@ export default function ProductCard({
                         // TODO: Add to wishlist
                     }}
                 >
-                    <Heart className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" />
+                    <i className="fa-solid fa-heart text-base text-gray-600 hover:text-red-500 transition-colors"></i>
                 </button>
             </Link>
 
@@ -146,7 +146,7 @@ export default function ProductCard({
                             : "bg-[#FFD814] hover:bg-[#F7CA00] text-[#0F1111] active:scale-95"
                             }`}
                     >
-                        <ShoppingCart className="w-4 h-4" />
+                        <i className="fa-solid fa-cart-shopping text-base"></i>
                         {isOutOfStock ? "Out of Stock" : "Add to Cart"}
                     </button>
                 )}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Loader2, Save, ArrowLeft } from "lucide-react";
+// FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 
 export default function EditProfilePage() {
@@ -144,7 +144,7 @@ export default function EditProfilePage() {
         return (
 
             <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534] mx-auto" />
+                <i className="fa-solid fa-spinner fa-spin text-4xl text-[#D97534] mx-auto"></i>
                 <p className="text-gray-500 mt-4">Loading profile...</p>
             </div>
 
@@ -158,7 +158,7 @@ export default function EditProfilePage() {
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate("/profile")} className="p-2 hover:bg-gray-100 rounded-lg">
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                        <i className="fa-solid fa-arrow-left text-xl text-gray-600"></i>
                     </button>
                     <div>
                         <h1 className="font-playfair font-bold text-2xl text-gray-900">Edit Profile</h1>
@@ -192,7 +192,7 @@ export default function EditProfilePage() {
                             disabled={uploading}
                             className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
                         >
-                            {uploading ? <Loader2 className="w-4 h-4 animate-spin text-[#D97534]" /> : <Camera className="w-4 h-4 text-gray-600" />}
+                            {uploading ? <i className="fa-solid fa-spinner fa-spin text-[#D97534]"></i> : <i className="fa-solid fa-camera text-gray-600"></i>}
                         </button>
                     </div>
                     <div>
@@ -282,12 +282,12 @@ export default function EditProfilePage() {
                     >
                         {saving ? (
                             <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <i className="fa-solid fa-spinner fa-spin w-5 h-5"></i>
                                 Saving...
                             </>
                         ) : (
                             <>
-                                <Save className="w-5 h-5" />
+                                <i className="fa-solid fa-floppy-disk w-5 h-5"></i>
                                 Save Changes
                             </>
                         )}

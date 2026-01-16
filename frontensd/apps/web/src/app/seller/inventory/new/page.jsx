@@ -3,7 +3,8 @@
 import React, { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
-import { ArrowLeft, Save, Upload, X, Image, Video, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+// FontAwesome icons loaded globally
+import { MAIN_CATEGORIES, getSubcategories } from "@/utils/categories";
 
 export default function AddProductPage() {
     const { token } = useAuth();
@@ -28,13 +29,21 @@ export default function AddProductPage() {
         price: "",
         brand: "",
         category: "",
+        subcategory: "",
         countInStock: "",
         description: ""
     });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        setForm(prev => {
+            const newForm = { ...prev, [name]: value };
+            // Reset subcategory if category changes
+            if (name === "category") {
+                newForm.subcategory = "";
+            }
+            return newForm;
+        });
     };
 
     // Image upload handler
@@ -179,6 +188,12 @@ export default function AddProductPage() {
             return;
         }
 
+        if (!form.category || !form.subcategory) {
+            alert("Please select both category and subcategory");
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -227,7 +242,7 @@ export default function AddProductPage() {
         <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex items-center gap-4 text-gray-500 hover:text-gray-900">
                 <button onClick={() => navigate("/seller/inventory")} className="flex items-center">
-                    <ArrowLeft className="w-5 h-5 mr-1" /> Back to Inventory
+                    <i className="fa-solid fa-arrow-left w-5 h-5 mr-1 flex items-center justify-center"></i> Back to Inventory
                 </button>
             </div>
 
@@ -263,8 +278,40 @@ export default function AddProductPage() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Category</label>
-                            <input type="text" name="category" required value={form.category} onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500" />
+                            <select
+                                name="category"
+                                required
+                                value={form.category}
+                                onChange={handleChange}
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500"
+                            >
+                                <option value="">Select Category</option>
+                                {MAIN_CATEGORIES.map(cat => (
+                                    <option key={cat.name} value={cat.name}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Subcategory</label>
+                            <select
+                                name="subcategory"
+                                required
+                                value={form.subcategory}
+                                onChange={handleChange}
+                                disabled={!form.category}
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100"
+                            >
+                                <option value="">Select Subcategory</option>
+                                {getSubcategories(form.category).map(sub => (
+                                    <option key={sub} value={sub}>{sub}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="opacity-0 pointer-events-none">
+                            {/* Spacer */}
                         </div>
                     </div>
 
@@ -272,7 +319,7 @@ export default function AddProductPage() {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             <span className="flex items-center gap-2">
-                                <Image className="w-4 h-4" />
+                                <i className="fa-solid fa-image text-gray-500"></i>
                                 Product Images <span className="text-red-500">*</span>
                                 <span className="text-gray-400 font-normal">(up to 5, max 10MB each)</span>
                             </span>
@@ -286,8 +333,8 @@ export default function AddProductPage() {
                             onDrop={handleDropImage}
                             onClick={() => imageInputRef.current?.click()}
                             className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${dragActiveImage
-                                    ? 'border-orange-500 bg-orange-50'
-                                    : 'border-gray-300 hover:border-gray-400'
+                                ? 'border-orange-500 bg-orange-50'
+                                : 'border-gray-300 hover:border-gray-400'
                                 } ${uploadedImages.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <input
@@ -302,12 +349,12 @@ export default function AddProductPage() {
 
                             {uploadingImages ? (
                                 <div className="flex flex-col items-center">
-                                    <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                                    <i className="fa-solid fa-spinner fa-spin text-3xl text-orange-500"></i>
                                     <p className="mt-2 text-sm text-gray-500">Uploading...</p>
                                 </div>
                             ) : (
                                 <>
-                                    <Upload className="w-8 h-8 mx-auto text-gray-400" />
+                                    <i className="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mx-auto"></i>
                                     <p className="mt-2 text-sm text-gray-600">
                                         Drag & drop images here, or <span className="text-orange-600 font-medium">browse</span>
                                     </p>
@@ -336,9 +383,9 @@ export default function AddProductPage() {
                                         <button
                                             type="button"
                                             onClick={() => removeImage(index)}
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center"
                                         >
-                                            <X className="w-3 h-3" />
+                                            <i className="fa-solid fa-xmark text-xs"></i>
                                         </button>
                                     </div>
                                 ))}
@@ -350,7 +397,7 @@ export default function AddProductPage() {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             <span className="flex items-center gap-2">
-                                <Video className="w-4 h-4" />
+                                <i className="fa-solid fa-video text-gray-500"></i>
                                 Product Video
                                 <span className="text-gray-400 font-normal">(optional, max 100MB)</span>
                             </span>
@@ -364,8 +411,8 @@ export default function AddProductPage() {
                                 onDrop={handleDropVideo}
                                 onClick={() => videoInputRef.current?.click()}
                                 className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${dragActiveVideo
-                                        ? 'border-purple-500 bg-purple-50'
-                                        : 'border-gray-300 hover:border-gray-400'
+                                    ? 'border-purple-500 bg-purple-50'
+                                    : 'border-gray-300 hover:border-gray-400'
                                     }`}
                             >
                                 <input
@@ -378,12 +425,12 @@ export default function AddProductPage() {
 
                                 {uploadingVideo ? (
                                     <div className="flex flex-col items-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+                                        <i className="fa-solid fa-spinner fa-spin text-3xl text-purple-500"></i>
                                         <p className="mt-2 text-sm text-gray-500">Uploading video...</p>
                                     </div>
                                 ) : (
                                     <>
-                                        <Video className="w-8 h-8 mx-auto text-gray-400" />
+                                        <i className="fa-solid fa-video text-3xl text-gray-400 mx-auto"></i>
                                         <p className="mt-2 text-sm text-gray-600">
                                             Drag & drop video here, or <span className="text-purple-600 font-medium">browse</span>
                                         </p>
@@ -395,7 +442,7 @@ export default function AddProductPage() {
                             <div className="border rounded-lg p-4 bg-gray-50">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                        <i className="fa-solid fa-circle-check text-xl text-green-500"></i>
                                         <div>
                                             <p className="text-sm font-medium text-gray-700">Video uploaded</p>
                                             <p className="text-xs text-gray-500">{formatFileSize(uploadedVideo.size)}</p>
@@ -406,7 +453,7 @@ export default function AddProductPage() {
                                         onClick={removeVideo}
                                         className="text-red-500 hover:text-red-700"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <i className="fa-solid fa-xmark text-xl"></i>
                                     </button>
                                 </div>
                                 <video
@@ -438,15 +485,15 @@ export default function AddProductPage() {
                             className="flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-black bg-[#febd69] hover:bg-[#d97534] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                <div className="flex items-center">
+                                    <i className="fa-solid fa-spinner fa-spin mr-2"></i>
                                     Saving...
-                                </>
+                                </div>
                             ) : (
-                                <>
+                                <div className="flex items-center">
                                     Save Product
-                                    <Save className="ml-2 w-5 h-5" />
-                                </>
+                                    <i className="fa-solid fa-floppy-disk ml-2"></i>
+                                </div>
                             )}
                         </button>
                     </div>

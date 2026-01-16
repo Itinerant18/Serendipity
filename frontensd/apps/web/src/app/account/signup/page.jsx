@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Check, X, User, Mail, Phone, Lock, ArrowRight, ShoppingBag } from "lucide-react";
+// FontAwesome icons loaded globally
 import useAuth from "@/utils/useAuth";
 
 export default function SignUpPage() {
@@ -135,7 +135,7 @@ export default function SignUpPage() {
     }
   };
 
-  const InputField = ({ icon: Icon, label, type, value, onChange, placeholder, field, required = true }) => {
+  const InputField = ({ icon, label, type, value, onChange, placeholder, field, required = true }) => {
     const fieldError = getFieldError(field);
     const isValid = touched[field] && !fieldError && value;
 
@@ -146,7 +146,7 @@ export default function SignUpPage() {
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Icon className={`h-5 w-5 ${fieldError ? 'text-red-400' : isValid ? 'text-green-500' : 'text-gray-400'}`} />
+            <i className={`fa-solid ${icon} text-xl ${fieldError ? 'text-red-400' : isValid ? 'text-green-500' : 'text-gray-400'}`}></i>
           </div>
           <input
             type={type}
@@ -165,9 +165,9 @@ export default function SignUpPage() {
           {touched[field] && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
               {fieldError ? (
-                <X className="h-5 w-5 text-red-500" />
+                <i className="fa-solid fa-xmark text-xl text-red-500"></i>
               ) : value ? (
-                <Check className="h-5 w-5 text-green-500" />
+                <i className="fa-solid fa-check text-xl text-green-500"></i>
               ) : null}
             </div>
           )}
@@ -185,7 +185,7 @@ export default function SignUpPage() {
         {/* Logo */}
         <div className="text-center mb-6">
           <a href="/" className="inline-flex items-center gap-2">
-            <ShoppingBag className="w-8 h-8 text-[#D97534]" />
+            <i className="fa-solid fa-bag-shopping text-3xl text-[#D97534]"></i>
             <span className="font-playfair font-bold text-2xl text-[#8B4513]">Serendipity</span>
           </a>
         </div>
@@ -202,7 +202,7 @@ export default function SignUpPage() {
 
           <form onSubmit={onSubmit} className="space-y-5">
             <InputField
-              icon={User}
+              icon="fa-user"
               label="Full Name"
               type="text"
               value={name}
@@ -212,7 +212,7 @@ export default function SignUpPage() {
             />
 
             <InputField
-              icon={Mail}
+              icon="fa-envelope"
               label="Email Address"
               type="email"
               value={email}
@@ -222,7 +222,7 @@ export default function SignUpPage() {
             />
 
             <InputField
-              icon={Phone}
+              icon="fa-phone"
               label="Mobile Number"
               type="tel"
               value={mobile}
@@ -259,9 +259,9 @@ export default function SignUpPage() {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <i className="fa-solid fa-eye-slash text-xl text-gray-400 hover:text-gray-600"></i>
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <i className="fa-solid fa-eye text-xl text-gray-400 hover:text-gray-600"></i>
                   )}
                 </button>
               </div>
@@ -326,9 +326,9 @@ export default function SignUpPage() {
                 {touched.confirmPassword && (
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     {getFieldError('confirmPassword') ? (
-                      <X className="h-5 w-5 text-red-500" />
+                      <i className="fa-solid fa-xmark text-xl text-red-500"></i>
                     ) : confirmPassword && password === confirmPassword ? (
-                      <Check className="h-5 w-5 text-green-500" />
+                      <i className="fa-solid fa-check text-xl text-green-500"></i>
                     ) : null}
                   </div>
                 )}
@@ -340,7 +340,7 @@ export default function SignUpPage() {
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg font-inter text-sm flex items-center gap-2">
-                <X className="w-4 h-4 flex-shrink-0" />
+                <i className="fa-solid fa-xmark text-base flex-shrink-0"></i>
                 {error}
               </div>
             )}
@@ -358,7 +358,7 @@ export default function SignUpPage() {
               ) : (
                 <>
                   Create Account
-                  <ArrowRight className="w-5 h-5" />
+                  <i className="fa-solid fa-arrow-right text-xl"></i>
                 </>
               )}
             </button>

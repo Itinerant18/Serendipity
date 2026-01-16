@@ -2,15 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-    DollarSign,
-    Package,
-    ShoppingCart,
-    TrendingUp,
-    Plus,
-    Eye,
-    RefreshCw
-} from "lucide-react";
+// FontAwesome icons loaded globally
 
 import { formatCurrency } from "@/utils/format";
 import useAuth from "@/utils/useAuth";
@@ -154,7 +146,7 @@ export default function SellerDashboardPage() {
         {
             title: "Add New Product",
             description: "List a new product in your inventory",
-            icon: Plus,
+            icon: "fa-plus",
             href: "/seller/inventory/new",
             iconBgColor: "bg-green-100",
             iconColor: "text-green-600"
@@ -162,7 +154,7 @@ export default function SellerDashboardPage() {
         {
             title: "View Inventory",
             description: "Manage your product listings",
-            icon: Package,
+            icon: "fa-box",
             href: "/seller/inventory",
             iconBgColor: "bg-blue-100",
             iconColor: "text-blue-600"
@@ -170,7 +162,7 @@ export default function SellerDashboardPage() {
         {
             title: "View All Orders",
             description: "See all your customer orders",
-            icon: ShoppingCart,
+            icon: "fa-cart-shopping",
             href: "/seller/orders",
             iconBgColor: "bg-purple-100",
             iconColor: "text-purple-600",
@@ -179,7 +171,7 @@ export default function SellerDashboardPage() {
         {
             title: "Store Settings",
             description: "Update your store profile",
-            icon: Eye,
+            icon: "fa-eye",
             href: "/seller/settings",
             iconBgColor: "bg-orange-100",
             iconColor: "text-orange-600"
@@ -203,7 +195,7 @@ export default function SellerDashboardPage() {
                     disabled={loading}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
-                    <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                    <i className={`fa-solid fa-arrows-rotate text-base ${loading ? "fa-spin" : ""}`}></i>
                     Refresh
                 </button>
             </div>
@@ -228,7 +220,7 @@ export default function SellerDashboardPage() {
                 <StatCard
                     title="Total Sales"
                     value={formatCurrency(stats.totalSales)}
-                    icon={DollarSign}
+                    icon="fa-dollar-sign"
                     iconBgColor="bg-green-100"
                     iconColor="text-green-600"
                     trend={15}
@@ -238,7 +230,7 @@ export default function SellerDashboardPage() {
                 <StatCard
                     title="Total Orders"
                     value={stats.totalOrders}
-                    icon={ShoppingCart}
+                    icon="fa-cart-shopping"
                     iconBgColor="bg-blue-100"
                     iconColor="text-blue-600"
                     trend={8}
@@ -248,7 +240,7 @@ export default function SellerDashboardPage() {
                 <StatCard
                     title="Active Products"
                     value={stats.activeProducts}
-                    icon={Package}
+                    icon="fa-box"
                     iconBgColor="bg-purple-100"
                     iconColor="text-purple-600"
                     loading={loading}
@@ -256,7 +248,7 @@ export default function SellerDashboardPage() {
                 <StatCard
                     title="Pending Orders"
                     value={stats.pendingOrders}
-                    icon={TrendingUp}
+                    icon="fa-arrow-trend-up"
                     iconBgColor="bg-orange-100"
                     iconColor="text-orange-600"
                     loading={loading}

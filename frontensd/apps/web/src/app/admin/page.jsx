@@ -2,22 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-    DollarSign,
-    Package,
-    ShoppingCart,
-    Users,
-    TrendingUp,
-    RefreshCw,
-    LayoutDashboard,
-    Settings,
-    LogOut,
-    Store,
-    BarChart3,
-    ShieldCheck,
-    Clock,
-    ArrowUpRight
-} from "lucide-react";
+// FontAwesome icons loaded globally
 
 import useAuth from "@/utils/useAuth";
 import { formatCurrency } from "@/utils/format";
@@ -98,10 +83,10 @@ export default function AdminDashboardPage() {
 
             // Generate sample activity data
             setRecentActivity([
-                { type: "order", message: "New order placed", time: "2 min ago", icon: ShoppingCart },
-                { type: "product", message: "Product added by seller", time: "15 min ago", icon: Package },
-                { type: "user", message: "New user registered", time: "1 hour ago", icon: Users },
-                { type: "order", message: "Order marked as shipped", time: "2 hours ago", icon: TrendingUp }
+                { type: "order", message: "New order placed", time: "2 min ago", icon: "fa-cart-shopping" },
+                { type: "product", message: "Product added by seller", time: "15 min ago", icon: "fa-box" },
+                { type: "user", message: "New user registered", time: "1 hour ago", icon: "fa-users" },
+                { type: "order", message: "Order marked as shipped", time: "2 hours ago", icon: "fa-arrow-trend-up" }
             ]);
 
         } catch (err) {
@@ -122,7 +107,7 @@ export default function AdminDashboardPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
                 <div className="text-center">
-                    <ShieldCheck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <i className="fa-solid fa-shield-halved text-6xl text-gray-400 mx-auto mb-4"></i>
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">Admin Access Required</h2>
                     <p className="text-gray-500 mb-4">You need admin privileges to access this page.</p>
                     <Link to="/" className="btn-primary">
@@ -139,7 +124,7 @@ export default function AdminDashboardPage() {
             <aside className="w-64 bg-[#232f3e] text-white flex-shrink-0 hidden lg:block">
                 <div className="p-4 border-b border-gray-700">
                     <Link to="/admin" className="flex items-center gap-2">
-                        <ShieldCheck className="w-6 h-6 text-[#febd69]" />
+                        <i className="fa-solid fa-shield-halved text-2xl text-[#febd69]"></i>
                         <span className="font-bold text-lg">Admin Panel</span>
                     </Link>
                 </div>
@@ -149,35 +134,35 @@ export default function AdminDashboardPage() {
                         to="/admin"
                         className="flex items-center gap-3 px-4 py-3 bg-[#febd69] text-black rounded-lg font-medium"
                     >
-                        <LayoutDashboard className="w-5 h-5" />
+                        <i className="fa-solid fa-table-columns text-xl"></i>
                         Dashboard
                     </Link>
                     <Link
                         to="/admin/products"
                         className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
                     >
-                        <Package className="w-5 h-5" />
+                        <i className="fa-solid fa-box text-xl"></i>
                         Products
                     </Link>
                     <Link
                         to="/admin/orders"
                         className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
                     >
-                        <ShoppingCart className="w-5 h-5" />
+                        <i className="fa-solid fa-cart-shopping text-xl"></i>
                         Orders
                     </Link>
                     <Link
                         to="/admin/users"
                         className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
                     >
-                        <Users className="w-5 h-5" />
+                        <i className="fa-solid fa-users text-xl"></i>
                         Users
                     </Link>
                     <Link
                         to="/admin/analytics"
                         className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
                     >
-                        <BarChart3 className="w-5 h-5" />
+                        <i className="fa-solid fa-chart-column text-xl"></i>
                         Analytics
                     </Link>
                 </nav>
@@ -187,7 +172,7 @@ export default function AdminDashboardPage() {
                         onClick={handleSignOut}
                         className="flex items-center gap-3 w-full px-4 py-3 text-gray-300 hover:bg-red-900 hover:text-white rounded-lg transition-colors"
                     >
-                        <LogOut className="w-5 h-5" />
+                        <i className="fa-solid fa-right-from-bracket text-xl"></i>
                         Sign Out
                     </button>
                     <Link
@@ -216,7 +201,7 @@ export default function AdminDashboardPage() {
                         disabled={loading}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                     >
-                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                        <i className={`fa-solid fa-arrows-rotate text-base ${loading ? "fa-spin" : ""}`}></i>
                         Refresh
                     </button>
                 </div>
@@ -233,7 +218,7 @@ export default function AdminDashboardPage() {
                     <StatCard
                         title="Total Revenue"
                         value={formatCurrency(stats.totalRevenue)}
-                        icon={DollarSign}
+                        icon="fa-dollar-sign"
                         iconBgColor="bg-green-100"
                         iconColor="text-green-600"
                         trend={23}
@@ -243,7 +228,7 @@ export default function AdminDashboardPage() {
                     <StatCard
                         title="Total Orders"
                         value={stats.totalOrders}
-                        icon={ShoppingCart}
+                        icon="fa-cart-shopping"
                         iconBgColor="bg-blue-100"
                         iconColor="text-blue-600"
                         trend={12}
@@ -253,7 +238,7 @@ export default function AdminDashboardPage() {
                     <StatCard
                         title="Total Products"
                         value={stats.totalProducts}
-                        icon={Package}
+                        icon="fa-box"
                         iconBgColor="bg-purple-100"
                         iconColor="text-purple-600"
                         trend={5}
@@ -263,7 +248,7 @@ export default function AdminDashboardPage() {
                     <StatCard
                         title="Total Users"
                         value={stats.totalUsers}
-                        icon={Users}
+                        icon="fa-users"
                         iconBgColor="bg-orange-100"
                         iconColor="text-orange-600"
                         trend={18}
@@ -277,7 +262,7 @@ export default function AdminDashboardPage() {
                     <LargeActionCard
                         title="Manage Products"
                         description="View, edit, and delete all products"
-                        icon={Package}
+                        icon="fa-box"
                         href="/admin/products"
                         bgGradient="from-blue-500 to-indigo-600"
                         stats={[
@@ -287,7 +272,7 @@ export default function AdminDashboardPage() {
                     <LargeActionCard
                         title="View Orders"
                         description="Monitor and manage all orders"
-                        icon={ShoppingCart}
+                        icon="fa-cart-shopping"
                         href="/admin/orders"
                         bgGradient="from-green-500 to-emerald-600"
                         stats={[
@@ -297,7 +282,7 @@ export default function AdminDashboardPage() {
                     <LargeActionCard
                         title="User Management"
                         description="Manage users and permissions"
-                        icon={Users}
+                        icon="fa-users"
                         href="/admin/users"
                         bgGradient="from-orange-500 to-amber-600"
                         stats={[
@@ -340,18 +325,18 @@ export default function AdminDashboardPage() {
                                     <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                                <activity.icon className="w-5 h-5 text-gray-600" />
+                                                <i className={`fa-solid ${activity.icon} text-xl text-gray-600`}></i>
                                             </div>
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium text-gray-900">
                                                     {activity.message}
                                                 </p>
                                                 <div className="flex items-center gap-1 text-xs text-gray-500">
-                                                    <Clock className="w-3 h-3" />
+                                                    <i className="fa-solid fa-clock text-sm"></i>
                                                     {activity.time}
                                                 </div>
                                             </div>
-                                            <ArrowUpRight className="w-4 h-4 text-gray-400" />
+                                            <i className="fa-solid fa-arrow-up-right-from-square text-base text-gray-400"></i>
                                         </div>
                                     </div>
                                 ))

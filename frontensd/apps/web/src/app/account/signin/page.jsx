@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, ShoppingBag, AlertCircle } from "lucide-react";
+// FontAwesome icons loaded globally
 import useAuth from "@/utils/useAuth";
 
 export default function SignInPage() {
@@ -60,7 +60,7 @@ export default function SignInPage() {
         {/* Logo */}
         <div className="text-center mb-2">
           <a href="/" className="inline-flex items-center gap-2">
-            <ShoppingBag className="w-8 h-8 text-[#D97534]" />
+            <i className="fa-solid fa-bag-shopping text-3xl text-[#D97534]"></i>
             <span className="font-playfair font-bold text-2xl text-[#8B4513]">Serendipity</span>
           </a>
         </div>
@@ -91,7 +91,7 @@ export default function SignInPage() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <i className="fa-solid fa-envelope text-xl text-gray-400"></i>
                 </div>
                 <input
                   type="email"
@@ -120,7 +120,7 @@ export default function SignInPage() {
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <i className="fa-solid fa-lock text-xl text-gray-400"></i>
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -137,9 +137,9 @@ export default function SignInPage() {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                    <i className="fa-solid fa-eye-slash text-xl text-gray-400 hover:text-gray-600 transition-colors"></i>
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                    <i className="fa-solid fa-eye text-xl text-gray-400 hover:text-gray-600 transition-colors"></i>
                   )}
                 </button>
               </div>
@@ -162,7 +162,7 @@ export default function SignInPage() {
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg font-inter text-sm flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <i className="fa-solid fa-circle-exclamation text-base flex-shrink-0"></i>
                 {error}
               </div>
             )}
@@ -181,7 +181,7 @@ export default function SignInPage() {
               ) : (
                 <>
                   Sign In
-                  <ArrowRight className="w-5 h-5" />
+                  <i className="fa-solid fa-arrow-right text-xl"></i>
                 </>
               )}
             </button>
@@ -203,7 +203,7 @@ export default function SignInPage() {
               type="button"
               className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-inter font-medium hover:bg-gray-50 transition-colors"
               onClick={async () => {
-                const result = await signInWithGoogle();
+                const result = await signInWithGoogle('customer');
                 if (!result.success) {
                   setError(result.error);
                 }
@@ -246,7 +246,7 @@ export default function SignInPage() {
                 className="inline-flex items-center rounded-full bg-[#232F3E] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#1b2430] transition-colors"
               >
                 Seller portal
-                <ArrowRight className="w-3 h-3 ml-1" />
+                <i className="fa-solid fa-arrow-right text-xs ml-1"></i>
               </a>
             </div>
           </div>
@@ -255,11 +255,11 @@ export default function SignInPage() {
         {/* Trust Badges */}
         <div className="mt-6 flex justify-center gap-6 text-xs text-gray-500">
           <div className="flex items-center gap-1">
-            <Lock className="w-3 h-3" />
+            <i className="fa-solid fa-lock text-xs"></i>
             Secure Login
           </div>
           <div className="flex items-center gap-1">
-            <ShoppingBag className="w-3 h-3" />
+            <i className="fa-solid fa-bag-shopping text-xs"></i>
             Trusted by millions
           </div>
         </div>

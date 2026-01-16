@@ -2,28 +2,18 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-    User,
-    MapPin,
-    CreditCard,
-    ShoppingBag,
-    Heart,
-    Star,
-    Settings,
-    Shield,
-    ChevronRight
-} from "lucide-react";
+// FontAwesome icons loaded globally
 
 const navItems = [
-    { href: "/profile", label: "Overview", icon: User },
-    { href: "/profile/edit", label: "Edit Profile", icon: User },
-    { href: "/profile/addresses", label: "Addresses", icon: MapPin },
-    { href: "/profile/payment-methods", label: "Payment Methods", icon: CreditCard },
-    { href: "/profile/orders", label: "My Orders", icon: ShoppingBag },
-    { href: "/profile/wishlist", label: "Wishlist", icon: Heart },
-    { href: "/profile/reviews", label: "My Reviews", icon: Star },
-    { href: "/profile/settings", label: "Settings", icon: Settings },
-    { href: "/profile/security", label: "Security", icon: Shield },
+    { href: "/profile", label: "Overview", icon: "fa-user" },
+    { href: "/profile/edit", label: "Edit Profile", icon: "fa-user" },
+    { href: "/profile/addresses", label: "Addresses", icon: "fa-location-dot" },
+    { href: "/profile/payment-methods", label: "Payment Methods", icon: "fa-credit-card" },
+    { href: "/profile/orders", label: "My Orders", icon: "fa-bag-shopping" },
+    { href: "/profile/wishlist", label: "Wishlist", icon: "fa-heart" },
+    { href: "/profile/reviews", label: "My Reviews", icon: "fa-star" },
+    { href: "/profile/settings", label: "Settings", icon: "fa-gear" },
+    { href: "/profile/security", label: "Security", icon: "fa-shield-halved" },
 ];
 
 export default function ProfileSidebar({ user }) {
@@ -59,7 +49,7 @@ export default function ProfileSidebar({ user }) {
             {/* Navigation */}
             <nav className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 {navItems.map((item) => {
-                    const Icon = item.icon;
+                    const iconClass = item.icon;
                     const isActive = location.pathname === item.href ||
                         (item.href !== "/profile" && location.pathname.startsWith(item.href));
 
@@ -72,9 +62,9 @@ export default function ProfileSidebar({ user }) {
                                 : "text-gray-700 hover:bg-gray-50"
                                 }`}
                         >
-                            <Icon className={`w-5 h-5 ${isActive ? "text-[#D97534]" : "text-gray-400"}`} />
+                            <i className={`fa-solid ${iconClass} text-xl ${isActive ? "text-[#D97534]" : "text-gray-400"}`}></i>
                             <span className="font-inter text-sm font-medium flex-1">{item.label}</span>
-                            <ChevronRight className={`w-4 h-4 ${isActive ? "text-[#D97534]" : "text-gray-300"}`} />
+                            <i className={`fa-solid fa-chevron-right text-base ${isActive ? "text-[#D97534]" : "text-gray-300"}`}></i>
                         </Link>
                     );
                 })}

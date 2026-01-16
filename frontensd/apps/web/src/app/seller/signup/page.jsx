@@ -1,16 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Check, X, User, Mail, Phone, Lock, Store, FileText, ArrowRight, ArrowLeft, Building, CreditCard, MapPin, Globe, Briefcase } from "lucide-react";
+// FontAwesome icons loaded globally
 import useAuth from "@/utils/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function SellerSignupPage() {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const { setUser, setToken, setIsAuthenticated } = useAuth();
+    const { user, setUser, setToken, setIsAuthenticated, token } = useAuth();
+
+    // Check if user is already authenticated (e.g., from Google login)
+    useEffect(() => {
+        if (user) {
+            if (user.name) setName(user.name);
+            if (user.email) setEmail(user.email);
+            if (user.mobile) setMobile(user.mobile);
+            if (user.isSeller) {
+                navigate("/seller");
+            }
+        }
+    }, [user]);
+
+    const isAuth = !!user && !!token;
 
     // Step 1: Account Type
     const [accountType, setAccountType] = useState("individual"); // individual or business
@@ -80,7 +96,9 @@ export default function SellerSignupPage() {
     const validateName = (name) => name.trim().length >= 2;
 
     const canProceedToStep2 = accountType !== "";
-    const canProceedToStep3 = validateName(name) && validateEmail(email) && password.length >= 6 && password === confirmPassword;
+    const canProceedToStep3 = isAuth
+        ? validateName(name) && validateEmail(email)
+        : validateName(name) && validateEmail(email) && password.length >= 6 && password === confirmPassword;
     const canProceedToStep4 = storeName.trim().length >= 3;
 
     const nextStep = () => {
@@ -103,23 +121,33 @@ export default function SellerSignupPage() {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:5000/api/seller/signup', {
+            const apiEndpoint = isAuth
+                ? 'http://localhost:5000/api/seller/register'
+                : 'http://localhost:5000/api/seller/signup';
+
+            const payload = {
+                name: name.trim(),
+                email: email.trim().toLowerCase(),
+                mobile: mobile ? mobile.trim() : undefined,
+                store_name: storeName.trim(),
+                description: storeDescription.trim(),
+                account_type: accountType,
+                business_name: businessName.trim() || storeName.trim(),
+                business_type: businessType,
+                business_address: businessAddress.trim()
+            };
+
+            if (!isAuth) {
+                payload.password = password;
+            }
+
+            const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    ...(isAuth && { 'Authorization': `Bearer ${token}` })
                 },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    email: email.trim().toLowerCase(),
-                    mobile: mobile ? mobile.trim() : undefined,
-                    password,
-                    store_name: storeName.trim(),
-                    description: storeDescription.trim(),
-                    account_type: accountType,
-                    business_name: businessName.trim() || storeName.trim(),
-                    business_type: businessType,
-                    business_address: businessAddress.trim()
-                }),
+                body: JSON.stringify(payload),
             });
 
             const data = await response.json();
@@ -150,9 +178,9 @@ export default function SellerSignupPage() {
 
             // Redirect to seller dashboard (or seller login if no token was returned)
             if (data.token) {
-                window.location.href = "/seller";
+                navigate("/seller");
             } else {
-                window.location.href = "/seller/login";
+                navigate("/seller/login");
             }
         } catch (err) {
             setError(err.message || "Something went wrong. Please try again.");
@@ -166,7 +194,7 @@ export default function SellerSignupPage() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <a href="/" className="inline-flex items-center gap-2 mb-4">
-                        <Store className="w-8 h-8 text-[#FF9900]" />
+                        <i className="fa-solid fa-store text-3xl text-[#FF9900]"></i>
                         <span className="font-bold text-2xl text-[#232F3E]">Serendipity Seller Central</span>
                     </a>
                     <h1 className="text-3xl font-bold text-[#232F3E] mb-2">
@@ -189,7 +217,7 @@ export default function SellerSignupPage() {
                                             ? 'bg-[#FF9900] text-white'
                                             : 'bg-gray-200 text-gray-500'
                                         }`}>
-                                        {currentStep > step.number ? <Check className="w-5 h-5" /> : step.number}
+                                        {currentStep > step.number ? <i className="fa-solid fa-check text-xl"></i> : step.number}
                                     </div>
                                     <div className="text-center mt-2 hidden md:block">
                                         <p className="text-xs font-semibold text-gray-700">{step.title}</p>
@@ -226,7 +254,7 @@ export default function SellerSignupPage() {
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <User className="w-6 h-6 text-[#FF9900] flex-shrink-0 mt-1" />
+                                            <i className="fa-solid fa-user text-2xl text-[#FF9900] flex-shrink-0 mt-1"></i>
                                             <div>
                                                 <h3 className="font-bold text-lg text-[#232F3E] mb-2">Individual Seller</h3>
                                                 <p className="text-sm text-gray-600 mb-3">
@@ -234,11 +262,11 @@ export default function SellerSignupPage() {
                                                 </p>
                                                 <ul className="text-sm text-gray-600 space-y-1">
                                                     <li className="flex items-center gap-2">
-                                                        <Check className="w-4 h-4 text-green-500" />
+                                                        <i className="fa-solid fa-check text-base text-green-500"></i>
                                                         Perfect for hobbyists
                                                     </li>
                                                     <li className="flex items-center gap-2">
-                                                        <Check className="w-4 h-4 text-green-500" />
+                                                        <i className="fa-solid fa-check text-base text-green-500"></i>
                                                         Quick setup
                                                     </li>
                                                 </ul>
@@ -255,7 +283,7 @@ export default function SellerSignupPage() {
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <Building className="w-6 h-6 text-[#FF9900] flex-shrink-0 mt-1" />
+                                            <i className="fa-solid fa-building text-2xl text-[#FF9900] flex-shrink-0 mt-1"></i>
                                             <div>
                                                 <h3 className="font-bold text-lg text-[#232F3E] mb-2">Professional Seller</h3>
                                                 <p className="text-sm text-gray-600 mb-3">
@@ -263,15 +291,15 @@ export default function SellerSignupPage() {
                                                 </p>
                                                 <ul className="text-sm text-gray-600 space-y-1">
                                                     <li className="flex items-center gap-2">
-                                                        <Check className="w-4 h-4 text-green-500" />
+                                                        <i className="fa-solid fa-check text-base text-green-500"></i>
                                                         Advanced analytics
                                                     </li>
                                                     <li className="flex items-center gap-2">
-                                                        <Check className="w-4 h-4 text-green-500" />
+                                                        <i className="fa-solid fa-check text-base text-green-500"></i>
                                                         Bulk operations
                                                     </li>
                                                     <li className="flex items-center gap-2">
-                                                        <Check className="w-4 h-4 text-green-500" />
+                                                        <i className="fa-solid fa-check text-base text-green-500"></i>
                                                         API access
                                                     </li>
                                                 </ul>
@@ -288,7 +316,7 @@ export default function SellerSignupPage() {
                                         className="bg-[#FF9900] hover:bg-[#FA8900] text-white px-8 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
                                         Continue
-                                        <ArrowRight className="w-5 h-5" />
+                                        <i className="fa-solid fa-arrow-right text-xl"></i>
                                     </button>
                                 </div>
                             </div>
@@ -308,13 +336,14 @@ export default function SellerSignupPage() {
                                             Full Name <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
-                                            <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <i className="fa-solid fa-user absolute left-3 top-3 text-xl text-gray-400"></i>
                                             <input
                                                 type="text"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
+                                                readOnly={isAuth}
                                                 placeholder="John Doe"
-                                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent"
+                                                className={`w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent ${isAuth ? 'bg-gray-50 text-gray-400' : ''}`}
                                                 required
                                             />
                                         </div>
@@ -325,13 +354,14 @@ export default function SellerSignupPage() {
                                             Email Address <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
-                                            <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <i className="fa-solid fa-envelope absolute left-3 top-3 text-xl text-gray-400"></i>
                                             <input
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
+                                                readOnly={isAuth}
                                                 placeholder="john@example.com"
-                                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent"
+                                                className={`w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent ${isAuth ? 'bg-gray-50 text-gray-400' : ''}`}
                                                 required
                                             />
                                         </div>
@@ -342,7 +372,7 @@ export default function SellerSignupPage() {
                                             Mobile Number <span className="text-gray-400">(Optional)</span>
                                         </label>
                                         <div className="relative">
-                                            <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <i className="fa-solid fa-phone absolute left-3 top-3 text-xl text-gray-400"></i>
                                             <input
                                                 type="tel"
                                                 value={mobile}
@@ -354,71 +384,73 @@ export default function SellerSignupPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Password <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="relative">
-                                            <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                                            <input
-                                                type={showPassword ? "text" : "password"}
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                placeholder="At least 6 characters"
-                                                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent"
-                                                required
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-3"
-                                            >
-                                                {showPassword ? (
-                                                    <EyeOff className="w-5 h-5 text-gray-400" />
-                                                ) : (
-                                                    <Eye className="w-5 h-5 text-gray-400" />
-                                                )}
-                                            </button>
-                                        </div>
-                                        {password && (
-                                            <div className="mt-2">
-                                                <div className="flex gap-1 mb-1">
-                                                    {[1, 2, 3, 4, 5].map((level) => (
-                                                        <div
-                                                            key={level}
-                                                            className={`h-1 flex-1 rounded-full transition-all ${level <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'
-                                                                }`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <span className="text-xs text-gray-600">{passwordStrength.label}</span>
+                                {!isAuth && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Password <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <i className="fa-solid fa-lock absolute left-3 top-3 text-xl text-gray-400"></i>
+                                                <input
+                                                    type={showPassword ? "text" : "password"}
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    placeholder="At least 6 characters"
+                                                    className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent"
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-3"
+                                                >
+                                                    {showPassword ? (
+                                                        <i className="fa-solid fa-eye-slash text-xl text-gray-400"></i>
+                                                    ) : (
+                                                        <i className="fa-solid fa-eye text-xl text-gray-400"></i>
+                                                    )}
+                                                </button>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Confirm Password <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="relative">
-                                            <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                                            <input
-                                                type={showPassword ? "text" : "password"}
-                                                value={confirmPassword}
-                                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                                placeholder="Re-enter password"
-                                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent"
-                                                required
-                                            />
+                                            {password && (
+                                                <div className="mt-2">
+                                                    <div className="flex gap-1 mb-1">
+                                                        {[1, 2, 3, 4, 5].map((level) => (
+                                                            <div
+                                                                key={level}
+                                                                className={`h-1 flex-1 rounded-full transition-all ${level <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'
+                                                                    }`}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-xs text-gray-600">{passwordStrength.label}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        {confirmPassword && (
-                                            <p className={`mt-1 text-xs ${password === confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
-                                                {password === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
-                                            </p>
-                                        )}
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Confirm Password <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <i className="fa-solid fa-lock absolute left-3 top-3 text-xl text-gray-400"></i>
+                                                <input
+                                                    type={showPassword ? "text" : "password"}
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    placeholder="Re-enter password"
+                                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF9900] focus:border-transparent"
+                                                    required
+                                                />
+                                            </div>
+                                            {confirmPassword && (
+                                                <p className={`mt-1 text-xs ${password === confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {password === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="flex justify-between pt-4">
                                     <button
@@ -426,7 +458,7 @@ export default function SellerSignupPage() {
                                         onClick={prevStep}
                                         className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2"
                                     >
-                                        <ArrowLeft className="w-5 h-5" />
+                                        <i className="fa-solid fa-arrow-left text-xl"></i>
                                         Back
                                     </button>
                                     <button
@@ -436,7 +468,7 @@ export default function SellerSignupPage() {
                                         className="bg-[#FF9900] hover:bg-[#FA8900] text-white px-8 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
                                         Continue
-                                        <ArrowRight className="w-5 h-5" />
+                                        <i className="fa-solid fa-arrow-right text-xl"></i>
                                     </button>
                                 </div>
                             </div>
@@ -456,7 +488,7 @@ export default function SellerSignupPage() {
                                             Business Name <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
-                                            <Building className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <i className="fa-solid fa-building absolute left-3 top-3 text-xl text-gray-400"></i>
                                             <input
                                                 type="text"
                                                 value={businessName}
@@ -474,7 +506,7 @@ export default function SellerSignupPage() {
                                             Store Name <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
-                                            <Store className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <i className="fa-solid fa-store absolute left-3 top-3 text-xl text-gray-400"></i>
                                             <input
                                                 type="text"
                                                 value={storeName}
@@ -492,7 +524,7 @@ export default function SellerSignupPage() {
                                             Business Type
                                         </label>
                                         <div className="relative">
-                                            <Briefcase className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <i className="fa-solid fa-briefcase absolute left-3 top-3 text-xl text-gray-400"></i>
                                             <select
                                                 value={businessType}
                                                 onChange={(e) => setBusinessType(e.target.value)}
@@ -527,7 +559,7 @@ export default function SellerSignupPage() {
                                             Business Address
                                         </label>
                                         <div className="relative">
-                                            <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                            <i className="fa-solid fa-location-dot absolute left-3 top-3 text-xl text-gray-400"></i>
                                             <input
                                                 type="text"
                                                 value={businessAddress}
@@ -545,7 +577,7 @@ export default function SellerSignupPage() {
                                         onClick={prevStep}
                                         className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2"
                                     >
-                                        <ArrowLeft className="w-5 h-5" />
+                                        <i className="fa-solid fa-arrow-left text-xl"></i>
                                         Back
                                     </button>
                                     <button
@@ -555,7 +587,7 @@ export default function SellerSignupPage() {
                                         className="bg-[#FF9900] hover:bg-[#FA8900] text-white px-8 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
                                         Continue
-                                        <ArrowRight className="w-5 h-5" />
+                                        <i className="fa-solid fa-arrow-right text-xl"></i>
                                     </button>
                                 </div>
                             </div>
@@ -597,7 +629,7 @@ export default function SellerSignupPage() {
 
                                 {error && (
                                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
-                                        <X className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                        <i className="fa-solid fa-xmark text-xl flex-shrink-0 mt-0.5"></i>
                                         <div>{error}</div>
                                     </div>
                                 )}
@@ -614,7 +646,7 @@ export default function SellerSignupPage() {
                                         onClick={prevStep}
                                         className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2"
                                     >
-                                        <ArrowLeft className="w-5 h-5" />
+                                        <i className="fa-solid fa-arrow-left text-xl"></i>
                                         Back
                                     </button>
                                     <button
@@ -630,7 +662,7 @@ export default function SellerSignupPage() {
                                         ) : (
                                             <>
                                                 Create Seller Account
-                                                <Check className="w-5 h-5" />
+                                                <i className="fa-solid fa-check text-xl"></i>
                                             </>
                                         )}
                                     </button>

@@ -69,6 +69,12 @@ export default function RootLayout({ children }) {
 
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // Skip if on callback page to avoid race conditions
+      if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
+        console.log("RootLayout: Skipping initial session check on /auth/callback route");
+        return;
+      }
+
       if (session?.user) {
         fetchProfileAndLogin(session);
       }
@@ -76,6 +82,13 @@ export default function RootLayout({ children }) {
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Skip profile fetch in RootLayout if we are on the auth callback page
+      // to avoid race conditions with the page's own fetch logic.
+      if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
+        console.log("RootLayout: Skipping profile fetch on /auth/callback route");
+        return;
+      }
+
       if (event === 'SIGNED_IN' && session?.user) {
         fetchProfileAndLogin(session);
       } else if (event === 'SIGNED_OUT') {

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import useAuth from "@/utils/useAuth";
 import useSocket from "@/utils/useSocket";
-import { Bell, Clock, Wifi, WifiOff, Filter, RefreshCw } from "lucide-react";
+// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 import OrderCard from "@/components/OrderCard";
 
@@ -93,12 +93,12 @@ export default function SellerOrdersPage() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
                             </span>
-                            <Wifi className="w-4 h-4 mr-1.5" />
+                            <i className="fa-solid fa-wifi text-base"></i>
                             REAL-TIME ACTIVE
                         </>
                     ) : (
                         <>
-                            <WifiOff className="w-4 h-4 mr-1.5" />
+                            <i className="fa-solid fa-wifi-slash text-base"></i>
                             Connecting...
                         </>
                     )}
@@ -107,7 +107,7 @@ export default function SellerOrdersPage() {
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-3">
-                <Filter className="w-4 h-4 text-gray-400" />
+                <i className="fa-solid fa-filter text-base text-gray-400"></i>
                 {filterOptions.map(option => (
                     <button
                         key={option.value}
@@ -125,7 +125,7 @@ export default function SellerOrdersPage() {
                     className="ml-auto p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                     title="Refresh"
                 >
-                    <RefreshCw className="w-4 h-4" />
+                    <i className="fa-solid fa-arrows-rotate text-base"></i>
                 </button>
             </div>
 
@@ -139,7 +139,7 @@ export default function SellerOrdersPage() {
                 ) : filteredOrders.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                         <div className="relative">
-                            <Clock className="w-16 h-16 text-gray-200" />
+                            <i className="fa-solid fa-clock text-6xl text-gray-200"></i>
                             {isConnected && (
                                 <span className="absolute -top-1 -right-1 flex h-4 w-4">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -152,7 +152,7 @@ export default function SellerOrdersPage() {
                             Orders containing your products will appear here instantly.
                         </p>
                         <div className="mt-6 flex items-center text-xs text-gray-400">
-                            <Bell className="w-3 h-3 mr-1" />
+                            <i className="fa-solid fa-bell text-sm"></i>
                             Sound notifications enabled
                         </div>
                     </div>

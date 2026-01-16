@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router';
+import { MAIN_CATEGORIES } from "@/utils/categories";
 
 /**
  * CategoryCard Component
@@ -17,7 +17,7 @@ export default function CategoryCard({
 }) {
     return (
         <Link
-            to={href || `/search?category=${encodeURIComponent(name)}`}
+            to={href || `/category/${encodeURIComponent(name)}`}
             className="group flex flex-col items-center p-4 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-[#D97534]/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
         >
             {/* Icon/Image Container */}
@@ -44,46 +44,16 @@ export default function CategoryCard({
 }
 
 /**
- * Pre-defined category configurations
+ * Pre-defined category configurations from shared utility
  */
-export const defaultCategories = [
-    {
-        name: "Electronics",
-        emoji: "📱",
-        bgColor: "bg-blue-50",
-        iconColor: "text-blue-600"
-    },
-    {
-        name: "Fashion",
-        emoji: "👕",
-        bgColor: "bg-pink-50",
-        iconColor: "text-pink-600"
-    },
-    {
-        name: "Home & Kitchen",
-        emoji: "🏠",
-        bgColor: "bg-green-50",
-        iconColor: "text-green-600"
-    },
-    {
-        name: "Books",
-        emoji: "📚",
-        bgColor: "bg-yellow-50",
-        iconColor: "text-yellow-600"
-    },
-    {
-        name: "Sports",
-        emoji: "⚽",
-        bgColor: "bg-red-50",
-        iconColor: "text-red-600"
-    },
-    {
-        name: "Beauty",
-        emoji: "💄",
-        bgColor: "bg-purple-50",
-        iconColor: "text-purple-600"
-    }
-];
+export const defaultCategories = MAIN_CATEGORIES.map(cat => ({
+    name: cat.name,
+    emoji: cat.emoji,
+    image: cat.image,
+    bgColor: "bg-gray-50",
+    iconColor: "text-gray-600"
+}));
+
 
 /**
  * CategoryGrid Component
@@ -109,7 +79,7 @@ export function CategoryGrid({ categories = defaultCategories }) {
 export function EmojiCategoryCard({ name, emoji, bgColor = "bg-gray-50", href }) {
     return (
         <Link
-            to={href || `/search?category=${encodeURIComponent(name)}`}
+            to={href || `/category/${encodeURIComponent(name)}`}
             className="group flex flex-col items-center p-4 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-[#D97534]/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
         >
             <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full ${bgColor} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>

@@ -21,7 +21,7 @@ const supabaseAdmin = createClient(
 // @access  Private
 router.post('/register', protect, async (req, res) => {
     try {
-        const { store_name, description, logo_url } = req.body;
+        const { store_name, description, logo_url, mobile, name, business_name, business_type, business_address, account_type } = req.body;
         const userId = req.user.id;
 
         // Check if user is already a seller
@@ -53,9 +53,13 @@ router.post('/register', protect, async (req, res) => {
                 {
                     user_id: userId,
                     store_name,
-                    description,
-                    logo_url,
-                    rating: 0
+                    description: description || '',
+                    logo_url: logo_url || null,
+                    rating: 0,
+                    business_name: business_name || store_name,
+                    business_type: business_type || null,
+                    business_address: business_address || null,
+                    account_type: account_type || 'individual'
                 },
             ])
             .select()
@@ -66,7 +70,12 @@ router.post('/register', protect, async (req, res) => {
         // Update User to be a seller (using admin client to bypass RLS)
         const { error: userError } = await supabaseAdmin
             .from('users')
-            .update({ is_seller: true, seller_profile_id: profile.id })
+            .update({
+                is_seller: true,
+                seller_profile_id: profile.id,
+                mobile: mobile || req.user.mobile,
+                name: name || req.user.name
+            })
             .eq('id', userId);
 
         if (userError) {
@@ -76,7 +85,9 @@ router.post('/register', protect, async (req, res) => {
 
         res.status(201).json({
             message: 'Seller profile created successfully',
-            seller: profile
+            seller: profile,
+            isSeller: true,
+            sellerProfileId: profile.id
         });
     } catch (error) {
         console.error('Seller Register Error:', error);

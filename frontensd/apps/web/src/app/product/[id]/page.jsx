@@ -1,19 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-    Star,
-    ChevronLeft,
-    ChevronRight,
-    Plus,
-    Minus,
-    Truck,
-    RotateCcw,
-    ShieldCheck,
-    Check,
-    AlertCircle,
-    Zap,
-} from "lucide-react";
+// FontAwesome icons used globally
 import { formatCurrency } from "@/utils/format";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -195,7 +183,7 @@ export default function ProductPage({ params }) {
                             {/* Stock Badge on Image */}
                             {stockInfo.status === "low" && (
                                 <div className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center">
-                                    <AlertCircle className="w-4 h-4 mr-1" />
+                                    <i className="fa-solid fa-circle-exclamation mr-1"></i>
                                     Only {stockInfo.count} left!
                                 </div>
                             )}
@@ -241,13 +229,13 @@ export default function ProductPage({ params }) {
                                 <div className="flex items-center mb-4">
                                     <div className="flex items-center">
                                         {[...Array(5)].map((_, i) => (
-                                            <Star
+                                            <i
                                                 key={i}
-                                                className={`w-5 h-5 ${i < Math.floor(productData.product_rating)
-                                                    ? "text-[#D97534] fill-current"
+                                                className={`fa-solid fa-star text-lg ${i < Math.floor(productData.product_rating)
+                                                    ? "text-[#D97534]"
                                                     : "text-gray-300"
                                                     }`}
-                                            />
+                                            ></i>
                                         ))}
                                     </div>
                                     <span className="ml-3 font-inter text-gray-700">
@@ -281,19 +269,19 @@ export default function ProductPage({ params }) {
                             <div className="mb-4">
                                 {stockInfo.status === "in" && (
                                     <span className="inline-flex items-center text-green-600 font-inter font-medium">
-                                        <Check className="w-5 h-5 mr-1" />
+                                        <i className="fa-solid fa-check mr-2"></i>
                                         In Stock
                                     </span>
                                 )}
                                 {stockInfo.status === "low" && (
                                     <span className="inline-flex items-center text-orange-600 font-inter font-medium">
-                                        <AlertCircle className="w-5 h-5 mr-1" />
+                                        <i className="fa-solid fa-circle-exclamation mr-2"></i>
                                         Only {stockInfo.count} left - order soon!
                                     </span>
                                 )}
                                 {stockInfo.status === "out" && (
                                     <span className="inline-flex items-center text-red-600 font-inter font-medium">
-                                        <AlertCircle className="w-5 h-5 mr-1" />
+                                        <i className="fa-solid fa-circle-exclamation mr-2"></i>
                                         Currently unavailable
                                     </span>
                                 )}
@@ -350,7 +338,7 @@ export default function ProductPage({ params }) {
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                         className="text-[#D97534] hover:text-[#C86429] transition-colors"
                                     >
-                                        <Minus className="w-4 h-4" />
+                                        <i className="fa-solid fa-minus"></i>
                                     </button>
                                     <span className="font-inter font-semibold text-lg w-8 text-center">
                                         {quantity}
@@ -360,7 +348,7 @@ export default function ProductPage({ params }) {
                                         className="text-[#D97534] hover:text-[#C86429] transition-colors"
                                         disabled={quantity >= stockInfo.count}
                                     >
-                                        <Plus className="w-4 h-4" />
+                                        <i className="fa-solid fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
@@ -379,7 +367,7 @@ export default function ProductPage({ params }) {
                                 >
                                     {addedToCart ? (
                                         <span className="flex items-center justify-center">
-                                            <Check className="w-5 h-5 mr-2" />
+                                            <i className="fa-solid fa-check mr-2"></i>
                                             Added!
                                         </span>
                                     ) : (
@@ -395,7 +383,7 @@ export default function ProductPage({ params }) {
                                         : "bg-[#8B4513] hover:bg-[#6B3410] text-white"
                                         }`}
                                 >
-                                    <Zap className="w-5 h-5 mr-2" />
+                                    <i className="fa-solid fa-bolt mr-2"></i>
                                     Buy Now
                                 </button>
                             </div>
@@ -420,21 +408,21 @@ export default function ProductPage({ params }) {
                             <div className="grid grid-cols-3 gap-4 text-center">
                                 <div className="flex flex-col items-center">
                                     <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                                        <Truck className="w-5 h-5 text-green-600" />
+                                        <i className="fa-solid fa-truck text-green-600"></i>
                                     </div>
                                     <span className="font-inter text-xs font-medium text-gray-700">Free Delivery</span>
                                     <span className="font-inter text-xs text-gray-400">Orders over ₹499</span>
                                 </div>
                                 <div className="flex flex-col items-center">
                                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-                                        <RotateCcw className="w-5 h-5 text-blue-600" />
+                                        <i className="fa-solid fa-rotate-left text-blue-600"></i>
                                     </div>
                                     <span className="font-inter text-xs font-medium text-gray-700">Easy Returns</span>
                                     <span className="font-inter text-xs text-gray-400">30-day policy</span>
                                 </div>
                                 <div className="flex flex-col items-center">
                                     <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2">
-                                        <ShieldCheck className="w-5 h-5 text-purple-600" />
+                                        <i className="fa-solid fa-shield-halved text-purple-600"></i>
                                     </div>
                                     <span className="font-inter text-xs font-medium text-gray-700">Secure Payment</span>
                                     <span className="font-inter text-xs text-gray-400">100% protected</span>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Loader2 } from "lucide-react";
+// FontAwesome icons loaded globally
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -78,7 +78,7 @@ export default function HomePage() {
                             className="text-[#D97534] hover:text-[#C86429] font-semibold text-sm flex items-center gap-1"
                         >
                             View All
-                            <ArrowRight className="w-4 h-4" />
+                            <i className="fa-solid fa-arrow-right text-base"></i>
                         </Link>
                     </div>
 
@@ -105,13 +105,13 @@ export default function HomePage() {
                             className="text-[#D97534] hover:text-[#C86429] font-semibold text-sm flex items-center gap-1"
                         >
                             View All
-                            <ArrowRight className="w-4 h-4" />
+                            <i className="fa-solid fa-arrow-right text-base"></i>
                         </Link>
                     </div>
 
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <Loader2 className="w-8 h-8 animate-spin text-[#D97534]" />
+                            <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
                             <span className="ml-3 text-gray-600">Loading products...</span>
                         </div>
                     ) : error ? (
@@ -129,7 +129,7 @@ export default function HomePage() {
                             <p className="text-gray-500 mb-4">No products available yet.</p>
                             <Link to="/seller/signup" className="btn-primary inline-flex items-center gap-2">
                                 Become a Seller
-                                <ArrowRight className="w-4 h-4" />
+                                <i className="fa-solid fa-arrow-right text-base"></i>
                             </Link>
                         </div>
                     ) : (
@@ -192,7 +192,7 @@ export default function HomePage() {
                             className="inline-flex items-center gap-2 px-8 py-4 bg-[#febd69] hover:bg-[#f3a847] text-[#232f3e] font-bold rounded-lg transition-all duration-200 hover:shadow-lg"
                         >
                             Become a Seller
-                            <ArrowRight className="w-5 h-5" />
+                            <i className="fa-solid fa-arrow-right text-xl"></i>
                         </Link>
                     </div>
                 </section>

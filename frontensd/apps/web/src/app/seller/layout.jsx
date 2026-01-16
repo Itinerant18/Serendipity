@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
-import { LayoutDashboard, Package, ShoppingCart, User, LogOut, Store, Loader2 } from "lucide-react";
+// FontAwesome icons loaded globally
 
 export default function SellerLayout({ children }) {
     const { user, isAuthenticated, signOut } = useAuth();
@@ -35,7 +35,12 @@ export default function SellerLayout({ children }) {
             // For protected seller area, require login
             navigate("/seller/login");
         } else if (user && !user.isSeller && !pathname.includes("/seller/signup")) {
-            console.log("Redirecting to signup. User:", user);
+            console.log("SellerLayout: Redirecting to signup. User:", {
+                id: user.id,
+                email: user.email,
+                isSeller: user.isSeller,
+                hasProfileId: !!user.sellerProfileId
+            });
             // Logged-in customer but not yet a seller → send to seller registration flow
             navigate("/seller/signup");
         }
@@ -55,7 +60,7 @@ export default function SellerLayout({ children }) {
     if (!isHydrated) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534]" />
+                <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
             </div>
         );
     }
@@ -63,16 +68,16 @@ export default function SellerLayout({ children }) {
     if (!isAuthenticated || (user && !user.isSeller && !pathname.includes("/seller/signup"))) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534]" />
+                <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
             </div>
         );
     }
 
     const navigation = [
-        { name: "Dashboard", href: "/seller", icon: LayoutDashboard },
-        { name: "My Inventory", href: "/seller/inventory", icon: Package },
-        { name: "Orders", href: "/seller/orders", icon: ShoppingCart },
-        { name: "Profile Settings", href: "/seller/settings", icon: User },
+        { name: "Dashboard", href: "/seller", icon: "fa-table-columns" },
+        { name: "My Inventory", href: "/seller/inventory", icon: "fa-box" },
+        { name: "Orders", href: "/seller/orders", icon: "fa-cart-shopping" },
+        { name: "Profile Settings", href: "/seller/settings", icon: "fa-user" },
     ];
 
     // If on registration page, don't show sidebar
@@ -81,33 +86,33 @@ export default function SellerLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 flex font-inter">
+        <div className="h-screen bg-gray-100 flex font-inter overflow-hidden">
             {/* Sidebar */}
-            <div className={`bg-[#232f3e] text-white w-64 flex-shrink-0 transition-all duration-300 ${sidebarOpen ? "" : "-ml-64 md:ml-0"}`}>
+            <div className={`bg-[#232f3e] text-white w-64 flex-shrink-0 flex flex-col transition-all duration-300 ${sidebarOpen ? "" : "-ml-64 md:ml-0"}`}>
                 <div className="p-4 flex items-center justify-center border-b border-gray-700">
                     <span className="font-playfair text-xl font-bold flex items-center gap-2">
-                        <Store className="w-6 h-6 text-[#febd69]" /> Seller Central
+                        <i className="fa-solid fa-store text-2xl text-[#febd69]"></i> Seller Central
                     </span>
                 </div>
-                <nav className="mt-6 px-4 space-y-2">
+                <nav className="flex-1 mt-6 px-4 space-y-2 overflow-y-auto">
                     {navigation.map((item) => {
                         const isActive = location.pathname === item.href;
                         return (
-                            <a
+                            <Link // Changed from <a> to <Link>
                                 key={item.name}
-                                href={item.href}
+                                to={item.href} // Changed from href to to
                                 className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors ${isActive
                                     ? "bg-[#febd69] text-black"
                                     : "text-gray-300 hover:bg-gray-700 hover:text-white"
                                     }`}
                             >
-                                <item.icon className="w-5 h-5 mr-3" />
+                                <i className={`fa-solid ${item.icon} text-xl mr-3`}></i>
                                 {item.name}
-                            </a>
+                            </Link>
                         );
                     })}
                 </nav>
-                <div className="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+                <div className="p-4 border-t border-gray-700">
                     <button
                         onClick={() => {
                             signOut();
@@ -115,10 +120,10 @@ export default function SellerLayout({ children }) {
                         }}
                         className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-300 hover:bg-red-900 hover:text-white rounded-md transition-colors"
                     >
-                        <LogOut className="w-5 h-5 mr-3" />
+                        <i className="fa-solid fa-right-from-bracket text-xl mr-3"></i>
                         Sign Out
                     </button>
-                    <a href="/" className="mt-2 block text-center text-xs text-blue-400 hover:text-blue-300">Back to Marketplace</a>
+                    <Link to="/" className="mt-2 block text-center text-xs text-blue-400 hover:text-blue-300">Back to Marketplace</Link>
                 </div>
             </div>
 
@@ -126,7 +131,7 @@ export default function SellerLayout({ children }) {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="bg-white shadow px-6 py-4 flex justify-between items-center sm:hidden">
                     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-500">
-                        <LayoutDashboard />
+                        <i className="fa-solid fa-table-columns"></i>
                     </button>
                     <span className="font-bold">Seller Central</span>
                 </header>

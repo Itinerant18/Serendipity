@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Package, Clock, Eye, ChevronRight } from "lucide-react";
+// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 
 /**
@@ -61,7 +61,7 @@ export default function RecentOrdersCard({
                         className="text-sm text-[#D97534] hover:text-[#C86429] font-medium flex items-center gap-1"
                     >
                         View All
-                        <ChevronRight className="w-4 h-4" />
+                        <i className="fa-solid fa-chevron-right text-base"></i>
                     </Link>
                 )}
             </div>
@@ -70,7 +70,7 @@ export default function RecentOrdersCard({
             <div className="divide-y divide-gray-100">
                 {orders.length === 0 ? (
                     <div className="p-8 text-center">
-                        <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <i className="fa-solid fa-box text-5xl text-gray-300 mx-auto mb-3"></i>
                         <p className="text-gray-500 text-sm">No recent orders</p>
                     </div>
                 ) : (
@@ -154,7 +154,7 @@ function OrderRow({ order, isNew = false }) {
                 {/* Icon */}
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isNew ? "bg-orange-100" : "bg-gray-100"
                     }`}>
-                    <Package className={`w-5 h-5 ${isNew ? "text-orange-600" : "text-gray-600"}`} />
+                    <i className={`fa-solid fa-box text-xl ${isNew ? "text-orange-600" : "text-gray-600"}`}></i>
                 </div>
 
                 {/* Order Info */}
@@ -170,7 +170,7 @@ function OrderRow({ order, isNew = false }) {
                         )}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Clock className="w-3 h-3" />
+                        <i className="fa-solid fa-clock text-xs"></i>
                         <span>{formatTimeAgo(orderDate)}</span>
                         {itemCount > 0 && (
                             <>
@@ -192,7 +192,7 @@ function OrderRow({ order, isNew = false }) {
                 </div>
 
                 {/* Arrow */}
-                <Eye className="w-4 h-4 text-gray-400" />
+                <i className="fa-solid fa-eye text-base text-gray-400"></i>
             </div>
         </Link>
     );

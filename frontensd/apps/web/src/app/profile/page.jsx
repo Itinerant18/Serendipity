@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Package, MapPin, CreditCard, Settings, User, LogOut, Shield, ShoppingBag, Heart, Star, Loader2 } from "lucide-react";
+// FontAwesome icons loaded globally
 import useAuthStore from "@/utils/authStore";
 import { formatCurrency } from "@/utils/format";
 
@@ -56,7 +56,7 @@ export default function ProfileOverviewPage() {
     if (loading) {
         return (
             <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534] mx-auto" />
+                <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
                 <p className="text-gray-500 mt-4">Loading your profile...</p>
             </div>
         );
@@ -76,17 +76,17 @@ export default function ProfileOverviewPage() {
                     to="/"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-[#232F3E] text-white text-sm font-medium rounded-lg hover:bg-[#374151] transition-colors shadow-sm hover:shadow"
                 >
-                    <ShoppingBag className="w-4 h-4" />
+                    <i className="fa-solid fa-bag-shopping text-base"></i>
                     Start Shopping
                 </Link>
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard icon={ShoppingBag} label="Orders" value={stats.orders} href="/profile/orders" />
-                <StatCard icon={Heart} label="Wishlist" value={stats.wishlist} href="/profile/wishlist" />
-                <StatCard icon={Star} label="Reviews" value={stats.reviews} href="/profile/reviews" />
-                <StatCard icon={MapPin} label="Addresses" value={stats.addresses} href="/profile/addresses" />
+                <StatCard icon="fa-bag-shopping" label="Orders" value={stats.orders} href="/profile/orders" />
+                <StatCard icon="fa-heart" label="Wishlist" value={stats.wishlist} href="/profile/wishlist" />
+                <StatCard icon="fa-star" label="Reviews" value={stats.reviews} href="/profile/reviews" />
+                <StatCard icon="fa-location-dot" label="Addresses" value={stats.addresses} href="/profile/addresses" />
             </div>
 
             {/* Personal Information */}
@@ -116,7 +116,7 @@ export default function ProfileOverviewPage() {
 
                 {recentOrders.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                        <ShoppingBag className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                        <i className="fa-solid fa-bag-shopping text-4xl mx-auto mb-3 text-gray-300"></i>
                         <p>No orders yet. Start shopping!</p>
                     </div>
                 ) : (
@@ -144,7 +144,7 @@ export default function ProfileOverviewPage() {
     );
 }
 
-function StatCard({ icon: Icon, label, value, href }) {
+function StatCard({ icon, label, value, href }) {
     return (
         <Link
             to={href}
@@ -152,7 +152,7 @@ function StatCard({ icon: Icon, label, value, href }) {
         >
             <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-50 rounded-lg group-hover:bg-orange-100 transition-colors">
-                    <Icon className="w-5 h-5 text-[#D97534]" />
+                    <i className={`fa-solid ${icon} text-xl text-[#D97534]`}></i>
                 </div>
                 <div>
                     <p className="text-2xl font-bold text-gray-900">{value}</p>

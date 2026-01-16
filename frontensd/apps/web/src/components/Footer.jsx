@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Store, Mail, Phone, MapPin } from "lucide-react";
+// FontAwesome icons loaded globally
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -49,7 +49,7 @@ export default function Footer() {
                     {/* Brand Column */}
                     <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-8 lg:mb-0">
                         <Link to="/" className="flex items-center gap-2 mb-4">
-                            <Store className="w-8 h-8 text-[#febd69]" />
+                            <i className="fa-solid fa-store text-3xl text-[#febd69]"></i>
                             <span className="font-playfair text-2xl font-bold">Serendipity</span>
                         </Link>
                         <p className="text-gray-400 text-sm mb-4 italic">
@@ -57,11 +57,11 @@ export default function Footer() {
                         </p>
                         <div className="space-y-2 text-sm text-gray-400">
                             <div className="flex items-center gap-2">
-                                <Mail className="w-4 h-4" />
+                                <i className="fa-solid fa-envelope text-base"></i>
                                 <span>support@serendipity.com</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Phone className="w-4 h-4" />
+                                <i className="fa-solid fa-phone text-base"></i>
                                 <span>1-800-SHOP-NOW</span>
                             </div>
                         </div>

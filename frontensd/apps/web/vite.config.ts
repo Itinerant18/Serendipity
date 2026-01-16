@@ -1,17 +1,19 @@
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { reactRouter } from '@react-router/dev/vite';
 import { reactRouterHonoServer } from 'react-router-hono-server/dev';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { addRenderIds } from './plugins/addRenderIds';
-import { aliases } from './plugins/aliases';
 import consoleToParent from './plugins/console-to-parent';
 import { layoutWrapperPlugin } from './plugins/layouts';
 import { loadFontsFromTailwindSource } from './plugins/loadFontsFromTailwindSource';
 import { nextPublicProcessEnv } from './plugins/nextPublicProcessEnv';
 import { restart } from './plugins/restart';
 import { restartEnvFileChange } from './plugins/restartEnvFileChange';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   // Keep them available via import.meta.env.NEXT_PUBLIC_*
@@ -63,17 +65,16 @@ export default defineConfig({
     addRenderIds(),
     reactRouter(),
     tsconfigPaths(),
-    aliases(),
     layoutWrapperPlugin(),
   ],
   resolve: {
     alias: {
       lodash: 'lodash-es',
       'npm:stripe': 'stripe',
-      stripe: path.resolve(__dirname, './src/__create/stripe'),
+      stripe: path.join(__dirname, 'src/__create/stripe'),
       '@auth/create/react': '@hono/auth-js/react',
-      '@auth/create': path.resolve(__dirname, './src/__create/@auth/create'),
-      '@': path.resolve(__dirname, 'src'),
+      '@auth/create': path.join(__dirname, 'src/__create/@auth/create'),
+      '@': path.join(__dirname, 'src'),
     },
     dedupe: ['react', 'react-dom'],
   },

@@ -41,6 +41,60 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(products.map(p => ({ ...p, _id: p.id })));
 }));
 
+// @desc    Bulk create products (for CSV upload)
+// @route   POST /api/products/bulk
+// @access  Private/Admin or Seller
+router.post('/bulk', protect, asyncHandler(async (req, res) => {
+  const products = req.body;
+
+  if (!Array.isArray(products) || products.length === 0) {
+    res.status(400);
+    throw new Error('Please provide an array of products');
+  }
+
+  // Permission Check
+  if (!req.user.isAdmin && !req.user.is_seller) {
+    res.status(403);
+    throw new Error('Not authorized to create products');
+  }
+
+  let sellerProfileId = null;
+  if (req.user.is_seller) {
+    const { data: u } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
+    sellerProfileId = u.seller_profile_id;
+  }
+
+  // Prepare products for insertion
+  const productsToInsert = products.map(p => ({
+    name: p.name,
+    price: parseFloat(p.price) || 0,
+    user_id: req.user.id,
+    seller_profile_id: sellerProfileId,
+    seller_id: req.user.id,
+    image: p.image_url || 'https://via.placeholder.com/150', // Default image if missing
+    brand: p.brand || 'Generic',
+    category: p.category || 'Uncategorized',
+    subcategory: p.subcategory || null, // New column
+    count_in_stock: parseInt(p.stock) || 0,
+    num_reviews: 0,
+    rating: 0,
+    description: p.description || '',
+  }));
+
+  // Use supabaseAdmin to bypass RLS for bulk insert
+  const { data: createdProducts, error } = await supabaseAdmin
+    .from('products')
+    .insert(productsToInsert)
+    .select();
+
+  if (error) {
+    res.status(500);
+    throw new Error(error.message);
+  }
+
+  res.status(201).json(createdProducts);
+}));
+
 router.get('/:id', asyncHandler(async (req, res) => {
   const { data: product, error } = await supabase
     .from('products')
@@ -111,9 +165,6 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
 
 // @desc    Create a product
 // @route   POST /api/products
-// @access  Private/Admin
-// @desc    Create a product
-// @route   POST /api/products
 // @access  Private/Admin or Seller
 router.post('/', protect, asyncHandler(async (req, res) => {
   // Check permission
@@ -128,18 +179,30 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     sellerProfileId = u.seller_profile_id;
   }
 
+  const {
+    name,
+    price,
+    description,
+    image,
+    brand,
+    category,
+    subcategory,
+    countInStock,
+  } = req.body;
+
   const product = {
-    name: 'Sample name',
-    price: 0,
+    name: name || 'Sample name',
+    price: price || 0,
     user_id: req.user.id,
-    seller_profile_id: sellerProfileId, // Link to seller store
-    seller_id: req.user.id, // Explicit link to user
-    image: '/images/sample.jpg',
-    brand: 'Sample brand',
-    category: 'Sample category',
-    count_in_stock: 0,
+    seller_profile_id: sellerProfileId,
+    seller_id: req.user.id,
+    image: image || '/images/sample.jpg',
+    brand: brand || 'Sample brand',
+    category: category || 'Sample category',
+    subcategory: subcategory || null,
+    count_in_stock: countInStock || 0,
     num_reviews: 0,
-    description: 'Sample description',
+    description: description || 'Sample description',
   };
 
   // Use supabaseAdmin to bypass RLS
@@ -158,6 +221,8 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 }));
 
 
+
+
 // @desc    Update a product
 // @route   PUT /api/products/:id
 // @access  Private/Admin
@@ -172,6 +237,7 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     image,
     brand,
     category,
+    subcategory,
     countInStock,
   } = req.body;
 
@@ -207,6 +273,7 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
       image,
       brand,
       category,
+      subcategory,
       count_in_stock: countInStock,
     })
     .eq('id', req.params.id)

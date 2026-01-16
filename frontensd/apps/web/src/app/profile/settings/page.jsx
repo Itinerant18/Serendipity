@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Loader2, Save, Bell, Globe, Palette, Lock } from "lucide-react";
+// FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 
 export default function SettingsPage() {
@@ -92,7 +92,7 @@ export default function SettingsPage() {
         return (
 
             <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534] mx-auto" />
+                <i className="fa-solid fa-spinner fa-spin text-4xl text-[#D97534] mx-auto"></i>
                 <p className="text-gray-500 mt-4">Loading settings...</p>
             </div>
 
@@ -111,7 +111,7 @@ export default function SettingsPage() {
             {/* Notification Preferences */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
-                    <Bell className="w-5 h-5 text-[#D97534]" />
+                    <i className="fa-regular fa-bell text-xl text-[#D97534]"></i>
                     <h2 className="font-playfair font-bold text-lg text-gray-900">Notifications</h2>
                 </div>
                 <div className="space-y-4">
@@ -145,7 +145,7 @@ export default function SettingsPage() {
             {/* Display Preferences */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
-                    <Palette className="w-5 h-5 text-[#D97534]" />
+                    <i className="fa-solid fa-palette text-xl text-[#D97534]"></i>
                     <h2 className="font-playfair font-bold text-lg text-gray-900">Display</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -196,7 +196,7 @@ export default function SettingsPage() {
             {/* Privacy Settings */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
-                    <Lock className="w-5 h-5 text-[#D97534]" />
+                    <i className="fa-solid fa-lock text-xl text-[#D97534]"></i>
                     <h2 className="font-playfair font-bold text-lg text-gray-900">Privacy</h2>
                 </div>
                 <div className="space-y-4">
@@ -227,12 +227,12 @@ export default function SettingsPage() {
                 >
                     {saving ? (
                         <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <i className="fa-solid fa-spinner fa-spin w-5 h-5"></i>
                             Saving...
                         </>
                     ) : (
                         <>
-                            <Save className="w-5 h-5" />
+                            <i className="fa-solid fa-floppy-disk w-5 h-5"></i>
                             Save Preferences
                         </>
                     )}

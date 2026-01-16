@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/utils/authStore";
@@ -8,9 +8,13 @@ import useAuthStore from "@/utils/authStore";
 export default function AuthCallbackPage() {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
+    const processing = useRef(false);
 
     useEffect(() => {
         const handleAuthCallback = async () => {
+            if (processing.current) return;
+            processing.current = true;
+
             const { data: { session }, error } = await supabase.auth.getSession();
 
             if (error) {
@@ -52,8 +56,29 @@ export default function AuthCallbackPage() {
                         sellerProfileId
                     };
 
+                    console.log("Profile fetched for user:", user.email, "isSeller:", isSeller, "ID:", user.id);
                     login(user, session.access_token);
-                    navigate("/");
+
+                    // Check for role-based intent stored in localStorage
+                    const intentRole = localStorage.getItem('auth_intent_role');
+                    localStorage.removeItem('auth_intent_role'); // Clean up
+
+                    if (intentRole === 'seller') {
+                        if (isSeller) {
+                            navigate("/seller");
+                        } else {
+                            // If they intent to be a seller but aren't one yet, send to seller signup
+                            console.log("Seller intent detected. User is NOT a seller. Redirecting to signup.");
+                            navigate("/seller/signup");
+                        }
+                    } else if (intentRole === 'customer') {
+                        navigate("/");
+                    } else {
+                        // If no intent was found, it might have been cleared or not set
+                        // But we already logged in, so just go home if not already on a target page
+                        console.log("No specific intent role found, defaulting to home");
+                        navigate("/");
+                    }
                 } catch (err) {
                     console.error("Failed to fetch profile after Google login:", err);
                     // Fallback to basic user data

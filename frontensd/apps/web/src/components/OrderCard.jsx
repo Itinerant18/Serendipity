@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ShoppingBag, Clock, CheckCircle, Truck, Package } from "lucide-react";
+// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 
 /**
@@ -23,32 +23,32 @@ export default function OrderCard({ order, isNew = false, onViewDetails }) {
                 label: "Pending",
                 bgColor: "bg-yellow-100",
                 textColor: "text-yellow-700",
-                icon: Clock
+                icon: "fa-clock"
             },
             processing: {
                 label: "Processing",
                 bgColor: "bg-blue-100",
                 textColor: "text-blue-700",
-                icon: Package
+                icon: "fa-box"
             },
             shipped: {
                 label: "Shipped",
                 bgColor: "bg-purple-100",
                 textColor: "text-purple-700",
-                icon: Truck
+                icon: "fa-truck"
             },
             delivered: {
                 label: "Delivered",
                 bgColor: "bg-green-100",
                 textColor: "text-green-700",
-                icon: CheckCircle
+                icon: "fa-circle-check"
             }
         };
         return configs[status?.toLowerCase()] || configs.pending;
     };
 
     const statusConfig = getStatusConfig(order.status || order.payment_status);
-    const StatusIcon = statusConfig.icon;
+    const statusIconClass = statusConfig.icon;
 
     const formatTime = (timestamp) => {
         if (!timestamp) return "Just now";
@@ -80,7 +80,7 @@ export default function OrderCard({ order, isNew = false, onViewDetails }) {
                 {/* Left: Order Info */}
                 <div className="flex items-center gap-4">
                     <div className={`p-2 rounded-full ${isNew ? "bg-green-200" : "bg-blue-100"}`}>
-                        <ShoppingBag className={`w-5 h-5 ${isNew ? "text-green-600" : "text-blue-600"}`} />
+                        <i className={`fa-solid fa-bag-shopping text-xl ${isNew ? "text-green-600" : "text-blue-600"}`}></i>
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export default function OrderCard({ order, isNew = false, onViewDetails }) {
                 {/* Right: Status & Time */}
                 <div className="text-right">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                        <StatusIcon className="w-3 h-3 mr-1" />
+                        <i className={`fa-solid ${statusIconClass} text-xs mr-1`}></i>
                         {statusConfig.label}
                     </span>
                     <p className="text-xs text-gray-400 mt-1">

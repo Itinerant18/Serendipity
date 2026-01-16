@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+// FontAwesome icons used globally
 import { useParams, useNavigate } from "react-router";
 import useAuth from "@/utils/useAuth";
 
@@ -86,7 +86,7 @@ export default function ProductEdit() {
                     href="/admin/products"
                     className="inline-flex items-center text-[#8B4513] hover:underline mb-6"
                 >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <i className="fa-solid fa-arrow-left mr-2"></i>
                     Back to Products
                 </a>
 
@@ -176,7 +176,7 @@ export default function ProductEdit() {
                                 type="submit"
                                 className="w-full bg-[#D97534] hover:bg-[#C86429] text-white font-inter font-bold py-3 rounded-lg transition-colors flex items-center justify-center"
                             >
-                                <Save className="w-5 h-5 mr-2" />
+                                <i className="fa-solid fa-floppy-disk mr-2"></i>
                                 Update Product
                             </button>
                         </form>

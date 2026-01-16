@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
-import { ArrowLeft, Save, Upload, X, Image, Video, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+// FontAwesome icons loaded globally
 
 export default function EditProductPage() {
     const { token } = useAuth();
@@ -266,7 +266,7 @@ export default function EditProductPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-[#febd69]" />
+                <i className="fa-solid fa-spinner fa-spin text-3xl text-[#febd69]"></i>
             </div>
         );
     }
@@ -275,7 +275,7 @@ export default function EditProductPage() {
         <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex items-center gap-4 text-gray-500 hover:text-gray-900">
                 <button onClick={() => navigate("/seller/inventory")} className="flex items-center">
-                    <ArrowLeft className="w-5 h-5 mr-1" /> Back to Inventory
+                    <i className="fa-solid fa-arrow-left w-5 h-5 mr-1 flex items-center justify-center"></i> Back to Inventory
                 </button>
             </div>
 
@@ -320,7 +320,7 @@ export default function EditProductPage() {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             <span className="flex items-center gap-2">
-                                <Image className="w-4 h-4" />
+                                <i className="fa-solid fa-image text-gray-500"></i>
                                 Product Images <span className="text-red-500">*</span>
                                 <span className="text-gray-400 font-normal">(up to 5, max 10MB each)</span>
                             </span>
@@ -350,12 +350,12 @@ export default function EditProductPage() {
 
                             {uploadingImages ? (
                                 <div className="flex flex-col items-center">
-                                    <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                                    <i className="fa-solid fa-spinner fa-spin text-3xl text-orange-500"></i>
                                     <p className="mt-2 text-sm text-gray-500">Uploading...</p>
                                 </div>
                             ) : (
                                 <>
-                                    <Upload className="w-8 h-8 mx-auto text-gray-400" />
+                                    <i className="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mx-auto"></i>
                                     <p className="mt-2 text-sm text-gray-600">
                                         Drag & drop images here, or <span className="text-orange-600 font-medium">browse</span>
                                     </p>
@@ -384,9 +384,9 @@ export default function EditProductPage() {
                                         <button
                                             type="button"
                                             onClick={() => removeImage(index)}
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center"
                                         >
-                                            <X className="w-3 h-3" />
+                                            <i className="fa-solid fa-xmark text-xs"></i>
                                         </button>
                                     </div>
                                 ))}
@@ -398,7 +398,7 @@ export default function EditProductPage() {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             <span className="flex items-center gap-2">
-                                <Video className="w-4 h-4" />
+                                <i className="fa-solid fa-video text-gray-500"></i>
                                 Product Video
                                 <span className="text-gray-400 font-normal">(optional, max 100MB)</span>
                             </span>
@@ -426,12 +426,12 @@ export default function EditProductPage() {
 
                                 {uploadingVideo ? (
                                     <div className="flex flex-col items-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+                                        <i className="fa-solid fa-spinner fa-spin text-3xl text-purple-500"></i>
                                         <p className="mt-2 text-sm text-gray-500">Uploading video...</p>
                                     </div>
                                 ) : (
                                     <>
-                                        <Video className="w-8 h-8 mx-auto text-gray-400" />
+                                        <i className="fa-solid fa-video text-3xl text-gray-400 mx-auto"></i>
                                         <p className="mt-2 text-sm text-gray-600">
                                             Drag & drop video here, or <span className="text-purple-600 font-medium">browse</span>
                                         </p>
@@ -443,7 +443,7 @@ export default function EditProductPage() {
                             <div className="border rounded-lg p-4 bg-gray-50">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                        <i className="fa-solid fa-circle-check text-xl text-green-500"></i>
                                         <div>
                                             <p className="text-sm font-medium text-gray-700">Video uploaded</p>
                                             <p className="text-xs text-gray-500">{formatFileSize(uploadedVideo.size)}</p>
@@ -454,7 +454,7 @@ export default function EditProductPage() {
                                         onClick={removeVideo}
                                         className="text-red-500 hover:text-red-700"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <i className="fa-solid fa-xmark text-xl"></i>
                                     </button>
                                 </div>
                                 <video
@@ -486,15 +486,15 @@ export default function EditProductPage() {
                             className="flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-black bg-[#febd69] hover:bg-[#d97534] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {saving ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                <div className="flex items-center">
+                                    <i className="fa-solid fa-spinner fa-spin mr-2"></i>
                                     Saving...
-                                </>
+                                </div>
                             ) : (
-                                <>
+                                <div className="flex items-center">
                                     Update Product
-                                    <Save className="ml-2 w-5 h-5" />
-                                </>
+                                    <i className="fa-solid fa-floppy-disk ml-2"></i>
+                                </div>
                             )}
                         </button>
                     </div>

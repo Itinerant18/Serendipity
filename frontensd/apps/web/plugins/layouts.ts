@@ -1,6 +1,7 @@
 // vite-react-hierarchical-layouts.ts
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { PluginContext } from 'rollup';
 import { normalizePath, transformWithEsbuild, type Plugin } from 'vite';
 
@@ -27,6 +28,8 @@ const DEFAULT_PAGE_PATTERN = /\/page\.(jsx?)$/;
 const DEFAULT_LAYOUT_FILES = ['layout.jsx'];
 const DEFAULT_PARAM_PATTERN = /\[(\.{3})?([^\]]+)\]/g;
 const NO_LAYOUT_QUERY = '?noLayout.jsx';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function layoutWrapperPlugin(userOpts: HierarchicalLayoutOptions = {}): Plugin {
   const opts: Required<HierarchicalLayoutOptions> = {
@@ -151,23 +154,22 @@ export default function WrappedPage(props) {
   ${hasSpreadParams ? 'const location = useLocation();' : ''}
   return (
     ${opening.join('\n    ')}
-      <Page {...props}${
-        routeParams.length > 0
-          ? routeParams
-              .map((param) =>
-                pagePath.includes(`[...${param}]`)
-                  ? // collect the rest of the path for spread params
-                    `${param}={location.pathname
+      <Page {...props}${routeParams.length > 0
+        ? routeParams
+          .map((param) =>
+            pagePath.includes(`[...${param}]`)
+              ? // collect the rest of the path for spread params
+              `${param}={location.pathname
                       .split('/')
                       .slice(
                         location.pathname
                           .split('/')
                           .findIndex(Boolean) + 1
                       )}`
-                  : `${param}={params.${param}}`
-              )
-              .join(' ')
-          : ''
+              : `${param}={params.${param}}`
+          )
+          .join(' ')
+        : ''
       } />
     ${closing.join('\n    ')}
   );

@@ -420,15 +420,48 @@ export const useHandleScreenshotRequest = () => {
     };
   }, []);
 };
+
 export function Layout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
+        {/* Global app stylesheet */}
+        <link rel="stylesheet" href={globalStylesheet} suppressHydrationWarning />
+        {/* Global fonts */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap"
+        />
+        <script type="module" src="/src/__create/dev-error-overlay.js"></script>
+        <link rel="icon" href="/src/__create/favicon.png" />
+        <script src="https://kit.fontawesome.com/629b37c81d.js" crossOrigin="anonymous" async />
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+        {LoadFontsSSR ? <LoadFontsSSR /> : null}
+      </head>
+      <body suppressHydrationWarning>
+        {children}
+        <HotReloadIndicator />
+        <Toaster position="bottom-right" />
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function SandboxHandler() {
   useHandshakeParent();
   useCodeGen();
   useRefresh();
   useHandleScreenshotRequest();
-  // useDevServerHeartbeat();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location?.pathname;
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'sandbox:navigation') {
@@ -453,39 +486,15 @@ export function Layout({ children }: { children: ReactNode }) {
       );
     }
   }, [pathname]);
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-        {/* Global app stylesheet */}
-        <link rel="stylesheet" href={globalStylesheet} suppressHydrationWarning />
-        {/* Global fonts */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap"
-        />
-        <script type="module" src="/src/__create/dev-error-overlay.js"></script>
-        <link rel="icon" href="/src/__create/favicon.png" />
-        {LoadFontsSSR ? <LoadFontsSSR /> : null}
-      </head>
-      <body>
-        {children}
-        <HotReloadIndicator />
-        <Toaster position="bottom-right" />
-        <ScrollRestoration />
-        <Scripts />
-        <script src="https://kit.fontawesome.com/2c15cc0cc7.js" crossOrigin="anonymous" async />
-        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
-      </body>
-    </html>
-  );
+
+  return null;
 }
 
 export default function App() {
   return (
-    <Outlet />
+    <>
+      <ClientOnly loader={() => <SandboxHandler />} />
+      <Outlet />
+    </>
   );
 }

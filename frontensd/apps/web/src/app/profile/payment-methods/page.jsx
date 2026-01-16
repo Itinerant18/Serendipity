@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CreditCard, Plus, Trash2, Check, Loader2, Smartphone, Wallet } from "lucide-react";
+// FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 
 export default function PaymentMethodsPage() {
@@ -85,9 +85,9 @@ export default function PaymentMethodsPage() {
 
     const getMethodIcon = (type) => {
         switch (type) {
-            case "upi": return Smartphone;
-            case "wallet": return Wallet;
-            default: return CreditCard;
+            case "upi": return "fa-solid fa-mobile-screen-button";
+            case "wallet": return "fa-solid fa-wallet";
+            default: return "fa-solid fa-credit-card";
         }
     };
 
@@ -106,7 +106,7 @@ export default function PaymentMethodsPage() {
         return (
 
             <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534] mx-auto" />
+                <i className="fa-solid fa-spinner fa-spin text-4xl text-[#D97534] mx-auto"></i>
                 <p className="text-gray-500 mt-4">Loading payment methods...</p>
             </div>
 
@@ -126,7 +126,7 @@ export default function PaymentMethodsPage() {
                     onClick={() => setShowModal(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-[#D97534] hover:bg-[#C86429] text-white font-medium rounded-lg"
                 >
-                    <Plus className="w-5 h-5" />
+                    <i className="fa-solid fa-plus"></i>
                     Add Payment
                 </button>
             </div>
@@ -134,21 +134,21 @@ export default function PaymentMethodsPage() {
             {/* Payment Methods List */}
             {methods.length === 0 ? (
                 <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-                    <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <i className="fa-solid fa-credit-card text-5xl text-gray-300 mx-auto mb-4"></i>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No payment methods saved</h3>
                     <p className="text-gray-500 mb-6">Add a payment method for faster checkout</p>
                     <button
                         onClick={() => setShowModal(true)}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-[#D97534] hover:bg-[#C86429] text-white font-medium rounded-lg"
                     >
-                        <Plus className="w-5 h-5" />
+                        <i className="fa-solid fa-plus"></i>
                         Add Payment Method
                     </button>
                 </div>
             ) : (
                 <div className="grid gap-4">
                     {methods.map((method) => {
-                        const Icon = getMethodIcon(method.method_type);
+                        const iconClass = getMethodIcon(method.method_type);
                         return (
                             <div
                                 key={method.id}
@@ -158,7 +158,7 @@ export default function PaymentMethodsPage() {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className={`p-3 rounded-lg ${method.is_default ? "bg-orange-100" : "bg-gray-100"}`}>
-                                            <Icon className={`w-6 h-6 ${method.is_default ? "text-[#D97534]" : "text-gray-500"}`} />
+                                            <i className={`${iconClass} text-2xl ${method.is_default ? "text-[#D97534]" : "text-gray-500"}`}></i>
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
@@ -183,14 +183,14 @@ export default function PaymentMethodsPage() {
                                                 className="p-2 text-gray-400 hover:text-[#D97534] hover:bg-orange-50 rounded-lg"
                                                 title="Set as default"
                                             >
-                                                <Check className="w-4 h-4" />
+                                                <i className="fa-solid fa-check"></i>
                                             </button>
                                         )}
                                         <button
                                             onClick={() => handleDelete(method.id)}
                                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <i className="fa-solid fa-trash"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -254,9 +254,9 @@ function PaymentMethodModal({ onSave, onClose }) {
                     {/* Method Type Selector */}
                     <div className="flex gap-2">
                         {[
-                            { type: "upi", label: "UPI", icon: Smartphone },
-                            { type: "wallet", label: "Wallet", icon: Wallet },
-                        ].map(({ type, label, icon: Icon }) => (
+                            { type: "upi", label: "UPI", icon: "fa-solid fa-mobile-screen-button" },
+                            { type: "wallet", label: "Wallet", icon: "fa-solid fa-wallet" },
+                        ].map(({ type, label, icon }) => (
                             <button
                                 key={type}
                                 type="button"
@@ -266,7 +266,7 @@ function PaymentMethodModal({ onSave, onClose }) {
                                     : "border-gray-200 text-gray-600 hover:border-gray-300"
                                     }`}
                             >
-                                <Icon className="w-5 h-5" />
+                                <i className={`${icon} w-5 h-5`}></i>
                                 {label}
                             </button>
                         ))}

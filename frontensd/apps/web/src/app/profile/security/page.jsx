@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, Key, Smartphone, Loader2, Eye, EyeOff, AlertTriangle } from "lucide-react";
+// FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 
 export default function SecurityPage() {
@@ -102,7 +102,7 @@ export default function SecurityPage() {
             {/* Change Password */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
-                    <Key className="w-5 h-5 text-[#D97534]" />
+                    <i className="fa-solid fa-key text-xl text-[#D97534]"></i>
                     <h2 className="font-playfair font-bold text-lg text-gray-900">Change Password</h2>
                 </div>
 
@@ -122,7 +122,7 @@ export default function SecurityPage() {
                                 onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
-                                {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {showPasswords.current ? <i className="fa-solid fa-eye-slash"></i> : <i className="fa-solid fa-eye"></i>}
                             </button>
                         </div>
                     </div>
@@ -142,7 +142,7 @@ export default function SecurityPage() {
                                 onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
-                                {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {showPasswords.new ? <i className="fa-solid fa-eye-slash"></i> : <i className="fa-solid fa-eye"></i>}
                             </button>
                         </div>
                         {passwordData.new_password && (
@@ -178,7 +178,7 @@ export default function SecurityPage() {
                                 onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
-                                {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {showPasswords.confirm ? <i className="fa-solid fa-eye-slash"></i> : <i className="fa-solid fa-eye"></i>}
                             </button>
                         </div>
                     </div>
@@ -207,7 +207,7 @@ export default function SecurityPage() {
             {/* Two-Factor Authentication */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
-                    <Smartphone className="w-5 h-5 text-[#D97534]" />
+                    <i className="fa-solid fa-mobile-screen-button text-xl text-[#D97534]"></i>
                     <h2 className="font-playfair font-bold text-lg text-gray-900">Two-Factor Authentication</h2>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -224,7 +224,7 @@ export default function SecurityPage() {
             {/* Danger Zone */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-red-200">
                 <div className="flex items-center gap-3 mb-4">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <i className="fa-solid fa-triangle-exclamation text-xl text-red-600"></i>
                     <h2 className="font-playfair font-bold text-lg text-red-600">Danger Zone</h2>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">

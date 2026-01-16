@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import useAuth from "@/utils/useAuth";
-import { User, Store, FileText, Save, X, Camera, Star, Calendar, Mail, Loader2 } from "lucide-react";
+// FontAwesome icons loaded globally
 
 export default function SellerSettings() {
     const { token, user } = useAuth();
@@ -97,7 +97,7 @@ export default function SellerSettings() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534]" />
+                <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
             </div>
         );
     }
@@ -109,7 +109,7 @@ export default function SellerSettings() {
             {/* Success Message */}
             {success && (
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700">
-                    <Save className="w-5 h-5 mr-2" />
+                    <i className="fa-solid fa-floppy-disk text-xl mr-2"></i>
                     {success}
                 </div>
             )}
@@ -117,7 +117,7 @@ export default function SellerSettings() {
             {/* Error Message */}
             {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
-                    <X className="w-5 h-5 mr-2" />
+                    <i className="fa-solid fa-xmark text-xl mr-2"></i>
                     {error}
                 </div>
             )}
@@ -127,7 +127,7 @@ export default function SellerSettings() {
                 <div className="lg:col-span-2">
                     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h2 className="text-lg font-bold text-[#232f3e] mb-6 flex items-center">
-                            <Store className="w-5 h-5 mr-2 text-[#D97534]" />
+                            <i className="fa-solid fa-store text-xl text-[#D97534] mr-2"></i>
                             Store Information
                         </h2>
 
@@ -141,7 +141,7 @@ export default function SellerSettings() {
                                     {logoUrl ? (
                                         <img src={logoUrl} alt="Store logo" className="w-full h-full object-cover" />
                                     ) : (
-                                        <Camera className="w-8 h-8 text-gray-400" />
+                                        <i className="fa-solid fa-camera text-3xl text-gray-400"></i>
                                     )}
                                 </div>
                                 <div className="flex-1">
@@ -197,12 +197,12 @@ export default function SellerSettings() {
                             >
                                 {saving ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <i className="fa-solid fa-spinner fa-spin text-xl"></i>
                                         Saving...
                                     </>
                                 ) : (
                                     <>
-                                        <Save className="w-5 h-5" />
+                                        <i className="fa-solid fa-floppy-disk text-xl"></i>
                                         Save Changes
                                     </>
                                 )}
@@ -222,7 +222,7 @@ export default function SellerSettings() {
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h2 className="text-lg font-bold text-[#232f3e] mb-4 flex items-center">
-                            <User className="w-5 h-5 mr-2 text-[#D97534]" />
+                            <i className="fa-solid fa-user text-xl text-[#D97534] mr-2"></i>
                             Account Info
                         </h2>
 
@@ -230,7 +230,7 @@ export default function SellerSettings() {
                             {/* Email */}
                             <div>
                                 <div className="flex items-center text-sm text-gray-500 mb-1">
-                                    <Mail className="w-4 h-4 mr-1" />
+                                    <i className="fa-solid fa-envelope text-base mr-1"></i>
                                     Email
                                 </div>
                                 <p className="text-sm font-medium text-gray-900">{user?.email || "—"}</p>
@@ -239,7 +239,7 @@ export default function SellerSettings() {
                             {/* Member Since */}
                             <div>
                                 <div className="flex items-center text-sm text-gray-500 mb-1">
-                                    <Calendar className="w-4 h-4 mr-1" />
+                                    <i className="fa-solid fa-calendar text-base mr-1"></i>
                                     Member Since
                                 </div>
                                 <p className="text-sm font-medium text-gray-900">
@@ -257,19 +257,19 @@ export default function SellerSettings() {
                             {/* Rating */}
                             <div>
                                 <div className="flex items-center text-sm text-gray-500 mb-1">
-                                    <Star className="w-4 h-4 mr-1" />
+                                    <i className="fa-solid fa-star text-base mr-1"></i>
                                     Seller Rating
                                 </div>
                                 <div className="flex items-center">
                                     <div className="flex">
                                         {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star
+                                            <i
                                                 key={star}
-                                                className={`w-4 h-4 ${star <= (profile?.rating || 0)
-                                                        ? "text-yellow-400 fill-yellow-400"
-                                                        : "text-gray-300"
+                                                className={`fa-solid fa-star text-base ${star <= (profile?.rating || 0)
+                                                    ? "text-yellow-400"
+                                                    : "text-gray-300"
                                                     }`}
-                                            />
+                                            ></i>
                                         ))}
                                     </div>
                                     <span className="ml-2 text-sm font-medium text-gray-900">

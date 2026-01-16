@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+// FontAwesome icons loaded globally
 
 /**
  * QuickActionCard Component
@@ -11,7 +11,7 @@ import { ChevronRight } from "lucide-react";
 export default function QuickActionCard({
     title,
     description,
-    icon: Icon,
+    icon,
     href,
     onClick,
     iconBgColor = "bg-orange-100",
@@ -25,7 +25,7 @@ export default function QuickActionCard({
         <>
             {/* Icon */}
             <div className={`p-3 rounded-xl ${iconBgColor} group-hover:scale-110 transition-transform duration-300`}>
-                {Icon && <Icon className={`w-6 h-6 ${iconColor}`} />}
+                {icon && <i className={`fa-solid ${icon} text-2xl ${iconColor}`}></i>}
             </div>
 
             {/* Text Content */}
@@ -48,7 +48,7 @@ export default function QuickActionCard({
             </div>
 
             {/* Arrow */}
-            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#D97534] group-hover:translate-x-1 transition-all" />
+            <i className="fa-solid fa-chevron-right text-xl text-gray-400 group-hover:text-[#D97534] group-hover:translate-x-1 transition-all"></i>
         </>
     );
 
@@ -121,9 +121,9 @@ export function LargeActionCard({
             <div className="relative">
                 <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                        {Icon && <Icon className="w-8 h-8" />}
+                        {icon && <i className={`fa-solid ${icon} text-3xl`}></i>}
                     </div>
-                    <ChevronRight className="w-6 h-6 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <i className="fa-solid fa-chevron-right text-2xl opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                 </div>
 
                 <h3 className="text-xl font-bold mb-2">{title}</h3>

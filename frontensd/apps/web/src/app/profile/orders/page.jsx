@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Package, Truck, CheckCircle, XCircle, Clock, ChevronRight, Loader2, ShoppingBag } from "lucide-react";
+// FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 import { formatCurrency } from "@/utils/format";
 
 const statusConfig = {
-    pending: { icon: Clock, color: "text-yellow-600", bg: "bg-yellow-50", label: "Pending" },
-    processing: { icon: Package, color: "text-blue-600", bg: "bg-blue-50", label: "Processing" },
-    shipped: { icon: Truck, color: "text-purple-600", bg: "bg-purple-50", label: "Shipped" },
-    delivered: { icon: CheckCircle, color: "text-green-600", bg: "bg-green-50", label: "Delivered" },
-    cancelled: { icon: XCircle, color: "text-red-600", bg: "bg-red-50", label: "Cancelled" },
+    pending: { icon: "fa-solid fa-clock", color: "text-yellow-600", bg: "bg-yellow-50", label: "Pending" },
+    processing: { icon: "fa-solid fa-box", color: "text-blue-600", bg: "bg-blue-50", label: "Processing" },
+    shipped: { icon: "fa-solid fa-truck", color: "text-purple-600", bg: "bg-purple-50", label: "Shipped" },
+    delivered: { icon: "fa-solid fa-circle-check", color: "text-green-600", bg: "bg-green-50", label: "Delivered" },
+    cancelled: { icon: "fa-solid fa-circle-xmark", color: "text-red-600", bg: "bg-red-50", label: "Cancelled" },
 };
 
 export default function OrdersPage() {
@@ -50,7 +50,7 @@ export default function OrdersPage() {
         return (
 
             <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D97534] mx-auto" />
+                <i className="fa-solid fa-spinner fa-spin text-4xl text-[#D97534] mx-auto"></i>
                 <p className="text-gray-500 mt-4">Loading orders...</p>
             </div>
 
@@ -69,7 +69,7 @@ export default function OrdersPage() {
                     to="/"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-[#232F3E] text-white text-sm font-medium rounded-lg hover:bg-[#374151] transition-colors shadow-sm hover:shadow"
                 >
-                    <ShoppingBag className="w-4 h-4" />
+                    <i className="fa-solid fa-bag-shopping"></i>
                     Continue Shopping
                 </Link>
             </div>
@@ -94,7 +94,7 @@ export default function OrdersPage() {
             {filteredOrders.length === 0 ? (
                 <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100 flex flex-col items-center justify-center min-h-[400px]">
                     <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-6">
-                        <Package className="w-10 h-10 text-[#D97534]" />
+                        <i className="fa-solid fa-box text-5xl text-[#D97534]"></i>
                     </div>
                     <h3 className="font-playfair font-bold text-2xl text-gray-900 mb-3">No orders found</h3>
                     <p className="text-gray-500 mb-8 max-w-sm mx-auto text-lg leading-relaxed">
@@ -108,7 +108,7 @@ export default function OrdersPage() {
                     >
                         <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-[#D97534] to-[#C86429] opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></span>
                         <span className="relative z-10 font-semibold tracking-wide flex items-center gap-2">
-                            Start Shopping <ChevronRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                            Start Shopping <i className="fa-solid fa-chevron-right text-sm transition-transform duration-300 group-hover:translate-x-1"></i>
                         </span>
                     </Link>
                 </div>
@@ -128,7 +128,7 @@ export default function OrdersPage() {
                                 <div className="flex items-center justify-between p-5 bg-gray-50/50 border-b border-gray-100">
                                     <div className="flex items-center gap-4">
                                         <div className={`p-2.5 rounded-full ${config.bg} ring-1 ring-inset ring-black/5`}>
-                                            <StatusIcon className={`w-5 h-5 ${config.color}`} />
+                                            <i className={`${config.icon} ${config.color} text-xl`}></i>
                                         </div>
                                         <div>
                                             <p className="font-bold text-gray-900">
@@ -163,7 +163,7 @@ export default function OrdersPage() {
                                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                                        <Package className="w-8 h-8" />
+                                                        <i className="fa-solid fa-box text-2xl"></i>
                                                     </div>
                                                 )}
                                             </div>
@@ -194,7 +194,7 @@ export default function OrdersPage() {
                                         className="flex items-center gap-2 text-[#D97534] hover:text-[#C86429] font-semibold text-sm group/link px-4 py-2 hover:bg-orange-50 rounded-lg transition-colors"
                                     >
                                         View Order Details
-                                        <ChevronRight className="w-4 h-4 transition-transform duration-200 group-hover/link:translate-x-1" />
+                                        <i className="fa-solid fa-chevron-right text-sm transition-transform duration-200 group-hover/link:translate-x-1"></i>
                                     </Link>
                                 </div>
                             </div>

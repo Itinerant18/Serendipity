@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Trash2, ShoppingBag, ArrowRight, Minus, Plus } from "lucide-react";
+// FontAwesome icons loaded globally
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -43,7 +43,7 @@ export default function CartPage() {
 
                 {items.length === 0 ? (
                     <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                        <ShoppingBag className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                        <i className="fa-solid fa-bag-shopping text-6xl mx-auto text-gray-300 mb-4"></i>
                         <h2 className="text-2xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
                         <p className="text-gray-500 mb-8">Looks like you haven't added anything to your cart yet.</p>
                         <Link
@@ -90,14 +90,14 @@ export default function CartPage() {
                                                         onClick={() => handleQuantityChange(item.product, -1)}
                                                         className="p-2 hover:bg-gray-50 text-gray-600 rounded-l-lg"
                                                     >
-                                                        <Minus className="w-4 h-4" />
+                                                        <i className="fa-solid fa-minus text-base"></i>
                                                     </button>
                                                     <span className="px-4 font-medium text-gray-900">{item.qty}</span>
                                                     <button
                                                         onClick={() => handleQuantityChange(item.product, 1)}
                                                         className="p-2 hover:bg-gray-50 text-gray-600 rounded-r-lg"
                                                     >
-                                                        <Plus className="w-4 h-4" />
+                                                        <i className="fa-solid fa-plus text-base"></i>
                                                     </button>
                                                 </div>
 

@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import { TrendingUp, TrendingDown } from "lucide-react";
+// FontAwesome icons loaded globally
 
 /**
  * Reusable StatCard component with trend indicator
  * @param {Object} props
  * @param {string} props.title - Card title
  * @param {string|number} props.value - Main display value
- * @param {React.ComponentType} props.icon - Lucide icon component
+ * @param {string} props.icon - FontAwesome icon class name (e.g., "fa-dollar-sign")
  * @param {string} props.iconBgColor - Background color class for icon container
  * @param {string} props.iconColor - Text color class for icon
  * @param {number} [props.trend] - Percentage change (positive/negative)
@@ -17,7 +17,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 export default function StatCard({
     title,
     value,
-    icon: Icon,
+    icon,
     iconBgColor = "bg-orange-100",
     iconColor = "text-orange-600",
     trend,
@@ -26,7 +26,7 @@ export default function StatCard({
 }) {
     const hasTrend = trend !== undefined && trend !== null;
     const isPositive = trend > 0;
-    const TrendIcon = isPositive ? TrendingUp : TrendingDown;
+    const TrendIcon = isPositive ? "fa-arrow-trend-up" : "fa-arrow-trend-down";
 
     if (loading) {
         return (
@@ -47,7 +47,7 @@ export default function StatCard({
             <div className="flex items-center space-x-4">
                 {/* Icon Container */}
                 <div className={`p-4 rounded-full ${iconBgColor} group-hover:scale-110 transition-transform duration-300`}>
-                    {Icon && <Icon className={`w-6 h-6 ${iconColor}`} />}
+                    {icon && <i className={`fa-solid ${icon} text-2xl ${iconColor}`}></i>}
                 </div>
 
                 {/* Content */}
@@ -62,7 +62,7 @@ export default function StatCard({
                         {hasTrend && (
                             <div className={`flex items-center text-xs font-semibold ${isPositive ? "text-green-600" : "text-red-600"
                                 }`}>
-                                <TrendIcon className="w-3 h-3 mr-0.5" />
+                                <i className={`fa-solid ${TrendIcon} text-xs mr-0.5`}></i>
                                 <span>{Math.abs(trend)}%</span>
                                 {trendLabel && (
                                     <span className="text-gray-400 ml-1">{trendLabel}</span>

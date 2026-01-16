@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  ShoppingCart,
-  Menu,
-  X,
-  SlidersHorizontal,
-  Star,
-  ChevronDown,
-} from "lucide-react";
+// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -108,11 +100,9 @@ export default function SearchPage() {
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center px-4 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow font-inter text-sm text-gray-700 border border-gray-200"
             >
-              <SlidersHorizontal className="w-4 h-4 mr-2" />
+              <i className="fa-solid fa-sliders text-base mr-2"></i>
               Filters
-              <ChevronDown
-                className={`w-4 h-4 ml-2 transform transition-transform ${showFilters ? "rotate-180" : ""}`}
-              />
+              <i className={`fa-solid fa-chevron-down text-base ml-2 transform transition-transform ${showFilters ? "rotate-180" : ""}`}></i>
             </button>
 
             <select
@@ -237,13 +227,13 @@ export default function SearchPage() {
                   <div className="flex items-center mb-2">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
-                        <Star
+                        <i
                           key={i}
-                          className={`w-3 h-3 ${i < Math.floor(product.product_rating || 0)
-                            ? "text-[#D97534] fill-current"
+                          className={`fa-solid fa-star text-xs ${i < Math.floor(product.product_rating || 0)
+                            ? "text-[#D97534]"
                             : "text-gray-300"
                             }`}
-                        />
+                        ></i>
                       ))}
                     </div>
                     <span className="ml-2 text-xs text-gray-600 font-inter">

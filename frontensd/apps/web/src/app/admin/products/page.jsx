@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, ArrowLeft, Search, Filter, Package } from "lucide-react";
+// FontAwesome icons used globally
 import { useNavigate } from "react-router";
 import useAuth from "@/utils/useAuth";
 
@@ -109,7 +109,7 @@ export default function ProductList() {
                             href="/admin"
                             className="mr-4 p-2 rounded-full hover:bg-orange-100 transition-colors"
                         >
-                            <ArrowLeft className="w-6 h-6 text-[#8B4513]" />
+                            <i className="fa-solid fa-arrow-left text-xl text-[#8B4513]"></i>
                         </a>
                         <div>
                             <h1 className="font-playfair font-bold text-3xl text-[#8B4513]">
@@ -124,7 +124,7 @@ export default function ProductList() {
                         onClick={createHandler}
                         className="flex items-center px-5 py-3 bg-[#D97534] hover:bg-[#C86429] text-white rounded-lg font-inter font-medium transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
                     >
-                        <Plus className="w-5 h-5 mr-2" />
+                        <i className="fa-solid fa-plus mr-2"></i>
                         Create Product
                     </button>
                 </div>
@@ -134,7 +134,7 @@ export default function ProductList() {
                     <div className="flex flex-col sm:flex-row gap-4">
                         {/* Search */}
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                             <input
                                 type="text"
                                 placeholder="Search products by name or brand..."
@@ -146,7 +146,7 @@ export default function ProductList() {
 
                         {/* Category Filter */}
                         <div className="relative">
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <i className="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                             <select
                                 value={categoryFilter}
                                 onChange={(e) => setCategoryFilter(e.target.value)}
@@ -170,7 +170,7 @@ export default function ProductList() {
                     <div className="bg-red-50 text-red-600 p-4 rounded-lg font-inter">{error}</div>
                 ) : filteredProducts.length === 0 ? (
                     <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
-                        <Package className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                        <i className="fa-solid fa-box text-6xl text-gray-200 mx-auto mb-4"></i>
                         <p className="text-gray-500 font-inter text-lg">No products found</p>
                         <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
                     </div>
@@ -204,7 +204,7 @@ export default function ProductList() {
                                                                 />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                                                    <Package className="w-6 h-6" />
+                                                                    <i className="fa-solid fa-box"></i>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -240,14 +240,14 @@ export default function ProductList() {
                                                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                             title="Edit"
                                                         >
-                                                            <Edit className="w-4 h-4" />
+                                                            <i className="fa-solid fa-pen-to-square"></i>
                                                         </a>
                                                         <button
                                                             onClick={() => deleteHandler(product._id)}
                                                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                             title="Delete"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <i className="fa-solid fa-trash"></i>
                                                         </button>
                                                     </div>
                                                 </td>

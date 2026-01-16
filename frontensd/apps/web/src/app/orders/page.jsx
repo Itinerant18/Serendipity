@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, ShoppingCart, Menu, X, Package, User } from "lucide-react";
+// FontAwesome icons loaded globally
 import useAuth from "@/utils/useAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -96,7 +96,7 @@ export default function OrdersPage() {
 
         {orders.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
-            <Package className="w-24 h-24 mx-auto text-gray-300 mb-4" />
+            <i className="fa-solid fa-box text-8xl mx-auto text-gray-300 mb-4"></i>
             <p className="font-playfair text-2xl text-gray-500 mb-2">
               No orders yet
             </p>

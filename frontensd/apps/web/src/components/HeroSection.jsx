@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles } from "lucide-react";
+// FontAwesome icons loaded globally
 
 /**
  * HeroSection Component
@@ -32,7 +32,7 @@ export default function HeroSection({
                 <div className="text-center max-w-3xl mx-auto">
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white/90 text-sm mb-6 animate-fadeIn">
-                        <Sparkles className="w-4 h-4 text-[#febd69]" />
+                        <i className="fa-solid fa-sparkles text-base text-[#febd69]"></i>
                         <span>New arrivals every day</span>
                     </div>
 
@@ -53,7 +53,7 @@ export default function HeroSection({
                             className="inline-flex items-center gap-2 px-8 py-4 bg-[#febd69] hover:bg-[#f3a847] text-[#232f3e] font-bold rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
                         >
                             {ctaText}
-                            <ArrowRight className="w-5 h-5" />
+                            <i className="fa-solid fa-arrow-right text-xl"></i>
                         </Link>
 
                         {showSecondary && (

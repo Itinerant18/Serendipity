@@ -124,8 +124,13 @@ function useAuth() {
   }, [login]);
 
   // Mock implementations for social auth to prevent crashes if used
-  const signInWithGoogle = useCallback(async () => {
+  const signInWithGoogle = useCallback(async (role = 'customer') => {
     try {
+      // Store intent in localStorage to survive OAuth redirect
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_intent_role', role);
+      }
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

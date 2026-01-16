@@ -4,18 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
 import useCartStore from "@/utils/cartStore";
-import {
-    Search,
-    ShoppingCart,
-    User,
-    Menu,
-    X,
-    ChevronDown,
-    LogOut,
-    Package,
-    Store,
-    Settings
-} from "lucide-react";
+// FontAwesome icons loaded globally via script tag in root.tsx
 
 export default function Header() {
     const { user, isAuthenticated, signOut } = useAuth();
@@ -69,7 +58,7 @@ export default function Header() {
                         to="/"
                         className="flex items-center gap-2 text-white font-bold text-xl hover:text-[#febd69] transition-colors"
                     >
-                        <Store className="w-7 h-7 text-[#febd69]" />
+                        <i className="fa-solid fa-store text-3xl text-[#febd69]"></i>
                         <span className="font-playfair hidden sm:block">Serendipity</span>
                     </Link>
 
@@ -90,7 +79,7 @@ export default function Header() {
                                 type="submit"
                                 className="absolute right-0 top-0 h-full px-4 bg-[#febd69] hover:bg-[#f3a847] rounded-r-lg transition-colors"
                             >
-                                <Search className="w-5 h-5 text-[#232f3e]" />
+                                <i className="fa-solid fa-magnifying-glass text-xl text-[#232f3e]"></i>
                             </button>
                         </div>
                     </form>
@@ -118,7 +107,7 @@ export default function Header() {
                             to="/cart"
                             className="relative p-2 text-gray-300 hover:text-white transition-colors"
                         >
-                            <ShoppingCart className="w-6 h-6" />
+                            <i className="fa-solid fa-cart-shopping text-2xl"></i>
                             <span className="absolute -top-1 -right-1 bg-[#febd69] text-[#232f3e] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                                 {cartCount || 0}
                             </span>
@@ -131,11 +120,11 @@ export default function Header() {
                                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                                     className="flex items-center gap-2 p-2 text-gray-300 hover:text-white transition-colors"
                                 >
-                                    <User className="w-6 h-6" />
+                                    <i className="fa-solid fa-user text-2xl"></i>
                                     <span className="hidden sm:block text-sm font-medium">
                                         {user?.name || "Account"}
                                     </span>
-                                    <ChevronDown className="w-4 h-4 hidden sm:block" />
+                                    <i className="fa-solid fa-chevron-down text-base hidden sm:block"></i>
                                 </button>
 
                                 {/* Dropdown */}
@@ -151,7 +140,7 @@ export default function Header() {
                                             onClick={() => setIsUserMenuOpen(false)}
                                             className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                         >
-                                            <User className="w-4 h-4" />
+                                            <i className="fa-solid fa-user text-base"></i>
                                             My Account
                                         </Link>
 
@@ -160,7 +149,7 @@ export default function Header() {
                                             onClick={() => setIsUserMenuOpen(false)}
                                             className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                         >
-                                            <Package className="w-4 h-4" />
+                                            <i className="fa-solid fa-box text-base"></i>
                                             My Orders
                                         </Link>
 
@@ -170,7 +159,7 @@ export default function Header() {
                                                 onClick={() => setIsUserMenuOpen(false)}
                                                 className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                             >
-                                                <Store className="w-4 h-4" />
+                                                <i className="fa-solid fa-store text-base"></i>
                                                 Seller Dashboard
                                             </Link>
                                         )}
@@ -181,7 +170,7 @@ export default function Header() {
                                                 onClick={() => setIsUserMenuOpen(false)}
                                                 className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                             >
-                                                <Settings className="w-4 h-4" />
+                                                <i className="fa-solid fa-gear text-base"></i>
                                                 Admin Panel
                                             </Link>
                                         )}
@@ -191,7 +180,7 @@ export default function Header() {
                                                 onClick={handleSignOut}
                                                 className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                                             >
-                                                <LogOut className="w-4 h-4" />
+                                                <i className="fa-solid fa-right-from-bracket text-base"></i>
                                                 Sign Out
                                             </button>
                                         </div>
@@ -203,7 +192,7 @@ export default function Header() {
                                 to="/account/signin"
                                 className="flex items-center gap-2 px-4 py-2 bg-[#febd69] hover:bg-[#f3a847] text-[#232f3e] font-semibold rounded-lg transition-colors text-sm"
                             >
-                                <User className="w-4 h-4" />
+                                <i className="fa-solid fa-user text-base"></i>
                                 <span className="hidden sm:block">Sign In</span>
                             </Link>
                         )}
@@ -213,7 +202,7 @@ export default function Header() {
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors"
                         >
-                            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {isMenuOpen ? <i className="fa-solid fa-xmark text-2xl"></i> : <i className="fa-solid fa-bars text-2xl"></i>}
                         </button>
                     </div>
                 </div>
@@ -235,7 +224,7 @@ export default function Header() {
                             type="submit"
                             className="absolute right-0 top-0 h-full px-4 bg-[#febd69] hover:bg-[#f3a847] rounded-r-lg transition-colors"
                         >
-                            <Search className="w-5 h-5 text-[#232f3e]" />
+                            <i className="fa-solid fa-magnifying-glass text-xl text-[#232f3e]"></i>
                         </button>
                     </div>
                 </form>

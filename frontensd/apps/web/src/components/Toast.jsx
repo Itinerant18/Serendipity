@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect } from 'react';
-import { Check, X, AlertCircle, Info } from 'lucide-react';
+// FontAwesome icons loaded globally
 
 export default function Toast({ message, type = 'info', onClose, duration = 3000 }) {
     useEffect(() => {
@@ -10,10 +12,10 @@ export default function Toast({ message, type = 'info', onClose, duration = 3000
     }, [duration, onClose]);
 
     const icons = {
-        success: <Check className="w-5 h-5 text-green-600" />,
-        error: <X className="w-5 h-5 text-red-600" />,
-        warning: <AlertCircle className="w-5 h-5 text-yellow-600" />,
-        info: <Info className="w-5 h-5 text-blue-600" />
+        success: <i className="fa-solid fa-check text-xl text-green-600"></i>,
+        error: <i className="fa-solid fa-xmark text-xl text-red-600"></i>,
+        warning: <i className="fa-solid fa-circle-exclamation text-xl text-yellow-600"></i>,
+        info: <i className="fa-solid fa-circle-info text-xl text-blue-600"></i>
     };
 
     const styles = {
@@ -35,7 +37,7 @@ export default function Toast({ message, type = 'info', onClose, duration = 3000
                 onClick={onClose}
                 className="flex-shrink-0 hover:bg-gray-100 rounded p-1 transition-colors"
             >
-                <X className="w-4 h-4 text-gray-500" />
+                <i className="fa-solid fa-xmark text-base text-gray-500"></i>
             </button>
         </div>
     );
