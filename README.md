@@ -92,3 +92,59 @@ npm run dev
 - **Backend**: Node.js, Express, Socket.io, Mongoose.
 - **Database**: MongoDB, Supabase (PostgreSQL).
 - **Payments**: Razorpay / Stripe.
+
+## Troubleshooting & Common Commands
+
+If you encounter issues with "module not found" or package installation errors, try performing a clean install.
+
+### Backend Troubleshooting
+
+1. **Re-install Dependencies (Clean Install):**
+   
+   **Windows (PowerShell):**
+   ```powershell
+   cd backend
+   Remove-Item -Recurse -Force node_modules
+   Remove-Item package-lock.json
+   npm install
+   ```
+
+   **Mac/Linux/Git Bash:**
+   ```bash
+   cd backend
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+2. **Run Backend Server Manually:**
+   ```bash
+   cd backend
+   node server.js
+   # OR
+   npm run server
+   ```
+
+### Frontend Troubleshooting
+
+1. **Re-install Dependencies (Clean Install):**
+   
+   **Windows (PowerShell):**
+   ```powershell
+   cd frontensd/apps/web
+   Remove-Item -Recurse -Force node_modules
+   Remove-Item package-lock.json
+   npm install
+   ```
+
+   **Mac/Linux/Git Bash:**
+   ```bash
+   cd frontensd/apps/web
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+2. **Run Frontend Web App:**
+   ```bash
+   cd frontensd/apps/web
+   npm run dev
+   ```
