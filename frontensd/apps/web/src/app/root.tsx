@@ -438,7 +438,7 @@ export function Layout({ children }: { children: ReactNode }) {
         />
         <script type="module" src="/src/__create/dev-error-overlay.js"></script>
         <link rel="icon" href="/src/__create/favicon.png" />
-        <script src="https://kit.fontawesome.com/629b37c81d.js" crossOrigin="anonymous" async />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossOrigin="anonymous" referrerPolicy="no-referrer" />
         <script src="https://checkout.razorpay.com/v1/checkout.js" async />
         {LoadFontsSSR ? <LoadFontsSSR /> : null}
       </head>

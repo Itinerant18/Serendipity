@@ -1,4 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import useAuthStore from '@/utils/authStore';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -11,13 +17,14 @@ const queryClient = new QueryClient({
   },
 });
 
-import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import useAuthStore from '@/utils/authStore';
-
 export default function RootLayout({ children }) {
   const login = useAuthStore(state => state.login);
   const logout = useAuthStore(state => state.logout);
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  // Define routes where global header/footer should NOT appear
+  const isExcludedRoute = pathname.startsWith('/seller') || pathname.startsWith('/admin') || pathname.startsWith('/auth');
 
   useEffect(() => {
     const fetchProfileAndLogin = async (session) => {
@@ -101,7 +108,9 @@ export default function RootLayout({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {!isExcludedRoute && <Header />}
       {children}
+      {!isExcludedRoute && <Footer />}
     </QueryClientProvider>
   );
 }

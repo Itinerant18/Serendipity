@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 // FontAwesome icons loaded globally
 import useAuth from "@/utils/useAuth";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { formatCurrency } from "@/utils/format";
 
 export default function OrdersPage() {
@@ -80,12 +78,6 @@ export default function OrdersPage() {
       <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap"
         rel="stylesheet"
-      />
-
-      <Header
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        cartCount={cartCount}
       />
 
       {/* Orders Content */}
@@ -197,8 +189,6 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
-
-      <Footer />
 
       <style jsx global>{`
         .font-inter {

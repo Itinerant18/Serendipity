@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 // FontAwesome icons used globally
 import { formatCurrency } from "@/utils/format";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import useCartStore from "@/utils/cartStore";
 
 export default function ProductPage({ params }) {
@@ -149,11 +147,6 @@ export default function ProductPage({ params }) {
 
     return (
         <div className="min-h-screen bg-[#FFF8F0]">
-            <Header
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-            />
-
             {/* Product Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Breadcrumb */}
@@ -433,7 +426,7 @@ export default function ProductPage({ params }) {
                 </div>
             </div>
 
-            <Footer />
+
 
             <style jsx global>{`
         .font-inter {

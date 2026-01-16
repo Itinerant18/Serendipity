@@ -4,14 +4,67 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 // FontAwesome icons loaded globally
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import HeroSection from "@/components/HeroSection";
+import { EcommerceHero } from "@/components/ecommerce-hero";
 import ProductCard from "@/components/ProductCard";
 import { EmojiCategoryCard, defaultCategories } from "@/components/CategoryCard";
 import useCartStore from "@/utils/cartStore";
 
 export default function HomePage() {
+    const heroSlides = [
+        {
+            id: "1",
+            type: "image",
+            src: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop",
+            title: "Discover Premium Sound",
+            subtitle: "Unexpected Finds",
+            description: "Stumble upon the perfect audio experience you didn't know you needed",
+            category: "Electronics",
+            discount: "30% OFF",
+            ctaText: "Explore Now",
+            ctaLink: "/category/Electronics",
+            overlay: true,
+        },
+        {
+            id: "2",
+            type: "image",
+            src: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+            title: "Your Style Awaits",
+            subtitle: "Serendipitous Fashion",
+            description: "Let us surprise you with styles you'll love by chance",
+            category: "Fashion",
+            discount: "Up to 50% OFF",
+            ctaText: "Find Your Look",
+            ctaLink: "/category/Fashion",
+            overlay: true,
+        },
+        {
+            id: "3",
+            type: "image",
+            src: "https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?q=80&w=2070&auto=format&fit=crop",
+            title: "Home Treasures",
+            subtitle: "Discover by Chance",
+            description: "Find that perfect piece that makes your house a home",
+            category: "Home & Living",
+            discount: "25% OFF",
+            ctaText: "Discover More",
+            ctaLink: "/category/Home%20%26%20Living",
+            overlay: true,
+        },
+        {
+            id: "4",
+            type: "image",
+            src: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=2080&auto=format&fit=crop",
+            title: "Beauty By Chance",
+            subtitle: "Happy Discoveries",
+            description: "Uncover beauty products you'll wonder how you lived without",
+            category: "Beauty",
+            discount: "Buy 2 Get 1 Free",
+            ctaText: "Explore Beauty",
+            ctaLink: "/category/Beauty",
+            overlay: true,
+        },
+    ];
+
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -51,17 +104,15 @@ export default function HomePage() {
 
     return (
         <div className="min-h-screen bg-[#F3F3F3]">
-            {/* Header */}
-            <Header />
+
 
             {/* Hero Section */}
-            <HeroSection
-                title="Finding something good unintentionally"
-                subtitle="Welcome to Serendipity – your marketplace for discovering amazing products from sellers around the world."
-                ctaText="Browse Products"
-                ctaLink="/search"
-                secondaryCtaText="Start Selling"
-                secondaryCtaLink="/seller/signup"
+            {/* Hero Section */}
+            <EcommerceHero
+                slides={heroSlides}
+                autoplayDelay={4000}
+                showCategories={false}
+                showDots={true}
             />
 
             {/* Main Content */}
@@ -198,8 +249,7 @@ export default function HomePage() {
                 </section>
             </main>
 
-            {/* Footer */}
-            <Footer />
+
         </div>
     );
 }

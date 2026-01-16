@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 // FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,11 +80,6 @@ export default function SearchPage() {
       <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap"
         rel="stylesheet"
-      />
-
-      <Header
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -250,7 +244,7 @@ export default function SearchPage() {
         )}
       </div>
 
-      <Footer />
+
 
       <style jsx global>{`
         @keyframes staggerIn {

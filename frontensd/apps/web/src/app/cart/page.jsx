@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 // FontAwesome icons loaded globally
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 import { formatCurrency } from "@/utils/format";
 
 import useCartStore from "@/utils/cartStore";
@@ -36,9 +35,7 @@ export default function CartPage() {
 
     return (
         <div className="min-h-screen bg-[#F3F3F3]">
-            <Header />
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <h1 className="text-3xl font-bold font-playfair text-gray-900 mb-8">Shopping Cart</h1>
 
                 {items.length === 0 ? (
@@ -137,9 +134,7 @@ export default function CartPage() {
                         </div>
                     </div>
                 )}
-            </div>
-
-            <Footer />
+            </main>
         </div>
     );
 }
