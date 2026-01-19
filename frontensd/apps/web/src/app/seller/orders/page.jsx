@@ -52,8 +52,13 @@ export default function SellerOrdersPage() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                // Note: This endpoint needs to be created on the backend
-                // For now, we'll show empty state and rely on real-time
+                setLoading(true);
+                const res = await fetch(`http://localhost:5000/api/seller/orders?status=${filter}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Failed to fetch orders');
+                const data = await res.json();
+                setOrders(data || []);
                 setLoading(false);
             } catch (error) {
                 console.error("Failed to fetch orders", error);
@@ -62,11 +67,14 @@ export default function SellerOrdersPage() {
         };
 
         if (token) fetchOrders();
-    }, [token]);
+    }, [token, filter]);
 
+    // Filter orders client-side for safety (in case backend returns mixed statuses)
     const filteredOrders = orders.filter(order => {
+        if (!order?.status) return filter === "all";
+        const status = (order.status || '').toLowerCase();
         if (filter === "all") return true;
-        return order.status === filter;
+        return status === filter;
     });
 
     const filterOptions = [

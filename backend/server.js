@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 // const mongoose = require('mongoose');
 const cors = require('cors');
+const compression = require('compression');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -19,7 +20,17 @@ const io = require('socket.io')(server, {
 });
 
 app.use(cors());
+app.use(compression());
 app.use(express.json());
+
+// Small cache hints for GET endpoints (actual caching handled per-route where needed)
+app.use((req, res, next) => {
+    if (req.method === 'GET') {
+        // Conservative default; routes can override.
+        res.setHeader('Cache-Control', 'public, max-age=30');
+    }
+    next();
+});
 
 // Make io accessible in routes via req
 app.use((req, res, next) => {
@@ -37,6 +48,7 @@ app.use('/api/cart', require('./routes/cartRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use('/api/seller', require('./routes/sellerRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/categories', require('./routes/categoryRoutes'));
 
 // Profile Routes
 app.use('/api/profile', require('./routes/profileRoutes'));

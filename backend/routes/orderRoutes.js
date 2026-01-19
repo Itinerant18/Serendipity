@@ -117,17 +117,25 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 // @route   GET /api/orders/myorders
 // @access  Private
 router.get('/myorders', protect, asyncHandler(async (req, res) => {
-  const { data: orders, error } = await supabase
+  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit || '20', 10), 1), 100);
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data: orders, error, count } = await supabase
     .from('orders')
-    .select('*')
-    .eq('user_id', req.user.id);
+    .select('id,order_number,total_amount,payment_status,is_paid,is_delivered,created_at', { count: 'exact' })
+    .eq('user_id', req.user.id)
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
   if (error) {
     res.status(500);
     throw new Error(error.message);
   }
 
-  res.json(orders);
+  res.setHeader('Cache-Control', 'private, max-age=15');
+  res.json({ page, limit, total: count || 0, orders: orders || [] });
 }));
 
 router.get('/:id', protect, asyncHandler(async (req, res) => {

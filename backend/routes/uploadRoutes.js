@@ -100,7 +100,7 @@ router.post('/product-media', protect, protectSeller, upload.single('file'), asy
 // @desc    Upload multiple product images
 // @route   POST /api/upload/product-images
 // @access  Private (Seller)
-router.post('/product-images', protect, protectSeller, upload.array('files', 5), async (req, res) => {
+router.post('/product-images', protect, protectSeller, upload.array('files', 7), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: 'No files uploaded' });

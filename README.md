@@ -35,23 +35,53 @@ A full-stack e-commerce application built with the MERN stack (MongoDB, Express,
 
 ## Configuration
 
+### Quick Setup (Recommended)
+
+Use the automated setup script:
+
+**Windows PowerShell:**
+```powershell
+.\setup-env.ps1
+```
+
+**Manual Setup:**
+
+### Database Migration (If you have existing seller data)
+
+If you have existing seller profiles and products in your main database and want to migrate them to the seller database:
+
+```bash
+cd backend
+npm run migrate:seller
+```
+
+This will:
+- Copy all `seller_profiles` from main database → seller database
+- Copy all seller `products` from main database → seller database
+- Verify the migration was successful
+
+**⚠️ Important**: The migration script **copies** data (doesn't delete). Your original data remains in the main database as a backup.
+
+For detailed migration instructions, see [`backend/migrations/README_MIGRATION.md`](backend/migrations/README_MIGRATION.md)
+
 ### Backend
 1. Navigate to the `backend` directory.
-2. Create a `.env` file based on `.env.example`.
-   ```bash
-   cp .env.example .env
-   ```
-   *(On Windows Command Prompt, use `copy .env.example .env`)*
-3. Update the `.env` file with your credentials (MongoDB URI, Supabase keys, Razorpay secret, etc.).
+2. Create a `.env` file and add the required environment variables (see `ENV_SETUP.md` for details).
+3. Update the `.env` file with your credentials:
+   - Main Supabase database credentials
+   - Seller Supabase database credentials
+   - Payment gateway keys (Razorpay, Stripe)
+   - JWT secret (optional)
 
 ### Frontend
 1. Navigate to the `frontensd/apps/web` directory.
-2. Create a `.env` file based on `.env.example`.
-   ```bash
-   cp .env.example .env
-   ```
-   *(On Windows Command Prompt, use `copy .env.example .env`)*
-3. Update the `.env` file with your configuration (Supabase URL/Anon Key, API endpoints, etc.).
+2. Create a `.env` file and add the required environment variables (see `ENV_SETUP.md` for details).
+3. Update the `.env` file with your configuration:
+   - Main Supabase URL and Anon Key
+   - Backend API URL
+   - Socket.IO URL
+
+**For detailed environment setup instructions, see [`ENV_SETUP.md`](ENV_SETUP.md)**
 
 ## Running the Application
 
@@ -146,5 +176,5 @@ If you encounter issues with "module not found" or package installation errors, 
 2. **Run Frontend Web App:**
    ```bash
    cd frontensd/apps/web
-   npm run dev
+   npm run dev / node node_modules/vite/bin/vite.js
    ```

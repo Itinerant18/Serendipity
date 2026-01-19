@@ -7,9 +7,12 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key Loaded:', !!supabaseKey, supabaseKey?.substring(0, 10));
-console.log('Supabase Service Key Loaded:', !!supabaseServiceKey, supabaseServiceKey?.substring(0, 10));
+// Avoid logging secrets in production. If you need debug output, log only booleans.
+if (process.env.NODE_ENV === 'development') {
+  console.log('Supabase URL Loaded:', !!supabaseUrl);
+  console.log('Supabase Key Loaded:', !!supabaseKey);
+  console.log('Supabase Service Key Loaded:', !!supabaseServiceKey);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

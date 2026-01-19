@@ -1,73 +1,213 @@
 const express = require('express');
 const router = express.Router();
-const { createClient } = require('@supabase/supabase-js');
 const { protect } = require('../middleware/authMiddleware');
 const { protectSeller } = require('../middleware/sellerMiddleware');
-const dotenv = require('dotenv');
+const { supabase, supabaseAdmin } = require('../config/supabase');
+const { supabaseSeller, supabaseSellerAdmin } = require('../config/supabaseSeller');
 
-dotenv.config();
-
-// Regular client for queries
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
-// Service role client (bypasses RLS) - use for server-side admin operations
-const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
-);
+// Note: server.js already loads dotenv; use shared clients from config for connection reuse.
 
 // @desc    Register as a Seller (Create Profile from existing account)
 // @route   POST /api/seller/register
 // @access  Private
 router.post('/register', protect, async (req, res) => {
     try {
-        const { store_name, description, logo_url, mobile, name, business_name, business_type, business_address, account_type } = req.body;
+        console.log('=== Seller Registration Request ===');
+        console.log('User ID:', req.user?.id);
+        console.log('Request Body:', req.body);
+        
+        // Validate seller database client
+        if (!supabaseSellerAdmin || typeof supabaseSellerAdmin.from !== 'function') {
+            console.error('ERROR: supabaseSellerAdmin is not initialized!');
+            console.error('Please check your .env file has:');
+            console.error('  - SELLER_SUPABASE_URL');
+            console.error('  - SELLER_SUPABASE_KEY');
+            console.error('  - SELLER_SUPABASE_SERVICE_KEY');
+            return res.status(500).json({ 
+                message: 'Seller database not configured',
+                error: 'SELLER_SUPABASE_SERVICE_KEY is missing or invalid. Please check your .env file and restart the server.'
+            });
+        }
+
+        const { store_name, description, logo_url, mobile, name } = req.body;
         const userId = req.user.id;
 
-        // Check if user is already a seller
-        const { data: existingProfile } = await supabase
+        console.log('Extracted from request body:', {
+            store_name,
+            description,
+            logo_url,
+            mobile,
+            name,
+            userId
+        });
+
+        if (!userId) {
+            console.error('No user ID found in req.user');
+            return res.status(401).json({ message: 'User ID not found. Please log in again.' });
+        }
+
+        // Validate required fields
+        if (!store_name || typeof store_name !== 'string' || !store_name.trim()) {
+            console.error('Validation failed: store_name is missing or invalid');
+            console.error('Received store_name:', store_name);
+            return res.status(400).json({ 
+                message: 'Store name is required',
+                received: { store_name: store_name || null }
+            });
+        }
+
+        const trimmedStoreName = store_name.trim();
+        if (trimmedStoreName.length < 2) {
+            console.error('Validation failed: store_name too short');
+            console.error('Store name length:', trimmedStoreName.length);
+            return res.status(400).json({ 
+                message: 'Store name must be at least 2 characters',
+                received: { store_name: trimmedStoreName, length: trimmedStoreName.length }
+            });
+        }
+
+        // Check if user is already a seller (using seller database admin client)
+        console.log('Checking if user is already a seller...');
+        const { data: existingProfile, error: profileCheckError } = await supabaseSellerAdmin
             .from('seller_profiles')
             .select('id')
             .eq('user_id', userId)
             .single();
 
-        if (existingProfile) {
-            return res.status(400).json({ message: 'You are already registered as a seller' });
+        // PGRST116 = no rows returned (this is normal for new sellers)
+        if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+            console.error('Error checking existing profile:', profileCheckError);
+            console.error('Error Code:', profileCheckError.code);
+            console.error('Error Message:', profileCheckError.message);
+            throw profileCheckError;
         }
 
-        // Check if store name exists
-        const { data: existingStore } = await supabase
+        if (existingProfile) {
+            console.log('User is already registered as a seller:', existingProfile.id);
+            
+            // Sync seller status to main database if not already set
+            const { data: mainUser } = await supabaseAdmin
+                .from('users')
+                .select('is_seller, seller_profile_id')
+                .eq('id', userId)
+                .single();
+
+            if (!mainUser?.is_seller || mainUser?.seller_profile_id !== existingProfile.id) {
+                console.log('Syncing seller status to main database...');
+                const { error: syncError } = await supabaseAdmin
+                    .from('users')
+                    .update({
+                        is_seller: true,
+                        seller_profile_id: existingProfile.id
+                    })
+                    .eq('id', userId);
+
+                // If foreign key constraint fails (23503), just set is_seller without seller_profile_id
+                if (syncError && syncError.code === '23503') {
+                    console.log('Foreign key constraint detected - setting is_seller only (dual database setup)');
+                    const { error: fallbackError } = await supabaseAdmin
+                        .from('users')
+                        .update({
+                            is_seller: true
+                            // Don't set seller_profile_id - it exists in seller database, not main database
+                        })
+                        .eq('id', userId);
+                    
+                    if (fallbackError) {
+                        console.error('Failed to sync seller status (fallback):', fallbackError);
+                    } else {
+                        console.log('Successfully synced seller status (is_seller only)');
+                    }
+                } else if (syncError) {
+                    console.error('Failed to sync seller status:', syncError);
+                } else {
+                    console.log('Successfully synced seller status');
+                }
+            }
+
+            return res.status(400).json({ 
+                message: 'You are already registered as a seller',
+                sellerProfileId: existingProfile.id,
+                synced: true
+            });
+        }
+
+        // Check if store name exists (using seller database admin client)
+        console.log('Checking if store name exists...');
+        const { data: existingStore, error: storeCheckError } = await supabaseSellerAdmin
             .from('seller_profiles')
             .select('id')
-            .eq('store_name', store_name)
+            .eq('store_name', trimmedStoreName)
             .single();
+
+        // PGRST116 = no rows returned (this is normal if store name is available)
+        if (storeCheckError && storeCheckError.code !== 'PGRST116') {
+            console.error('Error checking existing store:', storeCheckError);
+            console.error('Error Code:', storeCheckError.code);
+            console.error('Error Message:', storeCheckError.message);
+            throw storeCheckError;
+        }
 
         if (existingStore) {
             return res.status(400).json({ message: 'Store name already taken' });
         }
 
-        // Create Seller Profile
-        const { data: profile, error } = await supabase
+        // Create Seller Profile in seller database (using admin client to bypass RLS)
+        // Only include columns that exist in the database schema
+        console.log('Creating seller profile...');
+        const profileData = {
+            user_id: userId,
+            store_name: trimmedStoreName,
+            description: description || '',
+            rating: 0
+        };
+
+        // Only add optional fields if they exist in the schema
+        if (logo_url) {
+            profileData.logo_url = logo_url;
+        }
+
+        console.log('Profile data to insert:', profileData);
+        const { data: profile, error } = await supabaseSellerAdmin
             .from('seller_profiles')
-            .insert([
-                {
-                    user_id: userId,
-                    store_name,
-                    description: description || '',
-                    logo_url: logo_url || null,
-                    rating: 0,
-                    business_name: business_name || store_name,
-                    business_type: business_type || null,
-                    business_address: business_address || null,
-                    account_type: account_type || 'individual'
-                },
-            ])
+            .insert([profileData])
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Seller Profile Creation Error:', error);
+            console.error('Error Code:', error.code);
+            console.error('Error Message:', error.message);
+            console.error('Error Details:', error.details);
+            console.error('Error Hint:', error.hint);
+            
+            // Handle specific error codes
+            if (error.code === 'PGRST205') {
+                console.error('\n⚠️  SCHEMA CACHE ISSUE DETECTED!');
+                console.error('The seller_profiles table exists but PostgREST schema cache is stale.');
+                console.error('Solution: Refresh the schema cache in Supabase Dashboard:');
+                console.error('  1. Go to: Settings > API');
+                console.error('  2. Click "Reload Schema" or restart the project');
+                return res.status(500).json({
+                    message: 'Database schema cache issue. Please refresh the schema cache in Supabase Dashboard.',
+                    error: 'PGRST205: Schema cache needs refresh',
+                    hint: 'Go to Supabase Dashboard > Settings > API > Reload Schema'
+                });
+            } else if (error.code === '42P01') {
+                return res.status(500).json({
+                    message: 'Seller database table not found. Please run the schema creation script.',
+                    error: 'Table seller_profiles does not exist',
+                    hint: 'Run: backend/migrations/createSellerDatabaseSchema.sql in your seller database'
+                });
+            }
+            
+            throw error;
+        }
+
+        console.log('Seller profile created successfully:', profile.id);
 
         // Update User to be a seller (using admin client to bypass RLS)
+        console.log('Updating user record in main database...');
         const { error: userError } = await supabaseAdmin
             .from('users')
             .update({
@@ -80,9 +220,15 @@ router.post('/register', protect, async (req, res) => {
 
         if (userError) {
             console.error('User Update Error:', userError);
-            throw userError;
+            console.error('Error Code:', userError.code);
+            console.error('Error Message:', userError.message);
+            // Don't throw - profile is already created, just log the error
+            console.warn('Warning: User update failed but profile was created');
+        } else {
+            console.log('User record updated successfully');
         }
 
+        console.log('=== Seller Registration Complete ===');
         res.status(201).json({
             message: 'Seller profile created successfully',
             seller: profile,
@@ -91,7 +237,18 @@ router.post('/register', protect, async (req, res) => {
         });
     } catch (error) {
         console.error('Seller Register Error:', error);
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        console.error('Error Details:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            stack: error.stack
+        });
+        res.status(500).json({ 
+            message: 'Server Error', 
+            error: error.message,
+            ...(process.env.NODE_ENV === 'development' && { details: error.details, hint: error.hint })
+        });
     }
 });
 
@@ -109,8 +266,8 @@ router.post('/signup', async (req, res) => {
             });
         }
 
-        // Check if store name already exists first
-        const { data: existingStore } = await supabase
+        // Check if store name already exists first (using seller database)
+        const { data: existingStore } = await supabaseSellerAdmin
             .from('seller_profiles')
             .select('id')
             .eq('store_name', store_name.trim())
@@ -185,8 +342,8 @@ router.post('/signup', async (req, res) => {
             }
         }
 
-        // Create Seller Profile
-        const { data: profile, error: profileError } = await supabaseAdmin
+        // Create Seller Profile in seller database
+        const { data: profile, error: profileError } = await supabaseSellerAdmin
             .from('seller_profiles')
             .insert([
                 {
@@ -250,7 +407,7 @@ router.post('/signup', async (req, res) => {
 // @access  Private (Seller)
 router.get('/profile', protect, protectSeller, async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseSeller
             .from('seller_profiles')
             .select('*')
             .eq('user_id', req.user.id)
@@ -278,9 +435,9 @@ router.put('/profile', protect, protectSeller, async (req, res) => {
             return res.status(400).json({ message: 'Store name must be at least 2 characters' });
         }
 
-        // Check if new store name is already taken by another seller
+        // Check if new store name is already taken by another seller (using seller database)
         if (store_name) {
-            const { data: existingStore } = await supabase
+            const { data: existingStore } = await supabaseSellerAdmin
                 .from('seller_profiles')
                 .select('id, user_id')
                 .eq('store_name', store_name.trim())
@@ -297,8 +454,8 @@ router.put('/profile', protect, protectSeller, async (req, res) => {
         if (description !== undefined) updates.description = description;
         if (logo_url !== undefined) updates.logo_url = logo_url;
 
-        // Update profile
-        const { data, error } = await supabaseAdmin
+        // Update profile in seller database
+        const { data, error } = await supabaseSellerAdmin
             .from('seller_profiles')
             .update(updates)
             .eq('user_id', userId)
@@ -320,10 +477,10 @@ router.put('/profile', protect, protectSeller, async (req, res) => {
 router.get('/stats', protect, protectSeller, async (req, res) => {
     try {
         const userId = req.user.id;
-        const sellerProfileId = req.user.sellerProfileId;
+        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
 
-        // Get total products
-        const { data: products, count: productCount } = await supabase
+        // Get total products from seller database
+        const { data: products, count: productCount } = await supabaseSeller
             .from('products')
             .select('*', { count: 'exact' })
             .eq('seller_profile_id', sellerProfileId);
@@ -335,6 +492,7 @@ router.get('/stats', protect, protectSeller, async (req, res) => {
         if (products && products.length > 0) {
             const productIds = products.map(p => p.id);
 
+            // Order items are in main database (orders are customer-facing)
             const { data: orderItems } = await supabase
                 .from('order_items')
                 .select('price, quantity, order_id')
@@ -366,16 +524,33 @@ router.get('/stats', protect, protectSeller, async (req, res) => {
 // @access  Private (Seller)
 router.get('/products', protect, protectSeller, async (req, res) => {
     try {
-        const sellerProfileId = req.user.sellerProfileId;
+        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+        const userId = req.user.id;
 
-        const { data, error } = await supabase
+        console.log(`Fetching products for seller: userId=${userId}, sellerProfileId=${sellerProfileId || 'null'}`);
+
+        // Get products from seller database - match by seller_profile_id OR user_id
+        // This handles cases where products were uploaded before seller_profile_id was set
+        let query = supabaseSeller
             .from('products')
-            .select('*')
-            .eq('seller_profile_id', sellerProfileId)
-            .order('created_at', { ascending: false });
+            .select('*');
 
-        if (error) throw error;
+        if (sellerProfileId) {
+            // If seller_profile_id exists, filter by it
+            query = query.eq('seller_profile_id', sellerProfileId);
+        } else {
+            // If no seller_profile_id, filter by user_id
+            query = query.eq('user_id', userId);
+        }
 
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Get Products Error:', error);
+            throw error;
+        }
+
+        console.log(`Found ${data?.length || 0} products`);
         res.json(data || []);
     } catch (error) {
         console.error('Get Products Error:', error);
@@ -384,15 +559,16 @@ router.get('/products', protect, protectSeller, async (req, res) => {
 });
 
 // @desc    Get Seller Orders
-// @route   GET /api/seller/orders
+// @route   GET /api/seller/orders?status=pending|shipped|delivered
 // @access  Private (Seller)
 router.get('/orders', protect, protectSeller, async (req, res) => {
     try {
-        const sellerProfileId = req.user.sellerProfileId;
+        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
         const limit = parseInt(req.query.limit) || 10;
+        const statusFilter = (req.query.status || 'all').toLowerCase();
 
-        // 1. Get all product IDs for this seller
-        const { data: products } = await supabase
+        // 1. Get all product IDs for this seller from seller database
+        const { data: products } = await supabaseSeller
             .from('products')
             .select('id')
             .eq('seller_profile_id', sellerProfileId);
@@ -427,19 +603,34 @@ router.get('/orders', protect, protectSeller, async (req, res) => {
         if (error) throw error;
 
         // 4. Transform to match frontend expectations
-        const formattedOrders = orders.map(order => ({
-            _id: order.id,
-            id: order.id,
-            orderNumber: order.order_number,
-            user: {
-                name: order.user?.name || 'Guest User',
-                email: order.user?.email
-            },
-            totalAmount: order.total_amount,
-            status: order.is_delivered ? 'Delivered' : (order.is_paid ? 'Processing' : 'Pending'),
-            createdAt: order.created_at,
-            paymentStatus: order.is_paid ? 'Paid' : 'Unpaid'
-        }));
+        const formattedOrders = orders.map(order => {
+            // Normalize status from DB; fallback to derived
+            const dbStatus = (order.status || '').toLowerCase();
+            let status = 'pending';
+            if (dbStatus === 'shipped' || dbStatus === 'delivered' || dbStatus === 'pending') {
+                status = dbStatus;
+            } else if (order.is_delivered) {
+                status = 'delivered';
+            } else if (order.is_paid) {
+                status = 'shipped'; // treat paid as shipped if no explicit status
+            } else {
+                status = 'pending';
+            }
+
+            return {
+                _id: order.id,
+                id: order.id,
+                orderNumber: order.order_number,
+                user: {
+                    name: order.user?.name || 'Guest User',
+                    email: order.user?.email
+                },
+                totalAmount: order.total_amount,
+                status,
+                createdAt: order.created_at,
+                paymentStatus: order.is_paid ? 'Paid' : 'Unpaid'
+            };
+        }).filter(o => statusFilter === 'all' ? true : o.status === statusFilter);
 
         res.json(formattedOrders);
     } catch (error) {
@@ -455,8 +646,8 @@ router.get('/analytics/weekly', protect, protectSeller, async (req, res) => {
     try {
         const sellerProfileId = req.seller.profileId;
 
-        // 1. Get all product IDs
-        const { data: products } = await supabase
+        // 1. Get all product IDs from seller database
+        const { data: products } = await supabaseSeller
             .from('products')
             .select('id')
             .eq('seller_profile_id', sellerProfileId);
@@ -514,6 +705,82 @@ router.get('/analytics/weekly', protect, protectSeller, async (req, res) => {
     } catch (error) {
         console.error('Get Analytics Error:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Sync Seller Status (Fix mismatch between seller DB and main DB)
+// @route   POST /api/seller/sync-status
+// @access  Private
+router.post('/sync-status', protect, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Check seller database for existing profile
+        const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
+            .from('seller_profiles')
+            .select('id')
+            .eq('user_id', userId)
+            .single();
+
+        if (sellerError && sellerError.code !== 'PGRST116') {
+            throw sellerError;
+        }
+
+        if (sellerProfile) {
+            // Update main database - try to set seller_profile_id, but handle foreign key constraint error
+            const { error: updateError } = await supabaseAdmin
+                .from('users')
+                .update({
+                    is_seller: true,
+                    seller_profile_id: sellerProfile.id
+                })
+                .eq('id', userId);
+
+            // If foreign key constraint fails (23503), just set is_seller without seller_profile_id
+            if (updateError && updateError.code === '23503') {
+                console.log('Foreign key constraint detected - setting is_seller only (dual database setup)');
+                const { error: fallbackError } = await supabaseAdmin
+                    .from('users')
+                    .update({
+                        is_seller: true
+                        // Don't set seller_profile_id - it exists in seller database, not main database
+                    })
+                    .eq('id', userId);
+                
+                if (fallbackError) {
+                    throw fallbackError;
+                }
+            } else if (updateError) {
+                throw updateError;
+            }
+
+            res.json({
+                message: 'Seller status synced successfully',
+                isSeller: true,
+                sellerProfileId: sellerProfile.id
+            });
+        } else {
+            // No seller profile found - ensure main DB reflects this
+            const { error: updateError } = await supabaseAdmin
+                .from('users')
+                .update({
+                    is_seller: false,
+                    seller_profile_id: null
+                })
+                .eq('id', userId);
+
+            res.json({
+                message: 'No seller profile found. User is not a seller.',
+                isSeller: false,
+                sellerProfileId: null
+            });
+        }
+    } catch (error) {
+        console.error('Sync Seller Status Error:', error);
+        res.status(500).json({
+            message: 'Failed to sync seller status',
+            error: error.message
+        });
     }
 });
 

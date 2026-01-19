@@ -20,11 +20,14 @@ export default function SellerSignupPage() {
             if (user.name) setName(user.name);
             if (user.email) setEmail(user.email);
             if (user.mobile) setMobile(user.mobile);
-            if (user.isSeller) {
+            // If user is already a seller, redirect to seller dashboard
+            if (user.isSeller || user.sellerProfileId) {
+                console.log('User is already a seller, redirecting to seller dashboard');
                 navigate("/seller");
+                return;
             }
         }
-    }, [user]);
+    }, [user, navigate]);
 
     const isAuth = !!user && !!token;
 
@@ -125,12 +128,19 @@ export default function SellerSignupPage() {
                 ? 'http://localhost:5000/api/seller/register'
                 : 'http://localhost:5000/api/seller/signup';
 
+            // Validate required fields before sending
+            if (!storeName || storeName.trim().length < 2) {
+                setError('Store name is required and must be at least 2 characters');
+                setLoading(false);
+                return;
+            }
+
             const payload = {
                 name: name.trim(),
                 email: email.trim().toLowerCase(),
                 mobile: mobile ? mobile.trim() : undefined,
                 store_name: storeName.trim(),
-                description: storeDescription.trim(),
+                description: storeDescription.trim() || '',
                 account_type: accountType,
                 business_name: businessName.trim() || storeName.trim(),
                 business_type: businessType,
@@ -140,6 +150,13 @@ export default function SellerSignupPage() {
             if (!isAuth) {
                 payload.password = password;
             }
+
+            console.log('Sending seller registration request:', {
+                endpoint: apiEndpoint,
+                payload: { ...payload, password: payload.password ? '***' : undefined },
+                isAuth,
+                hasToken: !!token
+            });
 
             const response = await fetch(apiEndpoint, {
                 method: 'POST',
@@ -153,7 +170,67 @@ export default function SellerSignupPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.message || 'Registration failed');
+                // Show detailed error message
+                const errorMessage = data.message || data.error || 'Registration failed';
+                console.error('Registration error:', {
+                    status: response.status,
+                    message: errorMessage,
+                    data: data
+                });
+                
+                // If user is already registered as seller, sync status and redirect
+                if (errorMessage.includes('already registered as a seller')) {
+                    setError('You are already registered as a seller. Syncing your account...');
+                    
+                    // Call sync endpoint to update user status
+                    try {
+                        const syncRes = await fetch('http://localhost:5000/api/seller/sync-status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (syncRes.ok) {
+                            const syncData = await syncRes.json();
+                            // Refresh user profile
+                            const profileRes = await fetch('http://localhost:5000/api/profile', {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                            
+                            if (profileRes.ok) {
+                                const profileData = await profileRes.json();
+                                setUser({
+                                    ...user,
+                                    isSeller: true,
+                                    sellerProfileId: profileData.user?.sellerProfileId || syncData.sellerProfileId
+                                });
+                            }
+                            
+                            setError('Account synced! Redirecting to seller dashboard...');
+                            setTimeout(() => {
+                                navigate('/seller');
+                            }, 1500);
+                        } else {
+                            setError('You are already registered. Redirecting to seller dashboard...');
+                            setTimeout(() => {
+                                navigate('/seller');
+                            }, 2000);
+                        }
+                    } catch (syncError) {
+                        console.error('Sync error:', syncError);
+                        setError('You are already registered. Redirecting to seller dashboard...');
+                        setTimeout(() => {
+                            navigate('/seller');
+                        }, 2000);
+                    }
+                    
+                    setLoading(false);
+                    return;
+                }
+                
+                setError(errorMessage);
                 setLoading(false);
                 return;
             }

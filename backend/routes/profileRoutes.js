@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const asyncHandler = require('express-async-handler');
 const { supabase, supabaseAdmin } = require('../config/supabase');
+const { supabaseSellerAdmin } = require('../config/supabaseSeller');
 const { protect } = require('../middleware/authMiddleware');
 
 // @desc    Get user profile with stats
@@ -22,6 +23,57 @@ router.get('/', protect, asyncHandler(async (req, res) => {
         throw new Error('User not found');
     }
 
+    // Check seller database if user doesn't have seller status set
+    let isSeller = user.is_seller || false;
+    let sellerProfileId = user.seller_profile_id || null;
+
+    if (!isSeller || !sellerProfileId) {
+        // Check if seller profile exists in seller database
+        const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
+            .from('seller_profiles')
+            .select('id')
+            .eq('user_id', userId)
+            .single();
+
+        if (sellerProfile && !sellerError) {
+            // Seller profile exists but user record is not updated - sync it
+            console.log(`Syncing seller status for user ${userId}: Found seller profile ${sellerProfile.id}`);
+            isSeller = true;
+            sellerProfileId = sellerProfile.id;
+
+            // Update user record in main database - try to set seller_profile_id, but handle foreign key constraint error
+            const { error: updateError } = await supabaseAdmin
+                .from('users')
+                .update({
+                    is_seller: true,
+                    seller_profile_id: sellerProfile.id
+                })
+                .eq('id', userId);
+
+            // If foreign key constraint fails (23503), just set is_seller without seller_profile_id
+            if (updateError && updateError.code === '23503') {
+                console.log('Foreign key constraint detected - setting is_seller only (dual database setup)');
+                const { error: fallbackError } = await supabaseAdmin
+                    .from('users')
+                    .update({
+                        is_seller: true
+                        // Don't set seller_profile_id - it exists in seller database, not main database
+                    })
+                    .eq('id', userId);
+                
+                if (fallbackError) {
+                    console.error('Failed to sync seller status (fallback):', fallbackError);
+                } else {
+                    console.log('Successfully synced seller status (is_seller only)');
+                }
+            } else if (updateError) {
+                console.error('Failed to sync seller status:', updateError);
+            } else {
+                console.log('Successfully synced seller status to user record');
+            }
+        }
+    }
+
     // Fetch stats
     const [ordersResult, addressesResult] = await Promise.all([
         supabaseAdmin.from('orders').select('id', { count: 'exact' }).eq('user_id', userId),
@@ -39,8 +91,8 @@ router.get('/', protect, asyncHandler(async (req, res) => {
             gender: user.gender,
             created_at: user.created_at,
             isAdmin: user.is_admin || false,
-            isSeller: user.is_seller || false,
-            sellerProfileId: user.seller_profile_id || null,
+            isSeller: isSeller,
+            sellerProfileId: sellerProfileId,
         },
         stats: {
             orders: ordersResult.count || 0,

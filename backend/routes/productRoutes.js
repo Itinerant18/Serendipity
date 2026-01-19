@@ -1,14 +1,17 @@
 const express = require('express');
 const { supabase, supabaseAdmin } = require('../config/supabase');
+const { supabaseSeller, supabaseSellerAdmin } = require('../config/supabaseSeller');
 const asyncHandler = require('express-async-handler');
 const { protect, admin } = require('../middleware/authMiddleware');
+const cache = require('../utils/cache');
 
-// Helper to check if user can manage product
+// Helper to check if user can manage product (checks seller database for seller products)
 const canManageProduct = async (user, productId) => {
-  if (user.isAdmin) return true;
+  if (user.isAdmin) return true; // Admins can manage products in main DB
   if (!user.is_seller) return false;
 
-  const { data: product } = await supabase
+  // Check seller database for seller products
+  const { data: product } = await supabaseSeller
     .from('products')
     .select('seller_profile_id')
     .eq('id', productId)
@@ -18,11 +21,7 @@ const canManageProduct = async (user, productId) => {
   // If product seller profile matches user's seller profile -> True
   if (!product) return false;
 
-  // We need the user's seller profile ID. It should be on req.user from protect middleware if we update it,
-  // or we need to fetch it.
-  // Ideally protect middleware or a new middleware attaches it.
-  // For now let's query it or assume req.user has it if we update authMiddleware/protect.
-  // Actually, let's fetch it here to be safe if not in req.user.
+  // We need the user's seller profile ID
   const { data: userData } = await supabase.from('users').select('seller_profile_id').eq('id', user.id).single();
 
   return product.seller_profile_id === userData.seller_profile_id;
@@ -31,14 +30,65 @@ const canManageProduct = async (user, productId) => {
 const router = express.Router();
 
 router.get('/', asyncHandler(async (req, res) => {
-  const { data: products, error } = await supabase.from('products').select('*');
+  // Performance: paginate + select only listing fields (avoid select('*') and huge payloads)
+  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit || '24', 10), 1), 100);
+  const keyword = (req.query.keyword || '').toString().trim();
+  const category = (req.query.category || '').toString().trim();
 
-  if (error) {
-    res.status(500);
-    throw new Error(error.message);
-  }
+  // Cache public catalog listing briefly (safe for anonymous browsing)
+  const cacheKey = `products:list:v1:p=${page}:l=${limit}:k=${keyword.toLowerCase()}:c=${category.toLowerCase()}`;
+  const ttlMs = 30 * 1000;
 
-  res.json(products.map(p => ({ ...p, _id: p.id })));
+  const payload = await cache.getOrSet(cacheKey, ttlMs, async () => {
+    const selectCols = 'id,name,price,image,brand,category,subcategory,count_in_stock,num_reviews,rating,created_at,user_id,seller_profile_id';
+    // Fetch enough rows from each DB to satisfy combined page after merge.
+    const fetchLimit = page * limit;
+    const rangeFrom = 0;
+    const rangeTo = fetchLimit - 1;
+
+    const buildQuery = (client) => {
+      let q = client
+        .from('products')
+        .select(selectCols, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(rangeFrom, rangeTo);
+
+      if (category) q = q.eq('category', category);
+      if (keyword) q = q.ilike('name', `%${keyword}%`);
+      return q;
+    };
+
+    const [mainResult, sellerResult] = await Promise.all([
+      buildQuery(supabase),
+      supabaseSeller ? buildQuery(supabaseSeller) : Promise.resolve({ data: [], count: 0, error: null }),
+    ]);
+
+    // If both failed, surface error.
+    if (mainResult.error && sellerResult.error) {
+      throw new Error('Failed to fetch products');
+    }
+
+    const mainProducts = mainResult.data || [];
+    const sellerProducts = sellerResult.data || [];
+    const allProducts = [...mainProducts, ...sellerProducts]
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const pageItems = allProducts.slice(start, end).map((p) => ({ ...p, _id: p.id }));
+
+    return {
+      page,
+      limit,
+      total: (mainResult.count || 0) + (sellerResult.count || 0),
+      products: pageItems,
+    };
+  });
+
+  // Route-specific cache header (short-lived, overridden from global default)
+  res.setHeader('Cache-Control', 'public, max-age=30');
+  res.json(payload);
 }));
 
 // @desc    Bulk create products (for CSV upload)
@@ -61,54 +111,133 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
   let sellerProfileId = null;
   if (req.user.is_seller) {
     const { data: u } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
-    sellerProfileId = u.seller_profile_id;
+    sellerProfileId = u?.seller_profile_id || null;
+    
+    // If seller_profile_id is null, try to get it from seller database
+    if (!sellerProfileId) {
+      const { data: sellerProfile } = await supabaseSellerAdmin
+        ?.from('seller_profiles')
+        .select('id')
+        .eq('user_id', req.user.id)
+        .single();
+      
+      if (sellerProfile?.id) {
+        sellerProfileId = sellerProfile.id;
+        console.log(`Found seller profile ${sellerProfileId} for user ${req.user.id}`);
+      }
+    }
   }
 
-  // Prepare products for insertion
+  console.log(`Bulk upload: User ${req.user.id}, is_seller: ${req.user.is_seller}, sellerProfileId: ${sellerProfileId || 'null'}`);
+
+  // Prepare products for insertion (only columns that exist in current schema)
   const productsToInsert = products.map(p => ({
-    name: p.name,
+    name: p.name || 'Unnamed Product',
     price: parseFloat(p.price) || 0,
     user_id: req.user.id,
-    seller_profile_id: sellerProfileId,
+    seller_profile_id: sellerProfileId, // Can be null - will be filtered by user_id
     seller_id: req.user.id,
-    image: p.image_url || 'https://via.placeholder.com/150', // Default image if missing
+    image: p.image_url || p.image || 'https://via.placeholder.com/150', // Default image if missing
     brand: p.brand || 'Generic',
     category: p.category || 'Uncategorized',
-    subcategory: p.subcategory || null, // New column
-    count_in_stock: parseInt(p.stock) || 0,
+    subcategory: p.subcategory || null,
+    count_in_stock: parseInt(p.stock || p.count_in_stock || 0),
     num_reviews: 0,
     rating: 0,
     description: p.description || '',
   }));
 
-  // Use supabaseAdmin to bypass RLS for bulk insert
-  const { data: createdProducts, error } = await supabaseAdmin
-    .from('products')
-    .insert(productsToInsert)
-    .select();
-
-  if (error) {
-    res.status(500);
-    throw new Error(error.message);
+  // Use seller database for seller products, main database for admin products
+  let createdProducts, error;
+  if (req.user.is_seller) {
+    // Seller products go to seller database (even if sellerProfileId is null initially)
+    console.log(`Bulk upload: Inserting ${productsToInsert.length} products into seller database for user ${req.user.id}`);
+    console.log(`Seller profile ID: ${sellerProfileId || 'null (will be set later)'}`);
+    
+    const result = await supabaseSellerAdmin
+      .from('products')
+      .insert(productsToInsert)
+      .select();
+    createdProducts = result.data;
+    error = result.error;
+    
+    if (error) {
+      console.error('Bulk upload error (seller DB):', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+    } else {
+      console.log(`Successfully inserted ${createdProducts?.length || 0} products into seller database`);
+    }
+  } else {
+    // Admin products go to main database
+    console.log(`Bulk upload: Inserting ${productsToInsert.length} products into main database`);
+    const result = await supabaseAdmin
+      .from('products')
+      .insert(productsToInsert)
+      .select();
+    createdProducts = result.data;
+    error = result.error;
+    
+    if (error) {
+      console.error('Bulk upload error (main DB):', error);
+    }
   }
 
-  res.status(201).json(createdProducts);
+  if (error) {
+    console.error('Final bulk upload error:', error);
+    res.status(500);
+    throw new Error(`Failed to upload products: ${error.message || JSON.stringify(error)}`);
+  }
+
+  res.status(201).json({
+    success: true,
+    count: createdProducts?.length || 0,
+    products: createdProducts
+  });
 }));
 
 router.get('/:id', asyncHandler(async (req, res) => {
-  const { data: product, error } = await supabase
+  // Check both databases for the product
+  let product = null;
+  let sellerProfile = null;
+  
+  // First check seller database
+  const { data: sellerProduct } = await supabaseSeller
     .from('products')
-    .select('*, seller_profiles(store_name, rating)')
+    .select('*')
     .eq('id', req.params.id)
     .single();
+  
+  if (sellerProduct) {
+    product = sellerProduct;
+    // Get seller profile info from seller database
+    if (sellerProduct.seller_profile_id) {
+      const { data: profile } = await supabaseSeller
+        .from('seller_profiles')
+        .select('store_name, rating')
+        .eq('id', sellerProduct.seller_profile_id)
+        .single();
+      sellerProfile = profile;
+    }
+  } else {
+    // Check main database
+    const { data: mainProduct } = await supabase
+      .from('products')
+      .select('*, seller_profiles(store_name, rating)')
+      .eq('id', req.params.id)
+      .single();
+    product = mainProduct;
+    if (mainProduct?.seller_profiles) {
+      sellerProfile = mainProduct.seller_profiles;
+    }
+  }
 
   if (product) {
-    // Flatten structure slightly for easier consumption, or keep nested
+    // Flatten structure slightly for easier consumption
     const productWithSeller = {
       ...product,
       _id: product.id,
-      seller_store_name: product.seller_profiles?.store_name,
-      seller_rating: product.seller_profiles?.rating
+      seller_store_name: sellerProfile?.store_name,
+      seller_rating: sellerProfile?.rating
     };
     res.json(productWithSeller);
   } else {
@@ -124,7 +253,29 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // @route   DELETE /api/products/:id
 // @access  Private/Admin or Seller (Owner)
 router.delete('/:id', protect, asyncHandler(async (req, res) => {
-  const { data: product } = await supabase.from('products').select('*').eq('id', req.params.id).single();
+  // Check both databases for the product
+  let product = null;
+  let isSellerProduct = false;
+  
+  // First check seller database
+  const { data: sellerProduct } = await supabaseSeller
+    .from('products')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+  
+  if (sellerProduct) {
+    product = sellerProduct;
+    isSellerProduct = true;
+  } else {
+    // Check main database
+    const { data: mainProduct } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+    product = mainProduct;
+  }
 
   if (!product) {
     res.status(404);
@@ -136,9 +287,12 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
   if (req.user.isAdmin) {
     authorized = true;
   } else if (req.user.is_seller) {
-    // Check ownership
+    // Check ownership by seller_profile_id OR user_id
     const { data: userData } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
-    if (product.seller_profile_id === userData.seller_profile_id) {
+    if (
+      (product.seller_profile_id && product.seller_profile_id === userData?.seller_profile_id) ||
+      product.user_id === req.user.id
+    ) {
       authorized = true;
     }
   }
@@ -148,11 +302,23 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
     throw new Error('Not authorized to delete this product');
   }
 
-  // Use supabaseAdmin to bypass RLS
-  const { error } = await supabaseAdmin
-    .from('products')
-    .delete()
-    .eq('id', req.params.id);
+  // Delete from appropriate database
+  let error;
+  if (isSellerProduct) {
+    // Delete from seller database
+    const result = await supabaseSellerAdmin
+      .from('products')
+      .delete()
+      .eq('id', req.params.id);
+    error = result.error;
+  } else {
+    // Delete from main database
+    const result = await supabaseAdmin
+      .from('products')
+      .delete()
+      .eq('id', req.params.id);
+    error = result.error;
+  }
 
   if (error) {
     res.status(500);
@@ -160,6 +326,10 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
   }
 
   res.json({ message: 'Product removed' });
+  // Best-effort cache invalidation for listing endpoints
+  await cache.delPrefix('products:list:');
+  await cache.delPrefix('categories:');
+  await cache.delPrefix('subcategories:');
 }));
 
 
@@ -176,7 +346,16 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   let sellerProfileId = null;
   if (req.user.is_seller) {
     const { data: u } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
-    sellerProfileId = u.seller_profile_id;
+    sellerProfileId = u?.seller_profile_id || null;
+    // If missing, try seller DB
+    if (!sellerProfileId) {
+      const { data: sellerProfile } = await supabaseSellerAdmin
+        ?.from('seller_profiles')
+        .select('id')
+        .eq('user_id', req.user.id)
+        .single();
+      if (sellerProfile?.id) sellerProfileId = sellerProfile.id;
+    }
   }
 
   const {
@@ -184,40 +363,82 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     price,
     description,
     image,
+    images,
     brand,
     category,
     subcategory,
     countInStock,
   } = req.body;
 
+  // Only send columns that exist in the current schema to avoid missing-column errors
   const product = {
     name: name || 'Sample name',
-    price: price || 0,
+    price: parseFloat(price) || 0,
     user_id: req.user.id,
     seller_profile_id: sellerProfileId,
     seller_id: req.user.id,
-    image: image || '/images/sample.jpg',
-    brand: brand || 'Sample brand',
-    category: category || 'Sample category',
+    image: image || (images && images[0]) || '/images/sample.jpg',
+    brand: brand || 'Generic',
+    category: category || 'Uncategorized',
     subcategory: subcategory || null,
-    count_in_stock: countInStock || 0,
+    count_in_stock: parseInt(countInStock) || 0,
     num_reviews: 0,
-    description: description || 'Sample description',
+    rating: 0,
+    description: description || '',
   };
 
-  // Use supabaseAdmin to bypass RLS
-  const { data: createdProduct, error } = await supabaseAdmin
-    .from('products')
-    .insert(product)
-    .select()
-    .single();
+  console.log('Create product request:', {
+    userId: req.user.id,
+    isSeller: req.user.is_seller,
+    sellerProfileId: sellerProfileId || 'null',
+    productPreview: {
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      subcategory: product.subcategory
+    }
+  });
 
-  if (error) {
+  // Use seller database for seller products, main database for admin products
+  let createdProduct, error;
+  if (req.user.is_seller) {
+    const result = await supabaseSellerAdmin
+      .from('products')
+      .insert(product)
+      .select()
+      .single();
+    createdProduct = result.data;
+    error = result.error;
+    if (error) {
+      console.error('Create product error (seller DB):', error);
+    } else {
+      console.log('Created product in seller DB:', createdProduct?.id);
+    }
+  } else {
+    const result = await supabaseAdmin
+      .from('products')
+      .insert(product)
+      .select()
+      .single();
+    createdProduct = result.data;
+    error = result.error;
+    if (error) {
+      console.error('Create product error (main DB):', error);
+    } else {
+      console.log('Created product in main DB:', createdProduct?.id);
+    }
+  }
+
+  if (error || !createdProduct) {
     res.status(500);
-    throw new Error(error.message);
+    throw new Error(error?.message || 'Failed to create product');
   }
 
   res.status(201).json({ ...createdProduct, _id: createdProduct.id });
+  // Best-effort cache invalidation for listing endpoints
+  await cache.delPrefix('products:list:');
+  await cache.delPrefix('categories:');
+  await cache.delPrefix('subcategories:');
 }));
 
 
@@ -241,7 +462,30 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     countInStock,
   } = req.body;
 
-  const { data: product } = await supabase.from('products').select('*').eq('id', req.params.id).single();
+  // Check both databases for the product
+  let product = null;
+  let isSellerProduct = false;
+  
+  // First check seller database
+  const { data: sellerProduct } = await supabaseSeller
+    .from('products')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+  
+  if (sellerProduct) {
+    product = sellerProduct;
+    isSellerProduct = true;
+  } else {
+    // Check main database
+    const { data: mainProduct } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+    product = mainProduct;
+  }
+
   if (!product) {
     res.status(404);
     throw new Error('Product not found');
@@ -253,7 +497,10 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     authorized = true;
   } else if (req.user.is_seller) {
     const { data: userData } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
-    if (product.seller_profile_id === userData.seller_profile_id) {
+    if (
+      (product.seller_profile_id && product.seller_profile_id === userData?.seller_profile_id) ||
+      product.user_id === req.user.id
+    ) {
       authorized = true;
     }
   }
@@ -263,22 +510,47 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     throw new Error('Not authorized to update this product');
   }
 
-  // Use supabaseAdmin to bypass RLS
-  const { data: updatedProduct, error } = await supabaseAdmin
-    .from('products')
-    .update({
-      name,
-      price,
-      description,
-      image,
-      brand,
-      category,
-      subcategory,
-      count_in_stock: countInStock,
-    })
-    .eq('id', req.params.id)
-    .select()
-    .single();
+  // Update in appropriate database
+  let updatedProduct, error;
+  if (isSellerProduct) {
+    // Update in seller database
+    const result = await supabaseSellerAdmin
+      .from('products')
+      .update({
+        name,
+        price,
+        description,
+        image,
+        brand,
+        category,
+        subcategory,
+        count_in_stock: countInStock,
+      })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+    updatedProduct = result.data;
+    error = result.error;
+  } else {
+    // Update in main database
+    const result = await supabaseAdmin
+      .from('products')
+      .update({
+        name,
+        price,
+        description,
+        image,
+        brand,
+        category,
+        subcategory,
+        count_in_stock: countInStock,
+      })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+    updatedProduct = result.data;
+    error = result.error;
+  }
 
   if (error) {
     res.status(500);
@@ -286,6 +558,10 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
   }
 
   res.json({ ...updatedProduct, _id: updatedProduct.id });
+  // Best-effort cache invalidation for listing endpoints
+  await cache.delPrefix('products:list:');
+  await cache.delPrefix('categories:');
+  await cache.delPrefix('subcategories:');
 }));
 
 module.exports = router;

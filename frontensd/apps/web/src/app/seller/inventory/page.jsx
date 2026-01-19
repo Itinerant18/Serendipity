@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import useAuth from "@/utils/useAuth";
 // FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
+import { getSubcategories as getSubcategoriesUtil, getAllCategories } from "@/utils/categories";
 import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,19 @@ export default function SellerInventoryPage() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+    // Categories and subcategories from API
+    const [categories, setCategories] = useState([]);
+    const [subcategories, setSubcategories] = useState([]);
+    const [loadingCategories, setLoadingCategories] = useState(false);
+    const [loadingSubcategories, setLoadingSubcategories] = useState(false);
+
+    // Image upload states
+    const [uploadedImages, setUploadedImages] = useState([]);
+    const [uploadingImages, setUploadingImages] = useState(false);
+    const [dragActiveImage, setDragActiveImage] = useState(false);
+    const imageInputRef = useRef(null);
+    const MAX_IMAGES = 7;
 
     // Form and Selection States
     const [editingProduct, setEditingProduct] = useState(null);
@@ -73,6 +87,79 @@ export default function SellerInventoryPage() {
         if (token) fetchInventory();
     }, [token]);
 
+    // Fetch categories from API on component mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            setLoadingCategories(true);
+            try {
+                const res = await fetch('http://localhost:5000/api/categories');
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const data = await res.json();
+                if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+                    // Filter to ONLY show the 6 specified categories (remove any extras)
+                    const allowedCategories = getAllCategories();
+                    const filtered = data.categories.filter(cat => allowedCategories.includes(cat));
+                    // Always ensure all 6 categories are present
+                    const merged = [...new Set([...allowedCategories, ...filtered])]
+                        .filter(cat => allowedCategories.includes(cat))
+                        .sort();
+                    setCategories(merged);
+                } else {
+                    // Fallback: Use categories utility
+                    console.warn('No categories found in database, using fallback categories');
+                    setCategories(getAllCategories());
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                // Fallback: Use categories utility
+                setCategories(getAllCategories());
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    // Fetch subcategories when category changes
+    useEffect(() => {
+        const fetchSubcategories = async () => {
+            if (!formData.category) {
+                setSubcategories([]);
+                return;
+            }
+            
+            setLoadingSubcategories(true);
+            try {
+                const res = await fetch(`http://localhost:5000/api/categories/${encodeURIComponent(formData.category)}/subcategories`);
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const data = await res.json();
+                if (data.success && Array.isArray(data.subcategories) && data.subcategories.length > 0) {
+                    // Merge API subcategories with our known list (ensures full list)
+                    const fallbackSubcats = getSubcategoriesUtil(formData.category);
+                    const merged = [...new Set([...fallbackSubcats, ...data.subcategories])].sort();
+                    setSubcategories(merged);
+                } else {
+                    // Fallback to utility function
+                    console.warn(`No subcategories found for category: ${formData.category}, using fallback`);
+                    const fallbackSubcats = getSubcategoriesUtil(formData.category);
+                    setSubcategories(fallbackSubcats);
+                }
+            } catch (error) {
+                console.error('Error fetching subcategories:', error);
+                // Fallback to utility function
+                const fallbackSubcats = getSubcategoriesUtil(formData.category);
+                setSubcategories(fallbackSubcats);
+            } finally {
+                setLoadingSubcategories(false);
+            }
+        };
+        fetchSubcategories();
+    }, [formData.category]);
+
     // Form Handlers
     const resetForm = () => {
         setFormData({
@@ -85,17 +172,116 @@ export default function SellerInventoryPage() {
             description: "",
             image_url: "",
         });
+        setUploadedImages([]);
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+    // Image upload handler
+    const handleImageUpload = async (files) => {
+        if (!files || files.length === 0) return;
+
+        const remainingSlots = MAX_IMAGES - uploadedImages.length;
+        if (remainingSlots <= 0) {
+            alert(`Maximum ${MAX_IMAGES} images allowed`);
+            return;
+        }
+
+        const filesToUpload = Array.from(files).slice(0, remainingSlots);
+        
+        // Validate file types and sizes
+        const validFiles = [];
+        filesToUpload.forEach(file => {
+            if (!file.type.startsWith('image/')) {
+                alert(`${file.name} is not an image`);
+            } else if (file.size > 10 * 1024 * 1024) {
+                alert(`${file.name} exceeds 10MB limit`);
+            } else {
+                validFiles.push(file);
+            }
+        });
+
+        if (validFiles.length === 0) return;
+
+        setUploadingImages(true);
+
+        try {
+            const formData = new FormData();
+            validFiles.forEach(file => formData.append('files', file));
+
+            const res = await fetch('http://localhost:5000/api/upload/product-images', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.files && data.files.length > 0) {
+                setUploadedImages(prev => [...prev, ...data.files]);
+            }
+
+            if (data.errors && data.errors.length > 0) {
+                alert(`Some files failed: ${data.errors.map(e => e.error).join(', ')}`);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload images. Please try again.');
+        } finally {
+            setUploadingImages(false);
+            if (imageInputRef.current) {
+                imageInputRef.current.value = '';
+            }
+        }
     };
+
+    // Remove image
+    const removeImage = (index) => {
+        setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Drag handlers for images
+    const handleDragImage = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActiveImage(true);
+        } else if (e.type === "dragleave") {
+            setDragActiveImage(false);
+        }
+    };
+
+    const handleDropImage = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActiveImage(false);
+
+        const files = e.dataTransfer.files;
+        const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+        if (imageFiles.length > 0) {
+            handleImageUpload(imageFiles);
+        }
+    };
+
+    const handleInputChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => {
+            const newData = { ...prev, [name]: value };
+            // Reset subcategory if category changes
+            if (name === "category") {
+                newData.subcategory = "";
+            }
+            return newData;
+        });
+    }, []);
 
     const handleAddProduct = async () => {
         // Backend API call to create product
         try {
-            const res = await fetch("http://localhost:5000/api/products", { // Use /api/products for creation
+            // Use uploaded images if available, otherwise fall back to image_url
+            const images = uploadedImages.length > 0 
+                ? uploadedImages.map(img => img.url)
+                : formData.image_url ? [formData.image_url] : [];
+
+            const res = await fetch("http://localhost:5000/api/products", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -103,8 +289,9 @@ export default function SellerInventoryPage() {
                 },
                 body: JSON.stringify({
                     ...formData,
-                    countInStock: parseInt(formData.stock), // Map stock to countInStock
-                    image: formData.image_url // Map image_url to image
+                    countInStock: parseInt(formData.stock) || 0,
+                    image: images[0] || formData.image_url || '',
+                    images: images
                 })
             });
 
@@ -126,8 +313,13 @@ export default function SellerInventoryPage() {
         if (!editingProduct) return;
 
         try {
+            // Use uploaded images if available, otherwise fall back to image_url
+            const images = uploadedImages.length > 0 
+                ? uploadedImages.map(img => img.url)
+                : formData.image_url ? [formData.image_url] : [];
+
             // Backend API call to update product
-            const res = await fetch(`http://localhost:5000/api/products/${editingProduct.id}`, { // Use id
+            const res = await fetch(`http://localhost:5000/api/products/${editingProduct.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -135,8 +327,9 @@ export default function SellerInventoryPage() {
                 },
                 body: JSON.stringify({
                     ...formData,
-                    countInStock: parseInt(formData.stock),
-                    image: formData.image_url
+                    countInStock: parseInt(formData.stock) || 0,
+                    image: images[0] || formData.image_url || '',
+                    images: images
                 })
             });
 
@@ -182,10 +375,18 @@ export default function SellerInventoryPage() {
             category: product.category || "",
             subcategory: product.subcategory || "",
             brand: product.brand || "",
-            stock: product.count_in_stock?.toString() || "0", // Map count_in_stock to stock
+            stock: product.count_in_stock?.toString() || "0",
             description: product.description || "",
-            image_url: product.image || "", // Map image to image_url
+            image_url: product.image || "",
         });
+        // Set uploaded images if product has images array
+        if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+            setUploadedImages(product.images.map(url => ({ url })));
+        } else if (product.image) {
+            setUploadedImages([{ url: product.image }]);
+        } else {
+            setUploadedImages([]);
+        }
         setIsEditDialogOpen(true);
     };
 
@@ -225,28 +426,53 @@ export default function SellerInventoryPage() {
         setUploadError(null);
 
         try {
+            // Map CSV columns to backend expected format
+            const mappedData = parsedData.map(row => ({
+                name: row.name || row.Name || row.NAME || '',
+                price: row.price || row.Price || row.PRICE || row.cost || row.Cost || 0,
+                category: row.category || row.Category || row.CATEGORY || '',
+                subcategory: row.subcategory || row.Subcategory || row.SUBCATEGORY || null,
+                brand: row.brand || row.Brand || row.BRAND || 'Generic',
+                stock: row.stock || row.Stock || row.STOCK || row.count_in_stock || row.countInStock || 0,
+                description: row.description || row.Description || row.DESCRIPTION || '',
+                image_url: row.image_url || row.imageUrl || row.image || row.Image || row.IMAGE || row['image url'] || ''
+            }));
+
+            // Validate required fields
+            const invalidRows = mappedData.filter(p => !p.name || !p.category);
+            if (invalidRows.length > 0) {
+                setUploadError(`${invalidRows.length} rows missing required fields (name or category). Please check your CSV.`);
+                return;
+            }
+
+            console.log('Uploading products:', mappedData);
+
             const res = await fetch("http://localhost:5000/api/products/bulk", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify(parsedData)
+                body: JSON.stringify(mappedData)
             });
 
             const data = await res.json();
 
             if (res.ok) {
-                // alert(`Successfully uploaded ${data.length} products!`); // Optional success message
+                const count = data.count || data.length || mappedData.length;
+                alert(`Successfully uploaded ${count} products!`);
                 setIsUploadModalOpen(false);
                 setCsvFile(null);
                 setParsedData([]);
-                fetchInventory(); // Refresh list
+                await fetchInventory(); // Refresh list
             } else {
-                setUploadError(data.message || "Upload failed");
+                const errorMsg = data.message || data.error || "Upload failed";
+                console.error('Upload error response:', data);
+                setUploadError(errorMsg);
             }
         } catch (error) {
-            setUploadError("Network error during upload");
+            console.error('Upload error:', error);
+            setUploadError(`Network error: ${error.message || 'Failed to upload products'}`);
         } finally {
             setUploading(false);
         }
@@ -264,18 +490,22 @@ export default function SellerInventoryPage() {
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const ProductForm = ({ onSubmit, label }) => (
-        <div className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="name">Product Name</Label>
-                <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter product name"
-                />
-            </div>
+    // ProductForm component - memoized to prevent re-renders that cause input focus loss
+    const ProductForm = useMemo(() => {
+        return ({ onSubmit, label }) => (
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="name">Product Name</Label>
+                    <Input
+                        id="name"
+                        name="name"
+                        key="product-name-input"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="Enter product name"
+                        autoComplete="off"
+                    />
+                </div>
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="price">Price</Label>
@@ -304,23 +534,46 @@ export default function SellerInventoryPage() {
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Input
+                    <select
                         id="category"
                         name="category"
                         value={formData.category}
                         onChange={handleInputChange}
-                        placeholder="Enter category"
-                    />
+                        disabled={loadingCategories}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="">
+                            {loadingCategories ? 'Loading categories...' : 'Select Category'}
+                        </option>
+                        {categories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                    </select>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="subcategory">Subcategory</Label>
-                    <Input
+                    <select
                         id="subcategory"
                         name="subcategory"
                         value={formData.subcategory}
                         onChange={handleInputChange}
-                        placeholder="Enter subcategory"
-                    />
+                        disabled={!formData.category || loadingSubcategories}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="">
+                            {!formData.category 
+                                ? 'Select category first' 
+                                : loadingSubcategories 
+                                    ? 'Loading subcategories...' 
+                                    : subcategories.length === 0
+                                        ? 'No subcategories available'
+                                        : 'Select Subcategory'
+                            }
+                        </option>
+                        {subcategories.map(sub => (
+                            <option key={sub} value={sub}>{sub}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
             <div className="space-y-2">
@@ -345,20 +598,96 @@ export default function SellerInventoryPage() {
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input
-                    id="image_url"
-                    name="image_url"
-                    value={formData.image_url}
-                    onChange={handleInputChange}
-                    placeholder="https://example.com/image.jpg"
-                />
+                <Label>Product Images {uploadedImages.length > 0 && `(${uploadedImages.length}/${MAX_IMAGES})`}</Label>
+                
+                {uploadedImages.length < MAX_IMAGES && (
+                    <div
+                        onDragEnter={handleDragImage}
+                        onDragLeave={handleDragImage}
+                        onDragOver={handleDragImage}
+                        onDrop={handleDropImage}
+                        onClick={() => imageInputRef.current?.click()}
+                        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                            dragActiveImage
+                                ? 'border-primary bg-primary/10'
+                                : 'border-muted-foreground/25 hover:border-primary/50'
+                        } ${uploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        <input
+                            ref={imageInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                    handleImageUpload(e.target.files);
+                                }
+                            }}
+                            disabled={uploadingImages || uploadedImages.length >= MAX_IMAGES}
+                        />
+                        {uploadingImages ? (
+                            <div className="flex flex-col items-center">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mb-2"></div>
+                                <p className="text-sm text-muted-foreground">Uploading...</p>
+                            </div>
+                        ) : (
+                            <>
+                                <i className="fa-solid fa-cloud-arrow-up text-2xl text-muted-foreground mb-2"></i>
+                                <p className="text-sm text-muted-foreground">
+                                    <span className="text-primary font-medium">Click to upload</span> or drag and drop
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF up to 10MB each (max {MAX_IMAGES})</p>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {uploadedImages.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                        {uploadedImages.map((img, index) => (
+                            <div key={index} className="relative group">
+                                <img
+                                    src={img.url}
+                                    alt={`Product ${index + 1}`}
+                                    className="w-full h-20 object-cover rounded-md border border-border"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removeImage(index)}
+                                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <i className="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                                {index === 0 && (
+                                    <span className="absolute bottom-1 left-1 bg-primary text-primary-foreground text-xs px-1 rounded">
+                                        Main
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {uploadedImages.length === 0 && (
+                    <div className="space-y-2">
+                        <Label htmlFor="image_url">Or enter Image URL</Label>
+                        <Input
+                            id="image_url"
+                            name="image_url"
+                            value={formData.image_url}
+                            onChange={handleInputChange}
+                            placeholder="https://example.com/image.jpg"
+                        />
+                    </div>
+                )}
             </div>
-            <Button onClick={onSubmit} className="w-full">
-                {label}
-            </Button>
-        </div>
-    );
+                <Button onClick={onSubmit} className="w-full">
+                    {label}
+                </Button>
+            </div>
+        );
+    }, [formData, categories, subcategories, loadingCategories, loadingSubcategories, uploadedImages, uploadingImages, dragActiveImage, handleInputChange, handleDragImage, handleDropImage, handleImageUpload, removeImage, imageInputRef, MAX_IMAGES]);
 
     return (
         <div className="w-full max-w-7xl mx-auto p-6 space-y-6 bg-background h-full flex flex-col">

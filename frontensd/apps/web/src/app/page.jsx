@@ -84,7 +84,7 @@ export default function HomePage() {
             }
 
             const data = await response.json();
-            setProducts(data);
+            setProducts(data.products || []);
         } catch (err) {
             console.error("Error fetching products:", err);
             setError(err.message);
@@ -125,7 +125,7 @@ export default function HomePage() {
                             Shop by Category
                         </h2>
                         <Link
-                            to="/search"
+                            to="/products"
                             className="text-[#D97534] hover:text-[#C86429] font-semibold text-sm flex items-center gap-1"
                         >
                             View All
@@ -152,7 +152,7 @@ export default function HomePage() {
                             Featured Products
                         </h2>
                         <Link
-                            to="/search"
+                            to="/products"
                             className="text-[#D97534] hover:text-[#C86429] font-semibold text-sm flex items-center gap-1"
                         >
                             View All
