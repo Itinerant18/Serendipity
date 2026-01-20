@@ -47,7 +47,7 @@ export const MAIN_CATEGORIES = [
     },
     {
         name: "Beauty",
-
+        emoji: "💄",
         image: "https://images.unsplash.com/photo-1522335789201-a21f1da22315?auto=format&fit=crop&q=80&w=800",
         subcategories: [
             "Skincare",

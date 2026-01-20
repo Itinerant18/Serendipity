@@ -6,7 +6,8 @@ import { Link } from "react-router-dom";
 
 import { EcommerceHero } from "@/components/ecommerce-hero";
 import ProductCard from "@/components/ProductCard";
-import { EmojiCategoryCard, defaultCategories } from "@/components/CategoryCard";
+import { MAIN_CATEGORIES } from "@/utils/categories";
+import { MonochromaticCategories } from "@/components/monochromatic-categories";
 import useCartStore from "@/utils/cartStore";
 
 export default function HomePage() {
@@ -133,16 +134,17 @@ export default function HomePage() {
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4">
-                        {defaultCategories.map((category) => (
-                            <EmojiCategoryCard
-                                key={category.name}
-                                name={category.name}
-                                emoji={category.emoji}
-                                bgColor={category.bgColor}
-                            />
-                        ))}
-                    </div>
+                    <MonochromaticCategories
+                        title="Explore Categories"
+                        subtitle="Discover our curated collection across diverse categories"
+                        categories={MAIN_CATEGORIES.map((c) => ({
+                            id: c.name,
+                            name: c.name,
+                            mediaUrl: c.image,
+                            mediaType: "image",
+                            description: `Shop ${c.name} across ${c.subcategories.length} subcategories.`,
+                        }))}
+                    />
                 </section>
 
                 {/* Featured Products Section */}
