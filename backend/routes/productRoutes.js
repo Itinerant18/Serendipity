@@ -27,6 +27,14 @@ const canManageProduct = async (user, productId) => {
   return product.seller_profile_id === userData.seller_profile_id;
 };
 
+// Start Helper: Generate SKU
+const generateSKU = () => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const randomPart = Math.random().toString(36).substr(2, 5).toUpperCase();
+  return `SKU-${timestamp}-${randomPart}`;
+};
+// End Helper: Generate SKU
+
 const router = express.Router();
 
 router.get('/', asyncHandler(async (req, res) => {
@@ -112,7 +120,7 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
   if (req.user.is_seller) {
     const { data: u } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
     sellerProfileId = u?.seller_profile_id || null;
-    
+
     // If seller_profile_id is null, try to get it from seller database
     if (!sellerProfileId) {
       const { data: sellerProfile } = await supabaseSellerAdmin
@@ -120,7 +128,7 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
         .select('id')
         .eq('user_id', req.user.id)
         .single();
-      
+
       if (sellerProfile?.id) {
         sellerProfileId = sellerProfile.id;
         console.log(`Found seller profile ${sellerProfileId} for user ${req.user.id}`);
@@ -145,6 +153,8 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
     num_reviews: 0,
     rating: 0,
     description: p.description || '',
+    images: Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? p.images.split(',').map(i => i.trim()).filter(i => i) : []),
+    sku: generateSKU() // Auto-generate SKU, ignoring input
   }));
 
   // Use seller database for seller products, main database for admin products
@@ -153,14 +163,14 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
     // Seller products go to seller database (even if sellerProfileId is null initially)
     console.log(`Bulk upload: Inserting ${productsToInsert.length} products into seller database for user ${req.user.id}`);
     console.log(`Seller profile ID: ${sellerProfileId || 'null (will be set later)'}`);
-    
+
     const result = await supabaseSellerAdmin
       .from('products')
       .insert(productsToInsert)
       .select();
     createdProducts = result.data;
     error = result.error;
-    
+
     if (error) {
       console.error('Bulk upload error (seller DB):', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
@@ -176,7 +186,7 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
       .select();
     createdProducts = result.data;
     error = result.error;
-    
+
     if (error) {
       console.error('Bulk upload error (main DB):', error);
     }
@@ -199,14 +209,14 @@ router.get('/:id', asyncHandler(async (req, res) => {
   // Check both databases for the product
   let product = null;
   let sellerProfile = null;
-  
+
   // First check seller database
   const { data: sellerProduct } = await supabaseSeller
     .from('products')
     .select('*')
     .eq('id', req.params.id)
     .single();
-  
+
   if (sellerProduct) {
     product = sellerProduct;
     // Get seller profile info from seller database
@@ -256,14 +266,14 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
   // Check both databases for the product
   let product = null;
   let isSellerProduct = false;
-  
+
   // First check seller database
   const { data: sellerProduct } = await supabaseSeller
     .from('products')
     .select('*')
     .eq('id', req.params.id)
     .single();
-  
+
   if (sellerProduct) {
     product = sellerProduct;
     isSellerProduct = true;
@@ -368,6 +378,10 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     category,
     subcategory,
     countInStock,
+    sku, tags, compareAtPrice, weight, dimensions,
+    video_url, videos,
+    shippingRequired, shippingWeight, shippingClass, freeShipping,
+    metaTitle, metaDescription, slug, status, featured
   } = req.body;
 
   // Only send columns that exist in the current schema to avoid missing-column errors
@@ -385,6 +399,23 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     num_reviews: 0,
     rating: 0,
     description: description || '',
+    images: images || [],
+    sku: generateSKU(), // Auto-generate SKU
+    compare_at_price: compareAtPrice || null,
+    weight: weight || null,
+    dimensions: dimensions || null,
+    tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : [],
+    video_url: video_url || null,
+    videos: videos || [],
+    shipping_required: shippingRequired !== undefined ? shippingRequired : true,
+    shipping_weight: shippingWeight || null,
+    shipping_class: shippingClass || 'standard',
+    free_shipping: freeShipping || false,
+    meta_title: metaTitle || null,
+    meta_description: metaDescription || null,
+    slug: slug || null,
+    status: status || 'draft',
+    featured: featured || false
   };
 
   console.log('Create product request:', {
@@ -460,19 +491,23 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     category,
     subcategory,
     countInStock,
+    sku, tags, compareAtPrice, weight, dimensions,
+    video_url, videos,
+    shippingRequired, shippingWeight, shippingClass, freeShipping,
+    metaTitle, metaDescription, slug, status, featured
   } = req.body;
 
   // Check both databases for the product
   let product = null;
   let isSellerProduct = false;
-  
+
   // First check seller database
   const { data: sellerProduct } = await supabaseSeller
     .from('products')
     .select('*')
     .eq('id', req.params.id)
     .single();
-  
+
   if (sellerProduct) {
     product = sellerProduct;
     isSellerProduct = true;
@@ -525,6 +560,23 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         category,
         subcategory,
         count_in_stock: countInStock,
+        images: Array.isArray(images) ? images : (typeof images === 'string' ? images.split(',').map(i => i.trim()).filter(i => i) : undefined),
+        // sku, // Immutable
+        compare_at_price: compareAtPrice,
+        weight,
+        dimensions,
+        tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : undefined,
+        video_url,
+        videos,
+        shipping_required: shippingRequired,
+        shipping_weight: shippingWeight,
+        shipping_class: shippingClass,
+        free_shipping: freeShipping,
+        meta_title: metaTitle,
+        meta_description: metaDescription,
+        slug,
+        status,
+        featured
       })
       .eq('id', req.params.id)
       .select()
@@ -544,6 +596,23 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
         category,
         subcategory,
         count_in_stock: countInStock,
+        images: Array.isArray(images) ? images : (typeof images === 'string' ? images.split(',').map(i => i.trim()).filter(i => i) : undefined),
+        // sku, // Immutable
+        compare_at_price: compareAtPrice,
+        weight,
+        dimensions,
+        tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : undefined,
+        video_url,
+        videos,
+        shipping_required: shippingRequired,
+        shipping_weight: shippingWeight,
+        shipping_class: shippingClass,
+        free_shipping: freeShipping,
+        meta_title: metaTitle,
+        meta_description: metaDescription,
+        slug,
+        status,
+        featured
       })
       .eq('id', req.params.id)
       .select()

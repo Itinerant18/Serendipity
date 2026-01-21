@@ -40,27 +40,20 @@ const protectSeller = async (req, res, next) => {
                 throw new Error('Not authorized, user not found');
             }
 
-            let isSeller = user.is_seller || false;
-            let sellerProfileId = user.seller_profile_id || null;
+            // STRICT CHECK: Always verify against the actual seller database
+            // The is_seller flag in the main DB is just a cache/claim, the source of truth is the seller DB.
+            const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
+                ?.from('seller_profiles')
+                .select('id')
+                .eq('user_id', req.user.id)
+                .single();
 
-            // If not marked as seller in main DB, check seller database
-            if (!isSeller || !sellerProfileId) {
-                console.log(`Checking seller database for user ${req.user.id}...`);
-                
-                // Check seller database for existing profile
-                const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
-                    ?.from('seller_profiles')
-                    .select('id')
-                    .eq('user_id', req.user.id)
-                    .single();
+            const profileExists = sellerProfile && (!sellerError || sellerError.code === 'PGRST116') && sellerProfile.id;
 
-                // PGRST116 = no rows found (normal if not a seller)
-                if (sellerProfile && (!sellerError || sellerError.code === 'PGRST116')) {
-                    console.log(`Found seller profile ${sellerProfile.id} for user ${req.user.id}`);
-                    isSeller = true;
-                    sellerProfileId = sellerProfile.id;
-
-                    // Sync to main database - try to set seller_profile_id, but handle foreign key constraint error
+            if (profileExists) {
+                // Profile exists! Ensure is_seller is true in main DB (Syncing)
+                if (!user.is_seller || user.seller_profile_id !== sellerProfile.id) {
+                    console.log(`Syncing seller status: Profile found (${sellerProfile.id}), updating user record...`);
                     const { error: updateError } = await supabaseAdmin
                         .from('users')
                         .update({
@@ -69,45 +62,37 @@ const protectSeller = async (req, res, next) => {
                         })
                         .eq('id', req.user.id);
 
-                    // If foreign key constraint fails (23503), just set is_seller without seller_profile_id
-                    if (updateError && updateError.code === '23503') {
-                        console.log('Foreign key constraint detected - setting is_seller only (dual database setup)');
-                        const { error: fallbackError } = await supabaseAdmin
-                            .from('users')
-                            .update({
-                                is_seller: true
-                                // Don't set seller_profile_id - it exists in seller database, not main database
-                            })
-                            .eq('id', req.user.id);
-                        
-                        if (fallbackError) {
-                            console.error('Failed to sync seller status (fallback):', fallbackError);
-                        } else {
-                            console.log('Successfully synced seller status (is_seller only)');
-                        }
-                    } else if (updateError) {
-                        console.error('Failed to sync seller status:', updateError);
-                    } else {
-                        console.log('Successfully synced seller status to main database');
-                    }
+                    if (updateError) console.error('Failed to sync positive seller status:', updateError);
                 }
-            }
 
-            if (!isSeller) {
+                // Attach seller info
+                req.seller = {
+                    profileId: sellerProfile.id
+                };
+                req.user.isSeller = true;
+                req.user.sellerProfileId = sellerProfile.id;
+
+                next();
+            } else {
+                // Profile DOES NOT exist. 
+                // Checks if we need to revoke the status in the main DB
+                if (user.is_seller) {
+                    console.log(`Seller profile missing for user ${req.user.id}. Revoking seller status...`);
+                    const { error: revokeError } = await supabaseAdmin
+                        .from('users')
+                        .update({
+                            is_seller: false,
+                            seller_profile_id: null
+                        })
+                        .eq('id', req.user.id);
+
+                    if (revokeError) console.error('Failed to revoke seller status:', revokeError);
+                }
+
                 res.status(403);
-                throw new Error('Not authorized as a Seller');
+                throw new Error('Not authorized as a Seller (Profile not found)');
             }
 
-            // Attach seller info
-            req.seller = {
-                profileId: sellerProfileId
-            };
-
-            // Also update req.user for consistency
-            req.user.isSeller = true;
-            req.user.sellerProfileId = sellerProfileId;
-
-            next();
         } catch (error) {
             console.error('protectSeller error:', error);
             res.status(403).json({ message: error.message || 'Not authorized as seller' });

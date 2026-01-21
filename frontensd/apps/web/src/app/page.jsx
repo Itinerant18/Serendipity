@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 // FontAwesome icons loaded globally
 
-import { EcommerceHero } from "@/components/ecommerce-hero";
-import ProductCard from "@/components/ProductCard";
-import { MAIN_CATEGORIES } from "@/utils/categories";
-import { MonochromaticCategories } from "@/components/monochromatic-categories";
 import useCartStore from "@/utils/cartStore";
+import { MAIN_CATEGORIES } from "@/utils/categories";
+
+// Lazy load heavy components
+const EcommerceHero = lazy(() => import("@/components/ecommerce-hero").then(module => ({ default: module.EcommerceHero })));
+const ProductCard = lazy(() => import("@/components/ProductCard"));
+const MonochromaticCategories = lazy(() => import("@/components/monochromatic-categories").then(module => ({ default: module.MonochromaticCategories })));
 
 export default function HomePage() {
     const heroSlides = [
@@ -64,35 +67,48 @@ export default function HomePage() {
             ctaLink: "/category/Beauty",
             overlay: true,
         },
+        {
+            id: "5",
+            type: "image",
+            src: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=2070&auto=format&fit=crop",
+            title: "Gear Up for Action",
+            subtitle: "Athletic Discoveries",
+            description: "Find the perfect equipment to fuel your next adventure",
+            category: "Sports",
+            discount: "20% OFF",
+            ctaText: "Shop Sports",
+            ctaLink: "/category/Sports",
+            overlay: true,
+        },
+        {
+            id: "6",
+            type: "image",
+            src: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?q=80&w=2070&auto=format&fit=crop",
+            title: "Stories Await",
+            subtitle: "Literary Treasures",
+            description: "Discover your next favorite read in our curated collection",
+            category: "Books",
+            discount: "15% OFF",
+            ctaText: "Browse Books",
+            ctaLink: "/category/Books",
+            overlay: true,
+        }
     ];
 
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const addToCart = useCartStore((state) => state.addToCart);
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
-
-    const fetchProducts = async () => {
-        try {
-            setLoading(true);
+    const { data: products = [], isLoading: loading, error } = useQuery({
+        queryKey: ['products'],
+        queryFn: async () => {
             const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/products`);
-
             if (!response.ok) {
                 throw new Error("Failed to fetch products");
             }
-
             const data = await response.json();
-            setProducts(data.products || []);
-        } catch (err) {
-            console.error("Error fetching products:", err);
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+            return data.products || [];
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
     const handleAddToCart = (product) => {
         addToCart(product);
@@ -103,18 +119,25 @@ export default function HomePage() {
     // Get featured products (first 8)
     const featuredProducts = products.slice(0, 8);
 
+    // Fallback loading component
+    const LoadingSpinner = () => (
+        <div className="flex items-center justify-center py-20">
+            <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
+            <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-[#F3F3F3]">
-
-
             {/* Hero Section */}
-            {/* Hero Section */}
-            <EcommerceHero
-                slides={heroSlides}
-                autoplayDelay={4000}
-                showCategories={false}
-                showDots={true}
-            />
+            <Suspense fallback={<div className="h-[600px] bg-gray-200 animate-pulse"></div>}>
+                <EcommerceHero
+                    slides={heroSlides}
+                    autoplayDelay={4000}
+                    showCategories={false}
+                    showDots={true}
+                />
+            </Suspense>
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -134,17 +157,19 @@ export default function HomePage() {
                         </Link>
                     </div>
 
-                    <MonochromaticCategories
-                        title="Explore Categories"
-                        subtitle="Discover our curated collection across diverse categories"
-                        categories={MAIN_CATEGORIES.map((c) => ({
-                            id: c.name,
-                            name: c.name,
-                            mediaUrl: c.image,
-                            mediaType: "image",
-                            description: `Shop ${c.name} across ${c.subcategories.length} subcategories.`,
-                        }))}
-                    />
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <MonochromaticCategories
+                            title="Explore Categories"
+                            subtitle="Discover our curated collection across diverse categories"
+                            categories={MAIN_CATEGORIES.map((c) => ({
+                                id: c.name,
+                                name: c.name,
+                                mediaUrl: c.image,
+                                mediaType: "image",
+                                description: `Shop ${c.name} across ${c.subcategories.length} subcategories.`,
+                            }))}
+                        />
+                    </Suspense>
                 </section>
 
                 {/* Featured Products Section */}
@@ -163,15 +188,12 @@ export default function HomePage() {
                     </div>
 
                     {loading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
-                            <span className="ml-3 text-gray-600">Loading products...</span>
-                        </div>
+                        <LoadingSpinner />
                     ) : error ? (
                         <div className="text-center py-20">
-                            <p className="text-gray-500 mb-4">{error}</p>
+                            <p className="text-gray-500 mb-4">{error.message || "Something went wrong"}</p>
                             <button
-                                onClick={fetchProducts}
+                                onClick={() => window.location.reload()}
                                 className="btn-primary"
                             >
                                 Try Again
@@ -187,19 +209,21 @@ export default function HomePage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {featuredProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id || product._id}
-                                    product={product}
-                                    onAddToCart={handleAddToCart}
-                                />
-                            ))}
+                            <Suspense fallback={<LoadingSpinner />}>
+                                {featuredProducts.map((product) => (
+                                    <ProductCard
+                                        key={product.id || product._id}
+                                        product={product}
+                                        onAddToCart={handleAddToCart}
+                                    />
+                                ))}
+                            </Suspense>
                         </div>
                     )}
                 </section>
 
                 {/* Why Shop With Us Section */}
-                <section className="mb-16">
+                <section className="mb-16 bg-slate-50 rounded-2xl p-8 md:p-12 border border-slate-100">
                     <h2 className="text-2xl font-bold text-gray-900 font-playfair text-center mb-10">
                         Why Shop With Us
                     </h2>
@@ -250,8 +274,6 @@ export default function HomePage() {
                     </div>
                 </section>
             </main>
-
-
         </div>
     );
 }

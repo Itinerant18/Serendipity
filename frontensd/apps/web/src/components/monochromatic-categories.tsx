@@ -180,29 +180,12 @@ export function MonochromaticCategories({
   categories,
   className,
 }: MonochromaticCategoriesProps) {
-  const [cardSizes, setCardSizes] = React.useState<
-    ("small" | "medium" | "large")[]
-  >([]);
-
-  const generateRandomSizes = React.useCallback(() => {
-    const sizes: ("small" | "medium" | "large")[] = ["small", "medium", "large"];
-    return categories.map(
-      () => sizes[Math.floor(Math.random() * sizes.length)]!
-    );
-  }, [categories]);
-
-  React.useEffect(() => {
-    setCardSizes(generateRandomSizes());
-    const interval = window.setInterval(() => {
-      setCardSizes(generateRandomSizes());
-    }, 5000);
-    return () => window.clearInterval(interval);
-  }, [generateRandomSizes]);
+  // Removed random sizing for standardized grid
 
   return (
     <section
       className={cn(
-        "rounded-3xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-black p-6 md:p-10",
+        "rounded-3xl bg-gray-50 p-6 md:p-10 border border-gray-100",
         className
       )}
     >
@@ -213,11 +196,11 @@ export function MonochromaticCategories({
           transition={{ duration: 0.8 }}
           className="mb-10 text-center"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight font-playfair">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight font-playfair">
             {title}
           </h2>
           {subtitle ? (
-            <p className="text-zinc-400 text-base md:text-lg max-w-2xl mx-auto">
+            <p className="text-gray-500 text-base md:text-lg max-w-2xl mx-auto">
               {subtitle}
             </p>
           ) : null}
@@ -240,28 +223,15 @@ export function MonochromaticCategories({
                   delay: index * 0.05,
                   layout: { duration: 0.8, ease: "easeInOut" },
                 }}
-                className={cn(
-                  cardSizes[index] === "large" && "md:col-span-2",
-                  cardSizes[index] === "medium" && "md:col-span-1",
-                  cardSizes[index] === "small" && "md:col-span-1"
-                )}
+                className="md:col-span-1"
               >
                 <CategoryCard
                   category={category}
-                  size={cardSizes[index] || "medium"}
+                  size="medium"
                 />
               </motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.8 }}
-          className="mt-10 text-center"
-        >
-
         </motion.div>
       </div>
     </section>

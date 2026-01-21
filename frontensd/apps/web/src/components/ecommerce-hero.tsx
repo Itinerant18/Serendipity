@@ -143,7 +143,7 @@ export function EcommerceHero({
                 plugins={[plugin.current]}
             >
                 <CarouselContent>
-                    {slides.map((slide) => (
+                    {slides.map((slide, index) => (
                         <CarouselItem key={slide.id}>
                             <div className={cn("relative w-full overflow-hidden bg-muted", height)}>
                                 {/* Media Content */}
@@ -152,6 +152,8 @@ export function EcommerceHero({
                                         src={slide.src}
                                         alt={slide.alt || slide.title || "Hero slide"}
                                         className="w-full h-full object-cover"
+                                        loading={index === 0 ? "eager" : "lazy"}
+                                        fetchPriority={index === 0 ? "high" : "auto"}
                                     />
                                 ) : (
                                     <video
@@ -167,8 +169,8 @@ export function EcommerceHero({
                                 )}
 
                                 {/* Overlay */}
-                                {slide.overlay && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+                                {((slide.overlay) || (slide.title || slide.subtitle || slide.description)) && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
                                 )}
 
                                 {/* Content Overlay */}

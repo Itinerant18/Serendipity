@@ -32,18 +32,27 @@ export default function ProductPage({ params }) {
                     product_id: data.id || params.id,
                     product_title: data.name,
                     product_description: data.description,
-                    product_photos: [data.image],
-                    product_rating: data.rating || 4.5,
+                    product_photos: data.images && data.images.length > 0 ? data.images : [data.image],
+                    product_video: data.video_url || data.videos?.[0] || null, // New field
+                    product_rating: data.rating || 0,
                     product_num_reviews: data.num_reviews || 0,
                     count_in_stock: data.count_in_stock || 0,
                     offer: {
                         price: formatCurrency(data.price),
-                        original_price: data.original_price ? formatCurrency(data.original_price) : null,
+                        original_price: data.compare_at_price && data.compare_at_price > data.price ? formatCurrency(data.compare_at_price) : null,
                         store_name: data.seller_store_name || "Serendipity",
                         store_rating: data.seller_rating || 4.8
                     },
-                    typical_price_range: [formatCurrency(50), formatCurrency(500)],
-                    product_details: { Brand: data.brand, Category: data.category }
+                    typical_price_range: null,
+                    product_details: {
+                        Brand: data.brand || 'Generic',
+                        Category: data.category,
+                        Subcategory: data.subcategory,
+                        SKU: data.sku, // New
+                        Weight: data.weight ? `${data.weight} kg` : null, // New
+                        Dimensions: data.dimensions, // New
+                    },
+                    tags: data.tags || [] // New
                 };
                 setProduct({ product: mappedProduct });
 
@@ -65,29 +74,11 @@ export default function ProductPage({ params }) {
         // Construct the product object expected by the store logic
         const item = {
             id: product.product.product_id,
-            product: product.product.product_id, // Store expects 'product' as ID usually or checks _id/id
+            product: product.product.product_id,
             name: product.product.product_title,
-            price: parseFloat(product.product.offer?.price.replace(/[^0-9.]/g, '') || 0), // extract number if needed, but store might handle it. 
-            // Wait, HomePage passed: { id, name, price, image } to addToCart
-            // And Store does: { ...product, product: product._id || product.id, qty: 1 }
-            // So we should pass a clean object
+            price: parseFloat(product.product.offer?.price.replace(/[^0-9.]/g, '') || 0),
             image: product.product.product_photos[0],
-            // We need to handle quantity - the store adds 1, 
-            // but here we have a quantity selector.
-            // The current simple store 'addToCart' adds 1 or increments 1.
-            // I should modify store to accept quantity or just call it N times or fix the store.
-            // For now, I will update the store to accept quantity if I can, but since I can't edit store in this turn cleanly without checking context...
-            // Actually I CREATED the store. I know what it does.
-            // It does: { ...item, qty: item.qty + 1 }
-            // It does NOT support adding N items at once in the current implementation.
-            // I will just loop for now or simple assume 1 for this turn, OR better, I'll update the store later to support quantity. 
-            // Let's just call it once for now to enable the button working.
         };
-
-        // Actually, let's fix the calls. If the user selected quantity 3, calling it 3 times is ugly but works for a quick fix.
-        // A better fix is to update the store to accept quantity.
-        // But for this "Real-time updates" task, simply connecting it is the step.
-        // I'll implement a loop to match the quantity selected by user.
 
         for (let i = 0; i < quantity; i++) {
             addToCartStore({
@@ -158,20 +149,39 @@ export default function ProductPage({ params }) {
                         Home
                     </a>
                     <span className="text-gray-400 mx-2">/</span>
+                    <a href={`/category/${productData.product_details.Category}`} className="text-[#A0522D] hover:text-[#D97534] font-inter text-sm">
+                        {productData.product_details.Category}
+                    </a>
+                    <span className="text-gray-400 mx-2">/</span>
                     <span className="text-gray-600 font-inter text-sm">
                         {productData.product_title}
                     </span>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    {/* Image Gallery */}
+                    {/* Media Gallery (Images + Video) */}
                     <div className="space-y-4">
                         <div className="aspect-square bg-white rounded-2xl overflow-hidden shadow-lg relative">
-                            <img
-                                src={productData.product_photos[selectedImage]}
-                                alt={productData.product_title}
-                                className="w-full h-full object-contain"
-                            />
+                            {/* Show Video if selected and it's the last index (or a specific video index strategy) 
+                                For now, let's say if selectedImage index >= photos.length, show video?
+                                Or just mix them. Let's append video to photos list for selection logic?
+                                Better: If product_video is present, add a video thumbnail. 
+                             */}
+
+                            {productData.product_video && selectedImage === productData.product_photos.length ? (
+                                <video
+                                    src={productData.product_video}
+                                    controls
+                                    className="w-full h-full object-contain"
+                                    poster={productData.product_photos[0]}
+                                />
+                            ) : (
+                                <img
+                                    src={productData.product_photos[selectedImage] || productData.product_photos[0]}
+                                    alt={productData.product_title}
+                                    className="w-full h-full object-contain"
+                                />
+                            )}
 
                             {/* Stock Badge on Image */}
                             {stockInfo.status === "low" && (
@@ -188,92 +198,104 @@ export default function ProductPage({ params }) {
                         </div>
 
                         {/* Thumbnail Gallery */}
-                        {productData.product_photos.length > 1 && (
-                            <div className="grid grid-cols-5 gap-2">
-                                {productData.product_photos.slice(0, 5).map((photo, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => setSelectedImage(index)}
-                                        className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index
-                                            ? "border-[#D97534] shadow-md"
-                                            : "border-gray-200 hover:border-[#D97534]/50"
-                                            }`}
-                                    >
-                                        <img
-                                            src={photo}
-                                            alt={`${productData.product_title} - ${index + 1}`}
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                        <div className="grid grid-cols-5 gap-2">
+                            {productData.product_photos.map((photo, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setSelectedImage(index)}
+                                    className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index
+                                        ? "border-[#D97534] shadow-md"
+                                        : "border-gray-200 hover:border-[#D97534]/50"
+                                        }`}
+                                >
+                                    <img
+                                        src={photo}
+                                        alt={`${productData.product_title} - ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </button>
+                            ))}
+                            {/* Video Thumbnail */}
+                            {productData.product_video && (
+                                <button
+                                    onClick={() => setSelectedImage(productData.product_photos.length)}
+                                    className={`aspect-square bg-black/5 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center ${selectedImage === productData.product_photos.length
+                                        ? "border-[#D97534] shadow-md"
+                                        : "border-gray-200 hover:border-[#D97534]/50"
+                                        }`}
+                                >
+                                    <i className="fa-solid fa-play text-2xl text-[#8B4513]"></i>
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Product Info */}
                     <div className="space-y-6">
                         <div>
+                            {productData.product_details.Brand && (
+                                <p className="text-sm text-[#D97534] font-medium font-inter mb-1 uppercase tracking-wide">
+                                    {productData.product_details.Brand}
+                                </p>
+                            )}
                             <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-[#8B4513] mb-4 leading-tight">
                                 {productData.product_title}
                             </h1>
 
                             {/* Rating */}
-                            {productData.product_rating && (
-                                <div className="flex items-center mb-4">
-                                    <div className="flex items-center">
-                                        {[...Array(5)].map((_, i) => (
-                                            <i
-                                                key={i}
-                                                className={`fa-solid fa-star text-lg ${i < Math.floor(productData.product_rating)
-                                                    ? "text-[#D97534]"
-                                                    : "text-gray-300"
-                                                    }`}
-                                            ></i>
-                                        ))}
-                                    </div>
-                                    <span className="ml-3 font-inter text-gray-700">
-                                        {productData.product_rating} (
-                                        {productData.product_num_reviews || 0} reviews)
-                                    </span>
+                            <div className="flex items-center mb-4">
+                                <div className="flex items-center text-[#FFA41C]">
+                                    {[...Array(5)].map((_, i) => (
+                                        <i
+                                            key={i}
+                                            className={`fa-solid fa-star text-sm ${i < Math.floor(productData.product_rating)
+                                                ? "opacity-100"
+                                                : "opacity-30"
+                                                }`}
+                                        ></i>
+                                    ))}
                                 </div>
-                            )}
+                                <span className="ml-2 font-inter text-sm text-gray-600 hover:text-[#D97534] cursor-pointer">
+                                    {productData.product_rating} ratings • {productData.product_num_reviews} reviews
+                                </span>
+                            </div>
 
                             {/* Price */}
-                            <div className="mb-6">
-                                <div className="flex items-baseline gap-3">
+                            <div className="mb-6 p-4 bg-white/50 rounded-xl border border-[#FAE5D3]/50">
+                                <div className="flex items-end gap-3">
                                     <p className="font-playfair font-bold text-4xl text-[#8B4513]">
                                         {productData.offer?.price || "See offers"}
                                     </p>
                                     {productData.offer?.original_price && (
-                                        <p className="font-inter text-lg text-gray-400 line-through">
-                                            {productData.offer.original_price}
-                                        </p>
+                                        <div className="flex flex-col mb-1">
+                                            <p className="font-inter text-sm text-gray-500 line-through">
+                                                {productData.offer.original_price}
+                                            </p>
+                                            <p className="font-inter text-xs text-red-600 font-bold">
+                                                SAVE {Math.round((1 - parseFloat(productData.offer.price.replace(/[^\d.]/g, '')) / parseFloat(productData.offer.original_price.replace(/[^\d.]/g, ''))) * 100)}%
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
-                                {productData.typical_price_range && (
-                                    <p className="font-inter text-sm text-gray-600 mt-2">
-                                        Typical range: {productData.typical_price_range[0]} -{" "}
-                                        {productData.typical_price_range[1]}
-                                    </p>
-                                )}
+                                <p className="text-xs text-gray-500 mt-1">Inclusive of all taxes</p>
                             </div>
 
                             {/* Stock Status */}
                             <div className="mb-4">
                                 {stockInfo.status === "in" && (
-                                    <span className="inline-flex items-center text-green-600 font-inter font-medium">
+                                    <span className="inline-flex items-center text-green-700 bg-green-50 px-3 py-1 rounded-full font-inter font-medium text-sm border border-green-200">
                                         <i className="fa-solid fa-check mr-2"></i>
                                         In Stock
                                     </span>
                                 )}
                                 {stockInfo.status === "low" && (
-                                    <span className="inline-flex items-center text-orange-600 font-inter font-medium">
+                                    <span className="inline-flex items-center text-orange-700 bg-orange-50 px-3 py-1 rounded-full font-inter font-medium text-sm border border-orange-200">
                                         <i className="fa-solid fa-circle-exclamation mr-2"></i>
                                         Only {stockInfo.count} left - order soon!
                                     </span>
                                 )}
                                 {stockInfo.status === "out" && (
-                                    <span className="inline-flex items-center text-red-600 font-inter font-medium">
+                                    <span className="inline-flex items-center text-red-700 bg-red-50 px-3 py-1 rounded-full font-inter font-medium text-sm border border-red-200">
                                         <i className="fa-solid fa-circle-exclamation mr-2"></i>
                                         Currently unavailable
                                     </span>
@@ -283,143 +305,114 @@ export default function ProductPage({ params }) {
 
                         {/* Description */}
                         {productData.product_description && (
-                            <div className="bg-gradient-to-br from-white to-[#FAE5D3]/30 rounded-xl p-6 border border-[#FAE5D3]">
-                                <h2 className="font-playfair font-semibold text-xl text-[#8B4513] mb-3">
-                                    About this product
-                                </h2>
-                                <p className="font-inter text-gray-700 leading-relaxed">
+                            <div className="prose prose-sm text-gray-600 font-inter">
+                                <h3 className="font-playfair font-bold text-lg text-[#8B4513] mb-2">Description</h3>
+                                <div className="whitespace-pre-line leading-relaxed">
                                     {productData.product_description}
-                                </p>
+                                </div>
                             </div>
                         )}
 
-                        {/* Product Details */}
-                        {productData.product_details &&
-                            Object.keys(productData.product_details).length > 0 && (
-                                <div className="bg-white rounded-xl p-6 shadow-md">
-                                    <h2 className="font-playfair font-semibold text-xl text-[#8B4513] mb-4">
-                                        Product Details
-                                    </h2>
-                                    <div className="space-y-2">
-                                        {Object.entries(productData.product_details).map(
-                                            ([key, value]) => (
-                                                <div
-                                                    key={key}
-                                                    className="flex justify-between border-b border-gray-100 pb-2"
-                                                >
-                                                    <span className="font-inter text-sm text-gray-600">
-                                                        {key}:
-                                                    </span>
-                                                    <span className="font-inter text-sm font-medium text-gray-800">
-                                                        {value}
-                                                    </span>
-                                                </div>
-                                            ),
-                                        )}
-                                    </div>
+                        {/* Product Specs / Details */}
+                        {productData.product_details && Object.keys(productData.product_details).length > 0 && (
+                            <div className="bg-white rounded-xl overflow-hidden border border-gray-100">
+                                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                                    <h3 className="font-playfair font-semibold text-[#8B4513]">Specifications</h3>
                                 </div>
-                            )}
+                                <div className="divide-y divide-gray-100">
+                                    {Object.entries(productData.product_details).map(([key, value]) => (
+                                        value && (
+                                            <div key={key} className="grid grid-cols-3 px-5 py-3 text-sm">
+                                                <dt className="text-gray-500 font-medium">{key}</dt>
+                                                <dd className="col-span-2 text-gray-800">{value}</dd>
+                                            </div>
+                                        )
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tags */}
+                        {productData.tags && productData.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-4">
+                                {productData.tags.map((tag, i) => (
+                                    <span key={i} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full border border-gray-200">
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Quantity & Add to Cart */}
-                        <div className="bg-gradient-to-br from-[#F4E4D7] to-[#FFF8F0] rounded-xl p-6 shadow-md space-y-4">
+                        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4">
                             <div className="flex items-center space-x-4">
-                                <span className="font-inter font-semibold text-gray-700">
-                                    Quantity:
-                                </span>
-                                <div className="flex items-center space-x-3 bg-white rounded-full px-4 py-2 shadow-sm">
+                                <span className="font-inter font-medium text-gray-700">Quantity</span>
+                                <div className="flex items-center border border-gray-300 rounded-lg">
                                     <button
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="text-[#D97534] hover:text-[#C86429] transition-colors"
+                                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors"
                                     >
-                                        <i className="fa-solid fa-minus"></i>
+                                        <i className="fa-solid fa-minus text-xs"></i>
                                     </button>
-                                    <span className="font-inter font-semibold text-lg w-8 text-center">
+                                    <span className="px-3 py-2 font-inter font-medium text-center w-10 border-x border-gray-300">
                                         {quantity}
                                     </span>
                                     <button
                                         onClick={() => setQuantity(Math.min(stockInfo.count || 99, quantity + 1))}
-                                        className="text-[#D97534] hover:text-[#C86429] transition-colors"
+                                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors"
                                         disabled={quantity >= stockInfo.count}
                                     >
-                                        <i className="fa-solid fa-plus"></i>
+                                        <i className="fa-solid fa-plus text-xs"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="flex gap-3">
                                 <button
                                     onClick={addToCart}
                                     disabled={stockInfo.status === "out" || addedToCart}
-                                    className={`py-4 rounded-full font-inter font-bold text-lg transition-all transform hover:scale-105 shadow-lg ${addedToCart
-                                        ? "bg-green-500 text-white"
-                                        : stockInfo.status === "out"
-                                            ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:scale-100"
-                                            : "bg-[#D97534] hover:bg-[#C86429] text-white"
+                                    className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${addedToCart
+                                            ? "bg-green-600 text-white"
+                                            : stockInfo.status === "out"
+                                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                                : "bg-[#D97534] text-white hover:bg-[#C86429] shadow-md hover:shadow-lg"
                                         }`}
                                 >
                                     {addedToCart ? (
-                                        <span className="flex items-center justify-center">
-                                            <i className="fa-solid fa-check mr-2"></i>
-                                            Added!
+                                        <span className="flex items-center justify-center gap-2">
+                                            <i className="fa-solid fa-check"></i> Added
                                         </span>
                                     ) : (
                                         "Add to Cart"
                                     )}
                                 </button>
-
                                 <button
                                     onClick={buyNow}
                                     disabled={stockInfo.status === "out"}
-                                    className={`py-4 rounded-full font-inter font-bold text-lg transition-all transform hover:scale-105 shadow-lg flex items-center justify-center ${stockInfo.status === "out"
-                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:scale-100"
-                                        : "bg-[#8B4513] hover:bg-[#6B3410] text-white"
+                                    className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${stockInfo.status === "out"
+                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                            : "bg-[#8B4513] text-white hover:bg-[#6A320F] shadow-md hover:shadow-lg"
                                         }`}
                                 >
-                                    <i className="fa-solid fa-bolt mr-2"></i>
                                     Buy Now
                                 </button>
                             </div>
-
-                            {productData.offer?.store_name && (
-                                <p className="font-inter text-sm text-gray-600 text-center">
-                                    Sold by:{" "}
-                                    <span className="font-semibold text-[#8B4513]">
-                                        {productData.offer.store_name}
-                                    </span>
-                                    {productData.offer.store_rating && (
-                                        <span className="ml-2">
-                                            ⭐ {productData.offer.store_rating}
-                                        </span>
-                                    )}
-                                </p>
-                            )}
                         </div>
 
-                        {/* Trust Signals */}
-                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                            <div className="grid grid-cols-3 gap-4 text-center">
-                                <div className="flex flex-col items-center">
-                                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                                        <i className="fa-solid fa-truck text-green-600"></i>
-                                    </div>
-                                    <span className="font-inter text-xs font-medium text-gray-700">Free Delivery</span>
-                                    <span className="font-inter text-xs text-gray-400">Orders over ₹499</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-                                        <i className="fa-solid fa-rotate-left text-blue-600"></i>
-                                    </div>
-                                    <span className="font-inter text-xs font-medium text-gray-700">Easy Returns</span>
-                                    <span className="font-inter text-xs text-gray-400">30-day policy</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2">
-                                        <i className="fa-solid fa-shield-halved text-purple-600"></i>
-                                    </div>
-                                    <span className="font-inter text-xs font-medium text-gray-700">Secure Payment</span>
-                                    <span className="font-inter text-xs text-gray-400">100% protected</span>
-                                </div>
+                        {/* Trust Signals - Kept same as before but slightly cleaner */}
+                        <div className="grid grid-cols-3 gap-4 py-4 border-t border-gray-100">
+                            {/* ... (Keep existing trust signals or simplify) ... */}
+                            <div className="flex flex-col items-center text-center">
+                                <i className="fa-solid fa-truck text-[#D97534] mb-1"></i>
+                                <span className="text-xs text-gray-600">Free Delivery</span>
+                            </div>
+                            <div className="flex flex-col items-center text-center">
+                                <i className="fa-solid fa-rotate-left text-[#D97534] mb-1"></i>
+                                <span className="text-xs text-gray-600">Easy Returns</span>
+                            </div>
+                            <div className="flex flex-col items-center text-center">
+                                <i className="fa-solid fa-shield-halved text-[#D97534] mb-1"></i>
+                                <span className="text-xs text-gray-600">Secure</span>
                             </div>
                         </div>
                     </div>

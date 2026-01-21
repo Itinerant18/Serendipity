@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/utils/categories";
 import ProductCard from "@/components/ProductCard";
+import useCartStore from "@/utils/cartStore";
 
 // --- Components ---
 
@@ -95,9 +96,17 @@ const ActiveFilterChip = ({ label, onRemove }) => (
 );
 
 export default function ProductsPage() {
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12;
+
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
+    const addToCart = useCartStore((state) => state.addToCart);
+    const handleAddToCart = (product) => {
+        addToCart(product);
+    };
 
     // Filter States
     const [selectedCategories, setSelectedCategories] = useState([]);
@@ -164,6 +173,11 @@ export default function ProductsPage() {
         });
     }, [products, selectedCategories, selectedSubcategories, priceRange, selectedBrands, minRating, sortBy]);
 
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedCategories, selectedSubcategories, priceRange, selectedBrands, minRating, sortBy]);
+
     const toggleCategory = (catName) => {
         setSelectedCategories(prev => prev.includes(catName) ? prev.filter(c => c !== catName) : [...prev, catName]);
     };
@@ -189,6 +203,29 @@ export default function ProductsPage() {
     };
 
     const activeFiltersCount = selectedCategories.length + selectedSubcategories.length + selectedBrands.length + (minRating > 0 ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 500000 ? 1 : 0);
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const paginatedProducts = filteredProducts.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Subcategory Icon Lookup
+    const subcategoryIconMap = useMemo(() => {
+        const map = {};
+        MAIN_CATEGORIES.forEach(cat => {
+            if (cat.subcategoryIcons) {
+                Object.assign(map, cat.subcategoryIcons);
+            }
+        });
+        return map;
+    }, []);
 
     if (loading) {
         return (
@@ -235,6 +272,7 @@ export default function ProductsPage() {
                     <div className="max-h-60 overflow-y-auto custom-scrollbar pr-2 space-y-1.5">
                         {availableSubcategories.map((sub) => {
                             const isSelected = selectedSubcategories.includes(sub);
+                            const iconClass = subcategoryIconMap[sub] || 'fa-solid fa-circle-small';
                             return (
                                 <label key={sub} className={`flex items-center cursor-pointer group p-2.5 rounded-lg transition-all ${isSelected ? 'bg-indigo-50/60' : 'hover:bg-gray-50'}`}>
                                     <div className="relative flex items-center">
@@ -248,8 +286,11 @@ export default function ProductsPage() {
                                             <i className="fa-solid fa-check text-white text-[9px]"></i>
                                         </div>
                                     </div>
-                                    <span className={`ml-3 text-sm ${isSelected ? 'text-indigo-800 font-medium' : 'text-gray-600'}`}>
-                                        {sub}
+                                    <span className="ml-3 text-sm flex items-center gap-2">
+                                        <i className={`${iconClass} text-gray-400 w-4 text-center text-xs`}></i>
+                                        <span className={`${isSelected ? 'text-indigo-800 font-medium' : 'text-gray-600'}`}>
+                                            {sub}
+                                        </span>
                                     </span>
                                 </label>
                             );
@@ -258,6 +299,7 @@ export default function ProductsPage() {
                 </FilterSection>
             )}
 
+            {/* ... (Price, Brands, Rating, Reset Filters - same as before) */}
             <FilterSection title="Price Range" icon="fa-tag" isOpen={openSections.price} onToggle={() => toggleSection('price')}>
                 <div className="flex items-center gap-2 p-1">
                     <div className="relative flex-1">
@@ -349,7 +391,7 @@ export default function ProductsPage() {
                 <AllProductsHero totalProducts={filteredProducts.length} />
 
                 {/* Toolbar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sticky top-20 z-30 bg-gray-50/90 backdrop-blur-sm py-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sticky top-20 z-30 bg-gray-50/90 backdrop-blur-sm py-3 transition-all duration-300">
                     <button
                         className="md:hidden flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold shadow-sm text-gray-800"
                         onClick={() => setIsMobileFiltersOpen(true)}
@@ -365,6 +407,11 @@ export default function ProductsPage() {
 
                     <div className="hidden md:block text-gray-600">
                         <span className="font-medium text-gray-900">{filteredProducts.length}</span> items found
+                        {filteredProducts.length > itemsPerPage && (
+                            <span className="text-sm text-gray-400 ml-2">
+                                (Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredProducts.length)})
+                            </span>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -419,10 +466,10 @@ export default function ProductsPage() {
                     )}
                 </AnimatePresence>
 
-                <div className="flex gap-8">
+                <div className="flex gap-10">
                     {/* Sidebar - Desktop */}
-                    <div className="hidden md:block w-72 flex-shrink-0">
-                        <div className="sticky top-32 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                    <div className="hidden md:block w-[280px] shrink-0">
+                        <div className="sticky top-24 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-h-[85vh] overflow-y-auto custom-scrollbar">
                             <FilterContent />
                         </div>
                     </div>
@@ -430,28 +477,83 @@ export default function ProductsPage() {
                     {/* Product Grid */}
                     <div className="flex-1 min-h-[500px]">
                         <AnimatePresence mode="popLayout">
-                            {filteredProducts.length > 0 ? (
-                                <motion.div
-                                    layout
-                                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-7"
-                                >
-                                    {filteredProducts.map((product) => (
-                                        <motion.div
-                                            layout
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                            transition={{ duration: 0.25 }}
-                                            key={product.id}
-                                        >
-                                            <ProductCard
-                                                product={product}
-                                                showAddToCart={true}
-                                                className="h-full border border-gray-100 bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
-                                            />
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
+                            {paginatedProducts.length > 0 ? (
+                                <>
+                                    <motion.div
+                                        layout
+                                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5"
+                                    >
+                                        {paginatedProducts.map((product) => (
+                                            <motion.div
+                                                layout
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -20 }}
+                                                transition={{ duration: 0.25 }}
+                                                key={product.id}
+                                            >
+                                                <ProductCard
+                                                    product={product}
+                                                    showAddToCart={true}
+                                                    onAddToCart={handleAddToCart}
+                                                    className="h-full border border-gray-100 bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                                                />
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+
+                                    {/* Pagination Controls */}
+                                    {totalPages > 1 && (
+                                        <div className="mt-12 flex justify-center items-center gap-2">
+                                            <button
+                                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                                disabled={currentPage === 1}
+                                                className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-500 transition-colors"
+                                            >
+                                                <i className="fa-solid fa-chevron-left"></i>
+                                            </button>
+
+                                            <div className="flex gap-1">
+                                                {[...Array(totalPages)].map((_, i) => {
+                                                    const page = i + 1;
+                                                    // Show first, last, and pages around current
+                                                    if (
+                                                        page === 1 ||
+                                                        page === totalPages ||
+                                                        (page >= currentPage - 1 && page <= currentPage + 1)
+                                                    ) {
+                                                        return (
+                                                            <button
+                                                                key={page}
+                                                                onClick={() => handlePageChange(page)}
+                                                                className={`w-10 h-10 flex items-center justify-center rounded-full font-medium transition-colors ${currentPage === page
+                                                                    ? 'bg-indigo-600 text-white shadow-md'
+                                                                    : 'text-gray-600 hover:bg-gray-100'
+                                                                    }`}
+                                                            >
+                                                                {page}
+                                                            </button>
+                                                        );
+                                                    } else if (
+                                                        (page === currentPage - 2 && page > 2) ||
+                                                        (page === currentPage + 2 && page < totalPages - 1)
+                                                    ) {
+                                                        return <span key={page} className="w-8 flex items-center justify-center text-gray-400">...</span>;
+                                                    }
+                                                    return null;
+                                                })}
+                                            </div>
+
+                                            <button
+                                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-500 transition-colors"
+                                            >
+                                                <i className="fa-solid fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <motion.div
                                     initial={{ opacity: 0 }}
