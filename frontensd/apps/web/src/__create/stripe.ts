@@ -843,9 +843,9 @@ const hasEnv =
 
 const stripe = hasEnv
   ? getStripe({
-      projectGroupId: env.NEXT_PUBLIC_PROJECT_GROUP_ID,
-      token: env.CREATE_TEMP_API_KEY,
-    })
+    projectGroupId: env.NEXT_PUBLIC_PROJECT_GROUP_ID,
+    token: env.CREATE_TEMP_API_KEY,
+  })
   : regularStripe;
 
 export default stripe;

@@ -15,7 +15,7 @@ export default function AddProductPage() {
     const [activeTab, setActiveTab] = useState("basic"); // basic, media, details, shipping, seo
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
-    
+
     // Categories and subcategories from API
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
@@ -48,7 +48,7 @@ export default function AddProductPage() {
         subcategory: "",
         countInStock: "",
         description: "",
-        
+
         // Additional Details
         weight: "",
         weightUnit: "kg", // kg, g, lb, oz
@@ -60,22 +60,22 @@ export default function AddProductPage() {
         },
         tags: [],
         tagInput: "",
-        
+
         // Variants (for future)
         hasVariants: false,
         variants: [],
-        
+
         // Shipping
         shippingRequired: true,
         shippingWeight: "",
         shippingClass: "standard", // standard, express, heavy
         freeShipping: false,
-        
+
         // SEO
         metaTitle: "",
         metaDescription: "",
         slug: "",
-        
+
         // Status
         status: "draft", // draft, active, archived
         featured: false
@@ -128,7 +128,7 @@ export default function AddProductPage() {
                 setSubcategories([]);
                 return;
             }
-            
+
             setLoadingSubcategories(true);
             try {
                 const res = await fetch(`http://localhost:5000/api/categories/${encodeURIComponent(form.category)}/subcategories`);
@@ -195,13 +195,13 @@ export default function AddProductPage() {
 
     const handleChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
-        
+
         setTouched(prev => ({ ...prev, [name]: true }));
         setErrors(prev => ({ ...prev, [name]: null }));
 
         setForm(prev => {
             const newForm = { ...prev };
-            
+
             if (name.startsWith('dimensions.')) {
                 const dimKey = name.split('.')[1];
                 newForm.dimensions = {
@@ -212,13 +212,13 @@ export default function AddProductPage() {
                 newForm[name] = checked;
             } else {
                 newForm[name] = value;
-                
+
                 // Reset subcategory if category changes
                 if (name === "category") {
                     newForm.subcategory = "";
                 }
             }
-            
+
             return newForm;
         });
     }, []);
@@ -306,11 +306,11 @@ export default function AddProductPage() {
         }
 
         const filesToUpload = Array.from(files).slice(0, remainingSlots);
-        
+
         // Validate file types and sizes
         const validFiles = [];
         const invalidFiles = [];
-        
+
         filesToUpload.forEach(file => {
             if (!file.type.startsWith('image/')) {
                 invalidFiles.push(`${file.name} is not an image`);
@@ -363,18 +363,18 @@ export default function AddProductPage() {
 
         const fileArray = Array.isArray(files) ? files : [files];
         const remainingSlots = MAX_VIDEOS - uploadedVideos.length;
-        
+
         if (remainingSlots <= 0) {
             setErrors(prev => ({ ...prev, video: `Maximum ${MAX_VIDEOS} videos allowed` }));
             return;
         }
 
         const filesToUpload = fileArray.slice(0, remainingSlots);
-        
+
         // Validate file types and sizes
         const validFiles = [];
         const invalidFiles = [];
-        
+
         filesToUpload.forEach(file => {
             if (!file.type.startsWith('video/')) {
                 invalidFiles.push(`${file.name} is not a video`);
@@ -552,8 +552,8 @@ export default function AddProductPage() {
                 tags: form.tags.join(','),
                 compareAtPrice: form.compareAtPrice || null,
                 weight: form.weight ? `${form.weight} ${form.weightUnit}` : null,
-                dimensions: form.dimensions.length ? 
-                    `${form.dimensions.length}x${form.dimensions.width}x${form.dimensions.height} ${form.dimensions.unit}` : 
+                dimensions: form.dimensions.length ?
+                    `${form.dimensions.length}x${form.dimensions.width}x${form.dimensions.height} ${form.dimensions.unit}` :
                     null
             };
 
@@ -627,11 +627,10 @@ export default function AddProductPage() {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-all whitespace-nowrap ${
-                                    activeTab === tab.id
-                                        ? 'border-orange-500 text-orange-600 font-semibold bg-white'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                                }`}
+                                className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
+                                    ? 'border-orange-500 text-orange-600 font-semibold bg-white'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                    }`}
                             >
                                 <i className={`fa-solid ${tab.icon} text-sm`}></i>
                                 <span className="text-sm">{tab.label}</span>
@@ -655,9 +654,8 @@ export default function AddProductPage() {
                                     value={form.name}
                                     onChange={handleChange}
                                     onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
-                                    className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${
-                                        errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                    }`}
+                                    className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                        }`}
                                     placeholder="Enter product name"
                                 />
                                 {errors.name && <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
@@ -693,9 +691,8 @@ export default function AddProductPage() {
                                         required
                                         value={form.brand}
                                         onChange={handleChange}
-                                        className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${
-                                            errors.brand ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                        }`}
+                                        className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${errors.brand ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                            }`}
                                         placeholder="Enter brand name"
                                     />
                                     {errors.brand && <p className="mt-1.5 text-sm text-red-600">{errors.brand}</p>}
@@ -705,10 +702,10 @@ export default function AddProductPage() {
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Price ($) <span className="text-red-500">*</span>
+                                        Price (₹) <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
                                         <input
                                             type="number"
                                             name="price"
@@ -718,9 +715,8 @@ export default function AddProductPage() {
                                             value={form.price}
                                             onChange={handleChange}
                                             onBlur={() => setTouched(prev => ({ ...prev, price: true }))}
-                                            className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 pl-7 pr-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${
-                                                errors.price ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                            }`}
+                                            className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 pl-7 pr-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${errors.price ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                                }`}
                                             placeholder="0.00"
                                         />
                                     </div>
@@ -735,7 +731,7 @@ export default function AddProductPage() {
                                         <span className="ml-2 text-xs text-gray-400 font-normal">(optional)</span>
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
                                         <input
                                             type="number"
                                             name="compareAtPrice"
@@ -744,9 +740,8 @@ export default function AddProductPage() {
                                             value={form.compareAtPrice}
                                             onChange={handleChange}
                                             onBlur={() => setTouched(prev => ({ ...prev, compareAtPrice: true }))}
-                                            className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 pl-7 pr-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${
-                                                errors.compareAtPrice ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                            }`}
+                                            className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 pl-7 pr-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${errors.compareAtPrice ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                                }`}
                                             placeholder="0.00"
                                         />
                                     </div>
@@ -773,9 +768,8 @@ export default function AddProductPage() {
                                         onChange={handleChange}
                                         onBlur={() => setTouched(prev => ({ ...prev, category: true }))}
                                         disabled={loadingCategories}
-                                        className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                            errors.category ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                        }`}
+                                        className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed ${errors.category ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                            }`}
                                     >
                                         <option value="">
                                             {loadingCategories ? 'Loading categories...' : 'Select Category'}
@@ -806,15 +800,14 @@ export default function AddProductPage() {
                                         onChange={handleChange}
                                         disabled={!form.category || loadingSubcategories}
                                         onBlur={() => setTouched(prev => ({ ...prev, subcategory: true }))}
-                                        className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                                            errors.subcategory ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                        }`}
+                                        className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed ${errors.subcategory ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                            }`}
                                     >
                                         <option value="">
-                                            {!form.category 
-                                                ? 'Select category first' 
-                                                : loadingSubcategories 
-                                                    ? 'Loading subcategories...' 
+                                            {!form.category
+                                                ? 'Select category first'
+                                                : loadingSubcategories
+                                                    ? 'Loading subcategories...'
                                                     : subcategories.length === 0
                                                         ? 'No subcategories available'
                                                         : 'Select Subcategory'
@@ -849,9 +842,8 @@ export default function AddProductPage() {
                                     value={form.countInStock}
                                     onChange={handleChange}
                                     onBlur={() => setTouched(prev => ({ ...prev, countInStock: true }))}
-                                    className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${
-                                        errors.countInStock ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                    }`}
+                                    className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${errors.countInStock ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                        }`}
                                     placeholder="0"
                                 />
                                 {errors.countInStock && <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
@@ -871,18 +863,16 @@ export default function AddProductPage() {
                                     value={form.description}
                                     onChange={handleChange}
                                     onBlur={() => setTouched(prev => ({ ...prev, description: true }))}
-                                    className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-y ${
-                                        errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                    }`}
+                                    className={`mt-1 block w-full border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-y ${errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                        }`}
                                     placeholder="Describe your product in detail... (minimum 20 characters)"
                                 />
                                 {errors.description && <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
                                     <i className="fa-solid fa-circle-exclamation text-xs"></i>
                                     {errors.description}
                                 </p>}
-                                <p className={`mt-1.5 text-xs flex items-center gap-1 ${
-                                    form.description.length < 20 ? 'text-orange-600' : 'text-gray-500'
-                                }`}>
+                                <p className={`mt-1.5 text-xs flex items-center gap-1 ${form.description.length < 20 ? 'text-orange-600' : 'text-gray-500'
+                                    }`}>
                                     <i className={`fa-solid ${form.description.length < 20 ? 'fa-exclamation-triangle' : 'fa-check-circle'} text-xs`}></i>
                                     {form.description.length} / 20 characters minimum
                                 </p>
@@ -912,17 +902,14 @@ export default function AddProductPage() {
                                             imageInputRef.current?.click();
                                         }
                                     }}
-                                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                                        uploadedImages.length >= MAX_IMAGES 
-                                            ? 'opacity-50 cursor-not-allowed border-gray-200' 
-                                            : 'cursor-pointer border-gray-300 hover:border-gray-400'
-                                    } ${
-                                        dragActiveImage
+                                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${uploadedImages.length >= MAX_IMAGES
+                                        ? 'opacity-50 cursor-not-allowed border-gray-200'
+                                        : 'cursor-pointer border-gray-300 hover:border-gray-400'
+                                        } ${dragActiveImage
                                             ? 'border-orange-500 bg-orange-50'
                                             : ''
-                                    } ${
-                                        errors.images ? 'border-red-300' : ''
-                                    }`}
+                                        } ${errors.images ? 'border-red-300' : ''
+                                        }`}
                                 >
                                     <input
                                         ref={imageInputRef}
@@ -1051,13 +1038,11 @@ export default function AddProductPage() {
                                         onDragOver={handleDragVideo}
                                         onDrop={handleDropVideo}
                                         onClick={() => videoInputRef.current?.click()}
-                                        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                                            dragActiveVideo
-                                                ? 'border-purple-500 bg-purple-50'
-                                                : 'border-gray-300 hover:border-gray-400'
-                                        } ${uploadedVideos.length >= MAX_VIDEOS ? 'opacity-50 cursor-not-allowed' : ''} ${
-                                            errors.video ? 'border-red-300' : ''
-                                        }`}
+                                        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${dragActiveVideo
+                                            ? 'border-purple-500 bg-purple-50'
+                                            : 'border-gray-300 hover:border-gray-400'
+                                            } ${uploadedVideos.length >= MAX_VIDEOS ? 'opacity-50 cursor-not-allowed' : ''} ${errors.video ? 'border-red-300' : ''
+                                            }`}
                                     >
                                         <input
                                             ref={videoInputRef}
@@ -1099,7 +1084,7 @@ export default function AddProductPage() {
                                         )}
                                     </div>
                                 )}
-                                
+
                                 {errors.video && <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
                                     <i className="fa-solid fa-circle-exclamation text-xs"></i>
                                     {errors.video}
@@ -1354,9 +1339,8 @@ export default function AddProductPage() {
                                         value={form.slug}
                                         onChange={handleChange}
                                         onFocus={() => setTouched(prev => ({ ...prev, slug: true }))}
-                                        className={`flex-1 border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${
-                                            errors.slug ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                                        }`}
+                                        className={`flex-1 border rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none ${errors.slug ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                                            }`}
                                         placeholder="product-url-slug"
                                     />
                                 </div>
@@ -1381,9 +1365,8 @@ export default function AddProductPage() {
                                     className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white hover:border-gray-400"
                                     placeholder="SEO title for search engines"
                                 />
-                                <p className={`mt-1.5 text-xs flex items-center gap-1 ${
-                                    form.metaTitle.length > 60 ? 'text-red-600' : form.metaTitle.length > 50 ? 'text-orange-600' : 'text-gray-500'
-                                }`}>
+                                <p className={`mt-1.5 text-xs flex items-center gap-1 ${form.metaTitle.length > 60 ? 'text-red-600' : form.metaTitle.length > 50 ? 'text-orange-600' : 'text-gray-500'
+                                    }`}>
                                     <i className={`fa-solid ${form.metaTitle.length > 60 ? 'fa-exclamation-triangle' : 'fa-check-circle'} text-xs`}></i>
                                     {form.metaTitle.length}/60 characters
                                 </p>
@@ -1400,9 +1383,8 @@ export default function AddProductPage() {
                                     className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2.5 px-4 text-sm transition-colors focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-y bg-white hover:border-gray-400"
                                     placeholder="Brief description for search engines"
                                 />
-                                <p className={`mt-1.5 text-xs flex items-center gap-1 ${
-                                    form.metaDescription.length > 160 ? 'text-red-600' : form.metaDescription.length > 150 ? 'text-orange-600' : 'text-gray-500'
-                                }`}>
+                                <p className={`mt-1.5 text-xs flex items-center gap-1 ${form.metaDescription.length > 160 ? 'text-red-600' : form.metaDescription.length > 150 ? 'text-orange-600' : 'text-gray-500'
+                                    }`}>
                                     <i className={`fa-solid ${form.metaDescription.length > 160 ? 'fa-exclamation-triangle' : 'fa-check-circle'} text-xs`}></i>
                                     {form.metaDescription.length}/160 characters
                                 </p>
@@ -1421,11 +1403,10 @@ export default function AddProductPage() {
                                             key={tab.id}
                                             type="button"
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                                                activeTab === tab.id
-                                                    ? 'bg-orange-500 text-white shadow-sm'
-                                                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
-                                            }`}
+                                            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${activeTab === tab.id
+                                                ? 'bg-orange-500 text-white shadow-sm'
+                                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                                                }`}
                                         >
                                             {index + 1}
                                         </button>

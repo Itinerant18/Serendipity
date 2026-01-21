@@ -372,10 +372,10 @@ export default function ProductPage({ params }) {
                                     onClick={addToCart}
                                     disabled={stockInfo.status === "out" || addedToCart}
                                     className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${addedToCart
-                                            ? "bg-green-600 text-white"
-                                            : stockInfo.status === "out"
-                                                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                                : "bg-[#D97534] text-white hover:bg-[#C86429] shadow-md hover:shadow-lg"
+                                        ? "bg-green-600 text-white"
+                                        : stockInfo.status === "out"
+                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                            : "bg-[#D97534] text-white hover:bg-[#C86429] shadow-md hover:shadow-lg"
                                         }`}
                                 >
                                     {addedToCart ? (
@@ -390,8 +390,8 @@ export default function ProductPage({ params }) {
                                     onClick={buyNow}
                                     disabled={stockInfo.status === "out"}
                                     className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${stockInfo.status === "out"
-                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                            : "bg-[#8B4513] text-white hover:bg-[#6A320F] shadow-md hover:shadow-lg"
+                                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                        : "bg-[#8B4513] text-white hover:bg-[#6A320F] shadow-md hover:shadow-lg"
                                         }`}
                                 >
                                     Buy Now

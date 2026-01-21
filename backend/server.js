@@ -1,4 +1,5 @@
 const express = require('express');
+// Server Entry Point
 const dotenv = require('dotenv');
 // const mongoose = require('mongoose');
 const cors = require('cors');

@@ -177,11 +177,11 @@ export default function SellerSignupPage() {
                     message: errorMessage,
                     data: data
                 });
-                
+
                 // If user is already registered as seller, sync status and redirect
                 if (errorMessage.includes('already registered as a seller')) {
                     setError('You are already registered as a seller. Syncing your account...');
-                    
+
                     // Call sync endpoint to update user status
                     try {
                         const syncRes = await fetch('http://localhost:5000/api/seller/sync-status', {
@@ -191,14 +191,14 @@ export default function SellerSignupPage() {
                                 'Authorization': `Bearer ${token}`
                             }
                         });
-                        
+
                         if (syncRes.ok) {
                             const syncData = await syncRes.json();
                             // Refresh user profile
                             const profileRes = await fetch('http://localhost:5000/api/profile', {
                                 headers: { Authorization: `Bearer ${token}` }
                             });
-                            
+
                             if (profileRes.ok) {
                                 const profileData = await profileRes.json();
                                 setUser({
@@ -207,7 +207,7 @@ export default function SellerSignupPage() {
                                     sellerProfileId: profileData.user?.sellerProfileId || syncData.sellerProfileId
                                 });
                             }
-                            
+
                             setError('Account synced! Redirecting to seller dashboard...');
                             setTimeout(() => {
                                 navigate('/seller');
@@ -225,11 +225,11 @@ export default function SellerSignupPage() {
                             navigate('/seller');
                         }, 2000);
                     }
-                    
+
                     setLoading(false);
                     return;
                 }
-                
+
                 setError(errorMessage);
                 setLoading(false);
                 return;

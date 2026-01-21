@@ -3,8 +3,10 @@
 		"**/*.{ts,tsx,js,jsx}",
 		"**/.server/**/*",
 		"**/.client/**/*",
+		"**/.client/**/*",
 		".react-router/types/**/*",
-		"./src/global.d.ts"
+		"./src/global.d.ts",
+		"./src/vite-env.d.ts"
 	],
 	"compilerOptions": {
 		"lib": [
@@ -34,6 +36,9 @@
 		"paths": {
 			"@/*": [
 				"./src/*"
+			],
+			"npm:stripe": [
+				"./node_modules/stripe"
 			]
 		}
 	}

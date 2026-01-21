@@ -40,7 +40,7 @@ const ProductForm = ({
 
             <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-2">
-                    <Label htmlFor="price" className="text-foreground font-medium">Price ($)</Label>
+                    <Label htmlFor="price" className="text-foreground font-medium">Price (₹)</Label>
                     <Input
                         id="price"
                         name="price"
