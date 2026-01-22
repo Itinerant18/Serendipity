@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 // FontAwesome icons used globally
 import { formatCurrency } from "@/utils/format";
 import useCartStore from "@/utils/cartStore";
+import useAuth from "@/utils/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function ProductPage({ params }) {
     const [product, setProduct] = useState(null);
@@ -14,6 +16,8 @@ export default function ProductPage({ params }) {
     const [addedToCart, setAddedToCart] = useState(false);
     const [stockInfo, setStockInfo] = useState({ count: 0, status: "out" });
     const addToCartStore = useCartStore((state) => state.addToCart);
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchProduct();
@@ -71,6 +75,11 @@ export default function ProductPage({ params }) {
     };
 
     const addToCart = () => {
+        if (!isAuthenticated) {
+            navigate('/account/signin');
+            return;
+        }
+
         // Construct the product object expected by the store logic
         const item = {
             id: product.product.product_id,
@@ -94,6 +103,11 @@ export default function ProductPage({ params }) {
     };
 
     const buyNow = () => {
+        if (!isAuthenticated) {
+            navigate('/account/signin');
+            return;
+        }
+
         addToCart();
         window.location.href = "/cart";
     };

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import useAuthStore from './authStore';
 
 const useCartStore = create(
     persist(
@@ -8,6 +9,13 @@ const useCartStore = create(
 
             // Actions
             addToCart: (product) => {
+                // strict auth check
+                const { isAuthenticated } = useAuthStore.getState();
+                if (!isAuthenticated) {
+                    window.location.href = '/account/signin';
+                    return;
+                }
+
                 const items = get().items;
                 const existingItem = items.find((item) => item.product === product._id || item.product === product.id);
 

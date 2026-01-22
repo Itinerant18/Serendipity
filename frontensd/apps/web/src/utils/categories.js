@@ -82,7 +82,7 @@ export const MAIN_CATEGORIES = [
         name: "Beauty",
         emoji: "💄",
         icon: "fa-solid fa-wand-magic-sparkles",
-        image: "https://images.unsplash.com/photo-1522335789201-a21f1da22315?auto=format&fit=crop&q=80&w=800",
+        image: "https://img.freepik.com/free-photo/monochrome-beauty-product-skincare_23-2151307223.jpg?semt=ais_hybrid&w=740&q=80",
         subcategories: [
             "Skincare",
             "Makeup & Cosmetics",
@@ -108,7 +108,7 @@ export const MAIN_CATEGORIES = [
         name: "Sports",
         emoji: "⚽",
         icon: "fa-solid fa-futbol",
-        image: "https://images.unsplash.com/photo-1461896756970-f49c121d73ef?auto=format&fit=crop&q=80&w=800",
+        image: "https://harvardindependent.com/wp-content/uploads/2019/05/Crew-Article_Andrew_Nick-1024x731.jpg",
         subcategories: [
             "Fitness Equipment",
             "Sportswear & Activewear",

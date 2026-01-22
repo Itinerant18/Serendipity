@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import useAuth from "@/utils/useAuth";
 // FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 
@@ -107,6 +108,9 @@ export default function ProductCard({
         return stars;
     };
 
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+
     return (
         <div
             ref={cardRef}
@@ -181,6 +185,12 @@ export default function ProductCard({
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
+
+                                if (!isAuthenticated) {
+                                    navigate('/account/signin');
+                                    return;
+                                }
+
                                 if (!isOutOfStock) onAddToCart?.(product);
                             }}
                             disabled={isOutOfStock}
