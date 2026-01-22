@@ -1,14 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 // FontAwesome icons used globally
 import { formatCurrency } from "@/utils/format";
 import useCartStore from "@/utils/cartStore";
 import useAuth from "@/utils/useAuth";
 import { useNavigate } from "react-router-dom";
 
+// Lazy load ProductCard to avoid circular deps or heavy load
+const ProductCard = React.lazy(() => import("@/components/ProductCard"));
+
 export default function ProductPage({ params }) {
     const [product, setProduct] = useState(null);
+    const [relatedProducts, setRelatedProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
@@ -66,6 +70,23 @@ export default function ProductPage({ params }) {
                 if (count > 10) status = "in";
                 else if (count > 0) status = "low";
                 setStockInfo({ count, status });
+
+                // Fetch Related Products
+                try {
+                    const allResponse = await fetch("http://localhost:5000/api/products");
+                    const allData = await allResponse.json();
+
+                    const productsList = allData.products || (Array.isArray(allData) ? allData : []);
+
+                    if (Array.isArray(productsList)) {
+                        const related = productsList
+                            .filter(p => p.category === data.category && (p.id || p._id) !== (data.id || params.id))
+                            .slice(0, 4);
+                        setRelatedProducts(related);
+                    }
+                } catch (err) {
+                    console.error("Error fetching related products", err);
+                }
             }
         } catch (error) {
             console.error("Error fetching product:", error);
@@ -100,6 +121,19 @@ export default function ProductPage({ params }) {
 
         setAddedToCart(true);
         setTimeout(() => setAddedToCart(false), 2000);
+    };
+
+    const handleRelatedAddToCart = (item) => {
+        if (!isAuthenticated) {
+            navigate('/account/signin');
+            return;
+        }
+        addToCartStore({
+            id: item.id || item._id,
+            name: item.name,
+            price: typeof item.price === 'string' ? parseFloat(item.price.replace(/[^\d.]/g, '')) : item.price,
+            image: item.image || (item.images && item.images[0])
+        });
     };
 
     const buyNow = () => {
@@ -433,7 +467,23 @@ export default function ProductPage({ params }) {
                 </div>
             </div>
 
-
+            {/* Related Products Section */}
+            {relatedProducts.length > 0 && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-gray-200">
+                    <h2 className="text-3xl font-playfair font-bold text-[#8B4513] mb-8">Related Products</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Suspense fallback={<div>Loading...</div>}>
+                            {relatedProducts.map((p) => (
+                                <ProductCard
+                                    key={p.id || p._id}
+                                    product={p}
+                                    onAddToCart={handleRelatedAddToCart}
+                                />
+                            ))}
+                        </Suspense>
+                    </div>
+                </div>
+            )}
 
             <style jsx global>{`
         .font-inter {

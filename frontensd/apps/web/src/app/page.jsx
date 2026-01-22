@@ -12,6 +12,7 @@ import { MAIN_CATEGORIES } from "@/utils/categories";
 const EcommerceHero = lazy(() => import("@/components/ecommerce-hero").then(module => ({ default: module.EcommerceHero })));
 const ProductCard = lazy(() => import("@/components/ProductCard"));
 const MonochromaticCategories = lazy(() => import("@/components/monochromatic-categories").then(module => ({ default: module.MonochromaticCategories })));
+const FeaturedProducts = lazy(() => import("@/components/FeaturedProducts"));
 
 export default function HomePage() {
     const heroSlides = [
@@ -140,7 +141,7 @@ export default function HomePage() {
             </Suspense>
 
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
                 {/* Categories Section */}
                 <section className="mb-16">
@@ -173,54 +174,13 @@ export default function HomePage() {
                 </section>
 
                 {/* Featured Products Section */}
-                <section className="mb-16">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 font-playfair">
-                            Featured Products
-                        </h2>
-                        <Link
-                            to="/products"
-                            className="text-[#D97534] hover:text-[#C86429] font-semibold text-sm flex items-center gap-1"
-                        >
-                            View All
-                            <i className="fa-solid fa-arrow-right text-base"></i>
-                        </Link>
-                    </div>
-
-                    {loading ? (
-                        <LoadingSpinner />
-                    ) : error ? (
-                        <div className="text-center py-20">
-                            <p className="text-gray-500 mb-4">{error.message || "Something went wrong"}</p>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="btn-primary"
-                            >
-                                Try Again
-                            </button>
-                        </div>
-                    ) : featuredProducts.length === 0 ? (
-                        <div className="text-center py-20 bg-white rounded-xl">
-                            <p className="text-gray-500 mb-4">No products available yet.</p>
-                            <Link to="/seller/signup" className="btn-primary inline-flex items-center gap-2">
-                                Become a Seller
-                                <i className="fa-solid fa-arrow-right text-base"></i>
-                            </Link>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            <Suspense fallback={<LoadingSpinner />}>
-                                {featuredProducts.map((product) => (
-                                    <ProductCard
-                                        key={product.id || product._id}
-                                        product={product}
-                                        onAddToCart={handleAddToCart}
-                                    />
-                                ))}
-                            </Suspense>
-                        </div>
-                    )}
-                </section>
+                {/* Featured Products Section */}
+                <Suspense fallback={<LoadingSpinner />}>
+                    <FeaturedProducts
+                        products={featuredProducts}
+                        onAddToCart={addToCart}
+                    />
+                </Suspense>
 
                 {/* Why Shop With Us Section */}
                 <section className="mb-16 bg-slate-50 rounded-2xl p-8 md:p-12 border border-slate-100">

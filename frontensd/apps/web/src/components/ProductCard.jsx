@@ -4,7 +4,6 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import useAuth from "@/utils/useAuth";
-// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 
 /**
@@ -23,14 +22,14 @@ export default function ProductCard({
         name,
         price,
         image,
-        images = [], // New field
+        images = [],
         rating = 0,
         num_reviews = 0,
         brand,
         category,
         count_in_stock = 0,
         discount,
-        compare_at_price // New field
+        compare_at_price
     } = product;
 
     const productId = id || _id;
@@ -40,7 +39,6 @@ export default function ProductCard({
     let originalPrice = compare_at_price;
     let discountPercentage = discount;
 
-    // If we have a compare_at_price that is higher than price, that's a sale
     if (compare_at_price && compare_at_price > price) {
         originalPrice = compare_at_price;
         if (!discountPercentage) {
@@ -49,41 +47,17 @@ export default function ProductCard({
     }
 
     const hasDiscount = discountPercentage && discountPercentage > 0;
-
-    // If explicit discount is provided but no compare_at_price, calculate original (reverse logic for display if needed, but usually we just show price as discounted)
-    // Actually, widespread convention: 'price' is the selling price.
-    // If 'compare_at_price' exists, it's the crossed-out price.
-
     const isOutOfStock = count_in_stock === 0;
-    const finalImage = image || (images && images.length > 0 ? images[0] : "/images/sample.jpg");
 
-    const cardRef = React.useRef(null);
-    const [style, setStyle] = React.useState({});
+    // Image handling
+    const [imgSrc, setImgSrc] = React.useState("");
+    const [imgError, setImgError] = React.useState(false);
 
-    // --- MOUSE MOVE HANDLER ---
-    const handleMouseMove = (e) => {
-        if (!cardRef.current) return;
-
-        const { left, top, width, height } = cardRef.current.getBoundingClientRect();
-        const x = e.clientX - left;
-        const y = e.clientY - top;
-
-        const rotateX = (y - height / 2) / (height / 2) * -4; // Max rotation 4deg
-        const rotateY = (x - width / 2) / (width / 2) * 4;   // Max rotation 4deg
-
-        setStyle({
-            transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`,
-            transition: "transform 0.1s ease-out",
-        });
-    };
-
-    // --- MOUSE LEAVE HANDLER ---
-    const handleMouseLeave = () => {
-        setStyle({
-            transform: "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)",
-            transition: "transform 0.4s ease-in-out",
-        });
-    };
+    React.useEffect(() => {
+        if (image) setImgSrc(image);
+        else if (images && images.length > 0) setImgSrc(images[0]);
+        else setImgSrc("https://images.unsplash.com/photo-1560343076-ec343e42ac6e?q=80&w=400&auto=format&fit=crop");
+    }, [image, images]);
 
     const renderStars = (rating) => {
         const stars = [];
@@ -101,7 +75,7 @@ export default function ProductCard({
                 );
             } else {
                 stars.push(
-                    <i key={i} className="fa-regular fa-star text-xs text-white/50"></i>
+                    <i key={i} className="fa-regular fa-star text-xs text-gray-300"></i>
                 );
             }
         }
@@ -113,73 +87,79 @@ export default function ProductCard({
 
     return (
         <div
-            ref={cardRef}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={style}
             className={cn(
-                "group relative w-full aspect-[9/12] rounded-3xl bg-card shadow-lg cursor-pointer transform-style-3d",
+                "group relative flex flex-col w-full h-full bg-gradient-to-br from-white/80 via-white/60 to-white/40 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] hover:-translate-y-1 transition-all duration-500 overflow-hidden ring-1 ring-white/50",
                 className
             )}
         >
-            <Link to={`/product/${productId}`} className="absolute inset-0 z-10" />
-
-            {/* Background Image */}
-            <img
-                src={image || "/images/sample.jpg"}
-                alt={name}
-                className="absolute inset-0 h-full w-full object-cover rounded-3xl transition-transform duration-300 group-hover:scale-110"
-                style={{ transform: "translateZ(-20px) scale(1.1)" }}
-                onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://images.unsplash.com/photo-1560343076-ec343e42ac6e?q=80&w=400&auto=format&fit=crop";
-                }}
-            />
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-3xl pointer-events-none" />
-
-            {/* Content Layer */}
-            <div
-                className="absolute inset-0 p-5 flex flex-col pointer-events-none z-20"
-                style={{ transform: "translateZ(40px)" }}
-            >
-                {/* Header */}
-                <div className="flex items-start justify-between rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
-                    <div className="flex flex-col w-full">
-                        <h3 className="text-lg font-bold text-white line-clamp-1">{name}</h3>
-                        <div className="flex justify-between items-center mt-1">
-                            <p className="text-xs text-white/70">{brand || category}</p>
-                            <div className="flex items-center gap-1">
-                                {renderStars(rating)}
-                                <span className="text-[10px] text-white/50">({num_reviews})</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <Link to={`/product/${productId}`} className="relative aspect-[4/5] overflow-hidden bg-gray-50">
+                <img
+                    src={imgSrc}
+                    alt={name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={() => {
+                        if (!imgError) {
+                            setImgError(true);
+                            setImgSrc("https://images.unsplash.com/photo-1560343076-ec343e42ac6e?q=80&w=400&auto=format&fit=crop");
+                        }
+                    }}
+                />
 
                 {/* Badges */}
-                <div className="absolute top-[110px] left-5 flex flex-col gap-2 pointer-events-auto">
+                <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {hasDiscount && (
-                        <div className="rounded-full bg-red-500/80 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
-                            -{discount}%
+                        <div className="rounded-full bg-red-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                            -{discountPercentage}%
                         </div>
                     )}
                     {isOutOfStock && (
-                        <div className="rounded-full bg-gray-800/80 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
+                        <div className="rounded-full bg-gray-900 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
                             No Stock
                         </div>
                     )}
                 </div>
 
-                {/* Price Tag */}
-                <div className="absolute top-[108px] right-5 pointer-events-auto">
-                    <div className="rounded-full bg-black/40 px-4 py-1.5 text-sm font-semibold text-white backdrop-blur-sm shadow-sm border border-white/10">
-                        {formatCurrency(displayPrice)}
+                {/* Overlay on hover (optional subtle effect) */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+            </Link>
+
+            {/* Content Layer */}
+            <div className="p-4 flex flex-col flex-grow">
+                {/* Header */}
+                <div className="mb-2">
+                    <div className="flex justify-between items-start mb-1">
+                        <p className="text-xs text-[#D97534] font-medium uppercase tracking-wide truncate pr-2">
+                            {brand || category || "Serendipity"}
+                        </p>
+                        <div className="flex items-center gap-1 shrink-0">
+                            {renderStars(rating)}
+                            <span className="text-[10px] text-gray-400">({num_reviews})</span>
+                        </div>
                     </div>
+
+                    <Link to={`/product/${productId}`} className="block">
+                        <h3 className="text-base font-bold text-gray-900 line-clamp-2 hover:text-[#D97534] transition-colors leading-tight min-h-[2.5rem]">
+                            {name}
+                        </h3>
+                    </Link>
                 </div>
 
-                {/* Bottom Actions */}
-                <div className="mt-auto pointer-events-auto w-full relative z-50">
+                {/* Price */}
+                <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <div className="flex flex-col">
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-lg font-bold text-gray-900">
+                                {formatCurrency(displayPrice)}
+                            </span>
+                            {originalPrice && (
+                                <span className="text-xs text-gray-400 line-through">
+                                    {originalPrice}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Add to Cart Button */}
                     {showAddToCart && (
                         <button
                             onClick={(e) => {
@@ -194,14 +174,14 @@ export default function ProductCard({
                                 if (!isOutOfStock) onAddToCart?.(product);
                             }}
                             disabled={isOutOfStock}
-                            className={`w-full py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-md border border-white/20
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm
                                 ${isOutOfStock
-                                    ? "bg-gray-500/20 text-gray-400 cursor-not-allowed"
-                                    : "bg-white/10 text-white hover:bg-white/20 hover:scale-[1]"
+                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    : "bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#D97534] hover:text-white"
                                 }`}
+                            title={isOutOfStock ? "Out of Stock" : "Add to Cart"}
                         >
-                            <i className="fa-solid fa-cart-shopping"></i>
-                            {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                            <i className="fa-solid fa-cart-plus text-sm"></i>
                         </button>
                     )}
                 </div>

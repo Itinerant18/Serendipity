@@ -189,7 +189,7 @@ export function MonochromaticCategories({
         className
       )}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,7 +210,7 @@ export function MonochromaticCategories({
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           layout
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             {categories.map((category, index) => (
               <motion.div
                 key={category.id}
