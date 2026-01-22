@@ -242,4 +242,3 @@ If you encounter issues with "module not found" or package installation errors, 
    cd frontensd/apps/web
    npm run dev / node node_modules/vite/bin/vite.js
    ```
-1
