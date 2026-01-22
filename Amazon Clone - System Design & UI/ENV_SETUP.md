@@ -106,7 +106,7 @@ AUTH_SECRET=your_auth_secret_here
 
 ## How to Get Your Credentials
 
-### Main Database Credentials
+### Main Database Credentials (Supabase login using Github)
 
 1. **Visit Supabase Dashboard**: https://supabase.com/dashboard
 2. **Select Your Main Project**: Click on your project (currently: `wosxyoivsiqzyufhcyhy`)
@@ -116,7 +116,7 @@ AUTH_SECRET=your_auth_secret_here
    - **`anon` `public` key** → Use for `SUPABASE_KEY` (backend) and `VITE_SUPABASE_ANON_KEY` (frontend)
    - **`service_role` `secret` key** → Use for `SUPABASE_SERVICE_KEY` (backend only)
 
-### Seller Database Credentials
+### Seller Database Credentials (Supabase login using userdefined2209@gmail.com)
 
 1. **Visit Supabase Dashboard**: https://supabase.com/dashboard
 2. **Select Your Seller Project**: Click on your seller project (currently: `kfyocccbvsanihtzrfmb`)
