@@ -7,13 +7,14 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  ScrollView,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { apiService, Product } from '@/services/api';
 import { useCartStore } from '@/stores/cartStore';
+import { BrandColors, NeutralColors, BackgroundColors, Shadows, BorderRadius, Spacing } from '@/constants/theme';
 
 export default function ProductsScreen() {
   const { category } = useLocalSearchParams();
@@ -48,7 +49,6 @@ export default function ProductsScreen() {
         setHasMore(productsData.products.length === 24);
       }
 
-      // Safe category loading
       if (Array.isArray(categoriesData)) {
         setCategories(categoriesData.map((cat: any) => typeof cat === 'string' ? cat : cat.name));
       } else if (categoriesData && Array.isArray((categoriesData as any).categories)) {
@@ -127,46 +127,36 @@ export default function ProductsScreen() {
       <TouchableOpacity
         style={styles.productCard}
         onPress={() => router.push(`/products/${item.id}`)}
+        activeOpacity={0.9}
       >
-        <Image source={{ uri: imageUri }} style={styles.productImage} />
+        {/* Product Image */}
+        <View style={styles.productImageContainer}>
+          <Image source={{ uri: imageUri }} style={styles.productImage} />
+        </View>
+        
+        {/* Product Info */}
         <View style={styles.productInfo}>
+          <Text style={styles.productBrand}>{item.category || 'Serendipity'}</Text>
           <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-          <Text style={styles.productCategory}>{item.category}</Text>
-          <Text style={styles.productPrice}>${price.toFixed(2)}</Text>
-          <TouchableOpacity
-            style={styles.addToCartButton}
-            onPress={() => handleAddToCart(item)}
-          >
-            <Text style={styles.addToCartText}>Add to Cart</Text>
-          </TouchableOpacity>
+          
+          <View style={styles.productFooter}>
+            <Text style={styles.productPrice}>${price.toFixed(2)}</Text>
+            <TouchableOpacity
+              style={styles.addToCartButton}
+              onPress={() => handleAddToCart(item)}
+            >
+              <MaterialIcons name="add-shopping-cart" size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
 
-  const renderCategory = ({ item }: { item: string }) => (
-    <TouchableOpacity
-      style={[
-        styles.categoryChip,
-        selectedCategory === item && styles.categoryChipSelected
-      ]}
-      onPress={() => setSelectedCategory(item === selectedCategory ? '' : item)}
-    >
-      <Text
-        style={[
-          styles.categoryChipText,
-          selectedCategory === item && styles.categoryChipTextSelected
-        ]}
-      >
-        {item}
-      </Text>
-    </TouchableOpacity>
-  );
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#D97534" />
+        <ActivityIndicator size="large" color={BrandColors.primary} />
       </View>
     );
   }
@@ -175,12 +165,21 @@ export default function ProductsScreen() {
     <View style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchSection}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search products..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+        <View style={styles.searchInputContainer}>
+          <MaterialIcons name="search" size={20} color={NeutralColors.gray400} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search products..."
+            placeholderTextColor={NeutralColors.gray400}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <MaterialIcons name="close" size={18} color={NeutralColors.gray400} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Categories */}
@@ -196,6 +195,7 @@ export default function ProductsScreen() {
                   : null
               ]}
               onPress={() => setSelectedCategory(item === 'All' ? '' : item)}
+              activeOpacity={0.8}
             >
               <Text
                 style={[
@@ -227,11 +227,22 @@ export default function ProductsScreen() {
         onEndReached={loadMoreProducts}
         onEndReachedThreshold={0.5}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          <RefreshControl 
+            refreshing={isRefreshing} 
+            onRefresh={handleRefresh}
+            tintColor={BrandColors.primary}
+            colors={[BrandColors.primary]}
+          />
         }
         ListFooterComponent={hasMore ? (
-          <ActivityIndicator size="small" color="#D97534" style={styles.footerLoader} />
+          <ActivityIndicator size="small" color={BrandColors.primary} style={styles.footerLoader} />
         ) : null}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <MaterialIcons name="shopping-bag" size={48} color={NeutralColors.gray300} />
+            <Text style={styles.emptyStateText}>No products found</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -240,110 +251,149 @@ export default function ProductsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F3F3',
+    backgroundColor: BackgroundColors.neutral,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: BackgroundColors.neutral,
   },
+  
+  // Search
   searchSection: {
-    padding: 16,
-    backgroundColor: '#fff',
+    padding: Spacing.md,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: NeutralColors.gray200,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: NeutralColors.gray100,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   searchInput: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 8,
-    fontSize: 16,
+    flex: 1,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.sm,
+    fontSize: 15,
+    color: NeutralColors.gray900,
   },
+  
+  // Categories
   categoriesSection: {
-    backgroundColor: '#fff',
-    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: NeutralColors.gray200,
   },
   categoriesList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
   },
   categoryChip: {
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginRight: 8,
+    backgroundColor: NeutralColors.gray100,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    marginRight: Spacing.xs,
   },
   categoryChipSelected: {
-    backgroundColor: '#D97534',
+    backgroundColor: BrandColors.primary,
   },
   categoryChipText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: NeutralColors.gray600,
     fontWeight: '500',
   },
   categoryChipTextSelected: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
+  
+  // Products
   productsList: {
-    padding: 16,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
   productRow: {
     justifyContent: 'space-between',
   },
   productCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.md,
     width: '48%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    ...Shadows.lg,
+  },
+  productImageContainer: {
+    aspectRatio: 4 / 5,
+    backgroundColor: NeutralColors.gray100,
   },
   productImage: {
     width: '100%',
-    height: 120,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#f0f0f0',
+    height: '100%',
+    resizeMode: 'cover',
   },
   productInfo: {
-    flex: 1,
+    padding: Spacing.sm,
+  },
+  productBrand: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: BrandColors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   productName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: 4,
-    minHeight: 40,
+    color: NeutralColors.gray900,
+    marginBottom: Spacing.sm,
+    minHeight: 36,
+    lineHeight: 18,
   },
-  productCategory: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+  productFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: NeutralColors.gray200,
+    paddingTop: Spacing.sm,
   },
   productPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#D97534',
-    marginBottom: 8,
+    color: NeutralColors.gray900,
   },
   addToCartButton: {
-    backgroundColor: '#D97534',
-    padding: 8,
-    borderRadius: 6,
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.full,
+    backgroundColor: BrandColors.primary,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.sm,
   },
-  addToCartText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  
+  // Footer & Empty
   footerLoader: {
-    marginVertical: 20,
+    marginVertical: Spacing.lg,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxl,
+  },
+  emptyStateText: {
+    marginTop: Spacing.md,
+    fontSize: 16,
+    color: NeutralColors.gray500,
   },
 });

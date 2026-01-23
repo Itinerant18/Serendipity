@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useCartStore } from '@/stores/cartStore';
+import { BrandColors, NeutralColors, BackgroundColors, Shadows, BorderRadius, Spacing } from '@/constants/theme';
 
 export default function CartScreen() {
   const {
@@ -37,14 +38,14 @@ export default function CartScreen() {
             style={styles.quantityButton}
             onPress={() => updateQuantity(item.productId, item.quantity - 1)}
           >
-            <Text style={styles.quantityButtonText}>-</Text>
+            <MaterialIcons name="remove" size={16} color={NeutralColors.gray700} />
           </TouchableOpacity>
           <Text style={styles.quantity}>{item.quantity}</Text>
           <TouchableOpacity
             style={styles.quantityButton}
             onPress={() => updateQuantity(item.productId, item.quantity + 1)}
           >
-            <Text style={styles.quantityButtonText}>+</Text>
+            <MaterialIcons name="add" size={16} color={NeutralColors.gray700} />
           </TouchableOpacity>
         </View>
       </View>
@@ -56,7 +57,7 @@ export default function CartScreen() {
           style={styles.removeButton}
           onPress={() => removeItem(item.productId)}
         >
-          <Text style={styles.removeButtonText}>Remove</Text>
+          <MaterialIcons name="delete-outline" size={20} color={BrandColors.error} />
         </TouchableOpacity>
       </View>
     </View>
@@ -65,6 +66,7 @@ export default function CartScreen() {
   if (items.length === 0) {
     return (
       <View style={styles.emptyContainer}>
+        <MaterialIcons name="shopping-cart" size={80} color={NeutralColors.gray300} />
         <Text style={styles.emptyTitle}>Your cart is empty</Text>
         <Text style={styles.emptySubtitle}>Add some products to get started!</Text>
         <TouchableOpacity
@@ -72,6 +74,7 @@ export default function CartScreen() {
           onPress={() => router.push('/(tabs)/products')}
         >
           <Text style={styles.shopButtonText}>Continue Shopping</Text>
+          <MaterialIcons name="arrow-forward" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
     );
@@ -81,7 +84,9 @@ export default function CartScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Shopping Cart</Text>
-        <Text style={styles.itemCount}>{totalItems} items</Text>
+        <View style={styles.itemCountBadge}>
+          <Text style={styles.itemCountText}>{totalItems}</Text>
+        </View>
       </View>
 
       <FlatList
@@ -89,11 +94,12 @@ export default function CartScreen() {
         renderItem={renderCartItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.cartList}
+        showsVerticalScrollIndicator={false}
       />
 
       <View style={styles.footer}>
         <View style={styles.totalSection}>
-          <Text style={styles.totalLabel}>Total:</Text>
+          <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalPrice}>${totalPrice.toFixed(2)}</Text>
         </View>
 
@@ -102,13 +108,14 @@ export default function CartScreen() {
             style={styles.clearButton}
             onPress={clearCart}
           >
-            <Text style={styles.clearButtonText}>Clear Cart</Text>
+            <Text style={styles.clearButtonText}>Clear</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.checkoutButton}
             onPress={handleCheckout}
           >
-            <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+            <Text style={styles.checkoutButtonText}>Checkout</Text>
+            <MaterialIcons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -119,175 +126,193 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F3F3',
+    backgroundColor: BackgroundColors.neutral,
   },
+  
+  // Empty State
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: Spacing.xl,
+    backgroundColor: BackgroundColors.neutral,
   },
   emptyTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 8,
+    color: NeutralColors.gray900,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   emptySubtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 15,
+    color: NeutralColors.gray500,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   shopButton: {
-    backgroundColor: '#D97534',
-    padding: 16,
-    borderRadius: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: BrandColors.primary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.sm,
+    ...Shadows.md,
   },
   shopButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
+  
+  // Header
   header: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#FFFFFF',
+    padding: Spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: NeutralColors.gray200,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: NeutralColors.gray900,
   },
-  itemCount: {
-    fontSize: 14,
-    color: '#666',
+  itemCountBadge: {
+    backgroundColor: BrandColors.primary,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    minWidth: 28,
+    alignItems: 'center',
   },
+  itemCountText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  
+  // Cart List
   cartList: {
-    padding: 16,
+    padding: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
   cartItem: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
     flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...Shadows.md,
   },
   itemImage: {
     width: 80,
     height: 80,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    marginRight: 12,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: NeutralColors.gray100,
+    marginRight: Spacing.sm,
   },
   itemInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   itemName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: NeutralColors.gray900,
     marginBottom: 4,
   },
   itemPrice: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
+    fontSize: 13,
+    color: NeutralColors.gray500,
+    marginBottom: Spacing.sm,
   },
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   quantityButton: {
-    backgroundColor: '#f0f0f0',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    backgroundColor: NeutralColors.gray100,
+    width: 28,
+    height: 28,
+    borderRadius: BorderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  quantityButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
   quantity: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1a1a1a',
-    marginHorizontal: 12,
+    color: NeutralColors.gray900,
+    marginHorizontal: Spacing.md,
+    minWidth: 24,
+    textAlign: 'center',
   },
   itemActions: {
     alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
   itemTotal: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#D97534',
-    marginBottom: 8,
+    color: BrandColors.primary,
   },
   removeButton: {
-    padding: 4,
+    padding: Spacing.xs,
   },
-  removeButtonText: {
-    fontSize: 12,
-    color: '#ff4444',
-    fontWeight: '500',
-  },
+  
+  // Footer
   footer: {
-    backgroundColor: '#fff',
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    padding: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: NeutralColors.gray200,
+    ...Shadows.lg,
   },
   totalSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
   totalLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontSize: 16,
+    fontWeight: '500',
+    color: NeutralColors.gray600,
   },
   totalPrice: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#D97534',
+    color: NeutralColors.gray900,
   },
   actions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.sm,
   },
   clearButton: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: NeutralColors.gray100,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
   },
   clearButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#666',
+    color: NeutralColors.gray600,
   },
   checkoutButton: {
     flex: 2,
-    backgroundColor: '#D97534',
-    padding: 16,
-    borderRadius: 8,
+    flexDirection: 'row',
+    backgroundColor: BrandColors.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    ...Shadows.md,
   },
   checkoutButtonText: {
     fontSize: 16,
