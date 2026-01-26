@@ -63,7 +63,7 @@ Serendipity/
 │   ├── package.json
 │   ├── seed_products.js
 │   └── server.js
-└── frontensd/
+└── frontend/
     └── apps/
         └── web/
             ├── __create/
@@ -259,7 +259,7 @@ Serendipity/
 | `README.md` | Provides an overview of the project, including instructions on how to set it up, run it, and troubleshoot common issues. |
 | `setup-env.ps1` | A PowerShell script that automates the creation of `.env` files for both the backend and frontend, making the initial project setup easier. |
 | `backend/` | Contains the Node.js/Express backend server for the application. |
-| `frontensd/` | Contains the frontend application code. |
+| `frontend/` | Contains the frontend application code. |
 
 ### `backend/` Directory
 
@@ -353,7 +353,7 @@ Serendipity/
 | `categories.js` | Defines a hardcoded list of main categories and subcategories. |
 | `generateToken.js` | A utility for generating a JWT token. |
 
-### `frontensd/apps/web/` Directory
+### `frontend/apps/web/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -372,7 +372,7 @@ Serendipity/
 | `vite.config.ts` | The configuration file for Vite, the frontend build tool. |
 | `vitest.config.ts` | The configuration file for Vitest, the testing framework. |
 
-### `frontensd/apps/web/__create/` Directory
+### `frontend/apps/web/__create/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -389,13 +389,13 @@ Serendipity/
 | `is-auth-action.ts` | A utility function to check if a given path is an authentication-related action. |
 | `route-builder.ts` | A script that automatically discovers and registers API routes for the Hono server. |
 
-### `frontensd/apps/web/__create/@auth/` Directory
+### `frontend/apps/web/__create/@auth/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `create.js` | A function that returns an `auth` object with a function to get the current user's session from a JWT token. |
 
-### `frontensd/apps/web/plugins/` Directory
+### `frontend/apps/web/plugins/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -408,13 +408,13 @@ Serendipity/
 | `restart.ts` | A Vite plugin that restarts the development server when certain files are changed. |
 | `restartEnvFileChange.ts` | A Vite plugin that watches for changes to `.env` files and restarts the development server. |
 
-### `frontensd/apps/web/public/` Directory
+### `frontend/apps/web/public/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `icons8-book-ink-96.png` | An icon image file. |
 
-### `frontensd/apps/web/src/` Directory
+### `frontend/apps/web/src/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -429,7 +429,7 @@ Serendipity/
 | `index.css` | The main CSS file for the application, defining themes, animations, and utility classes. |
 | `vite-env.d.ts` | A TypeScript declaration file that defines the shape of the environment variables exposed to the Vite client. |
 
-### `frontensd/apps/web/src/__create/` Directory
+### `frontend/apps/web/src/__create/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -443,13 +443,13 @@ Serendipity/
 | `stripe.ts` | A wrapper around the Stripe API that makes requests to a protected endpoint. |
 | `useDevServerHeartbeat.ts` | A React hook that sends a heartbeat request to the development server to keep it alive. |
 
-### `frontensd/apps/web/src/__create/@auth/` Directory
+### `frontend/apps/web/src/__create/@auth/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `create.js` | A function that returns an `auth` object with the functionality to retrieve the current user's session from a JWT token, used server-side. |
 
-### `frontensd/apps/web/src/app/` Directory
+### `frontend/apps/web/src/app/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -473,13 +473,13 @@ Serendipity/
 | `root.tsx` | The root component for the entire React application, setting up basic HTML structure, HMR, and sandbox interaction. |
 | `routes.ts` | A script that dynamically generates React Router routes based the file system structure. |
 
-### `frontensd/apps/web/src/app/__create/` Directory
+### `frontend/apps/web/src/app/__create/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `not-found.tsx` | The component for handling 404 Not Found pages. |
 
-### `frontensd/apps/web/src/app/account/` Directory
+### `frontend/apps/web/src/app/account/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -487,33 +487,33 @@ Serendipity/
 | `signin/` | Contains the `page.jsx` component for user sign-in. |
 | `signup/` | Contains the `page.jsx` component for user registration. |
 
-### `frontensd/apps/web/src/app/admin/` Directory
+### `frontend/apps/web/src/app/admin/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `products/` | Contains pages for managing products in the admin panel. |
 | `page.jsx` | The Admin Dashboard page component, displaying statistics, recent orders, and quick actions, with access control. |
 
-### `frontensd/apps/web/src/app/admin/products/` Directory
+### `frontend/apps/web/src/app/admin/products/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `[id]/` | Contains pages for managing a specific product by its ID. |
 | `page.jsx` | The Admin Product List page component, displaying a table of products with search, filter, edit, delete, and create options. |
 
-### `frontensd/apps/web/src/app/admin/products/[id]/` Directory
+### `frontend/apps/web/src/app/admin/products/[id]/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `edit/` | Contains pages for editing a specific product. |
 
-### `frontensd/apps/web/src/app/admin/products/[id]/edit/` Directory
+### `frontend/apps/web/src/app/admin/products/[id]/edit/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Product Edit page component for admins, allowing them to view and update product details. |
 
-### `frontensd/apps/web/src/app/api/` Directory
+### `frontend/apps/web/src/app/api/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -527,103 +527,103 @@ Serendipity/
 | `utils/` | Contains utility functions for API routes. |
 | `vitest.config.ts` | The Vitest configuration file for API tests. |
 
-### `frontensd/apps/web/src/app/api/ai-search/` Directory
+### `frontend/apps/web/src/app/api/ai-search/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `route.js` | Defines an AI search API endpoint that uses the Gemini API to understand user intent, generate search queries, and fetch relevant products. |
 
-### `frontensd/apps/web/src/app/api/auth/` Directory
+### `frontend/apps/web/src/app/api/auth/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `expo-web-success/` | Contains an API route that handles successful authentication callbacks for Expo web. |
 | `token/` | Contains an API route that retrieves the JWT token and user information. |
 
-### `frontensd/apps/web/src/app/api/cart/` Directory
+### `frontend/apps/web/src/app/api/cart/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `sync/` | Contains the API route for syncing and retrieving the user's shopping cart. |
 
-### `frontensd/apps/web/src/app/api/orders/` Directory
+### `frontend/apps/web/src/app/api/orders/` Directory
 
 | File / Folder | Description |
 | :--- | --- |
 | `create/` | Contains the API route for creating a new order. |
 | `history/` | Contains the API route for retrieving a user's order history. |
 
-### `frontensd/apps/web/src/app/api/recommendations/` Directory
+### `frontend/apps/web/src/app/api/recommendations/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `route.js` | Defines an API route for generating product recommendations using ChatGPT and then fetching actual products based on those recommendations. |
 
-### `frontensd/apps/web/src/app/api/seller/` Directory
+### `frontend/apps/web/src/app/api/seller/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `signup/` | Contains an API route that acts as a proxy for the seller signup endpoint in the backend. |
 
-### `frontensd/apps/web/src/app/api/stripe-checkout/` Directory
+### `frontend/apps/web/src/app/api/stripe-checkout/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `route.js` | Defines an API route for creating a Stripe checkout session. |
 
-### `frontensd/apps/web/src/app/api/utils/` Directory
+### `frontend/apps/web/src/app/api/utils/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `sql.js` | Configures a serverless Neon database client for direct SQL execution. |
 | `upload.js` | A utility function for uploading files to a specified URL. |
 
-### `frontensd/apps/web/src/app/auth/` Directory
+### `frontend/apps/web/src/app/auth/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `callback/` | Contains the `page.jsx` component that handles the authentication callback from Supabase. |
 
-### `frontensd/apps/web/src/app/cart/` Directory
+### `frontend/apps/web/src/app/cart/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Shopping Cart page component, which displays the items in the user's cart, allows updating quantities, removing items, and proceeding to checkout. |
 
-### `frontensd/apps/web/src/app/category/` Directory
+### `frontend/apps/web/src/app/category/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `[id]/` | Contains pages for displaying products by a specific category ID. |
 | `page.jsx` | The Category Page component, displaying products, filtering, sorting, and pagination for a specific category. |
 
-### `frontensd/apps/web/src/app/checkout/` Directory
+### `frontend/apps/web/src/app/checkout/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `shipping/` | Contains the `page.jsx` component for the shipping address and payment processing. |
 | `success/` | Contains the `page.jsx` component for displaying order success messages. |
 
-### `frontensd/apps/web/src/app/orders/` Directory
+### `frontend/apps/web/src/app/orders/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Orders Page component for the current user's order history. |
 
-### `frontensd/apps/web/src/app/product/` Directory
+### `frontend/apps/web/src/app/product/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `[id]/` | Contains pages for displaying detailed information about a product by its ID. |
 | `page.jsx` | The Product Details page component, which displays detailed information about a single product. |
 
-### `frontensd/apps/web/src/app/products/` Directory
+### `frontend/apps/web/src/app/products/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The All Products Page component, displaying a comprehensive list of products with filtering, sorting, and pagination. |
 
-### `frontensd/apps/web/src/app/profile/` Directory
+### `frontend/apps/web/src/app/profile/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -636,49 +636,49 @@ Serendipity/
 | `layout.jsx` | The layout component for the user profile pages. |
 | `page.jsx` | The Profile Overview Page component, displaying a summary of the user's account. |
 
-### `frontensd/apps/web/src/app/profile/addresses/` Directory
+### `frontend/apps/web/src/app/profile/addresses/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Addresses Page component, which allows users to view, add, edit, delete, and set default shipping addresses. |
 
-### `frontensd/apps/web/src/app/profile/edit/` Directory
+### `frontend/apps/web/src/app/profile/edit/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Edit Profile Page component, allowing users to update their personal information and avatar. |
 
-### `frontensd/apps/web/src/app/profile/orders/` Directory
+### `frontend/apps/web/src/app/profile/orders/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Orders Page component within the user's profile section, displaying a filtered list of the current user's past orders. |
 
-### `frontensd/apps/web/src/app/profile/payment-methods/` Directory
+### `frontend/apps/web/src/app/profile/payment-methods/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Payment Methods Page component, which allows users to view, add, delete, and set default payment methods. |
 
-### `frontensd/apps/web/src/app/profile/security/` Directory
+### `frontend/apps/web/src/app/profile/security/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Security Page component, allowing users to change their password and includes placeholders for two-factor authentication and account deletion. |
 
-### `frontensd/apps/web/src/app/profile/settings/` Directory
+### `frontend/apps/web/src/app/profile/settings/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Settings Page component, which allows users to manage their notification preferences, display preferences (language, currency, theme), and privacy settings. |
 
-### `frontensd/apps/web/src/app/search/` Directory
+### `frontend/apps/web/src/app/search/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Search Page component, which displays search results for products, with filtering and sorting options. |
 
-### `frontensd/apps/web/src/app/seller/` Directory
+### `frontend/apps/web/src/app/seller/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -690,7 +690,7 @@ Serendipity/
 | `layout.jsx` | The layout component for seller-specific pages, handling authentication and navigation. |
 | `page.jsx` | The Seller Dashboard page component, displaying statistics, quick actions, and sales charts. |
 
-### `frontensd/apps/web/src/app/seller/inventory/` Directory
+### `frontend/apps/web/src/app/seller/inventory/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -699,43 +699,43 @@ Serendipity/
 | `page.jsx` | The Seller Inventory Page component, which allows sellers to view, search, filter, and manage their product listings. |
 | `ProductForm.jsx` | A reusable React component that provides a form for the creation and editing of product details. |
 
-### `frontensd/apps/web/src/app/seller/inventory/edit/[id]/` Directory
+### `frontend/apps/web/src/app/seller/inventory/edit/[id]/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Product Edit Page component for sellers, allowing them to view and update comprehensive product details. |
 
-### `frontensd/apps/web/src/app/seller/inventory/new/` Directory
+### `frontend/apps/web/src/app/seller/inventory/new/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The "Add New Product" page component for sellers, featuring a multi-tabbed form for product details, media uploads, and validation. |
 
-### `frontensd/apps/web/src/app/seller/login/` Directory
+### `frontend/apps/web/src/app/seller/login/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Seller Login Page component, which allows sellers to log in. |
 
-### `frontensd/apps/web/src/app/seller/orders/` Directory
+### `frontend/apps/web/src/app/seller/orders/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Seller Orders Page component, which displays a real-time feed of seller-specific orders, including filtering by status. |
 
-### `frontensd/apps/web/src/app/seller/settings/` Directory
+### `frontend/apps/web/src/app/seller/settings/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Seller Settings Page component, which allows sellers to manage their store information. |
 
-### `frontensd/apps/web/src/app/seller/signup/` Directory
+### `frontend/apps/web/src/app/seller/signup/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `page.jsx` | The Seller Signup Page component, which guides users through a multi-step process to register as a seller. |
 
-### `frontensd/apps/web/src/components/` Directory
+### `frontend/apps/web/src/components/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -756,7 +756,7 @@ Serendipity/
 | `StatCard.jsx` | A React component that displays a statistical card with a title, value, icon, and optional trend indicator. |
 | `Toast.jsx` | A React component that displays a dismissible toast notification. |
 
-### `frontensd/apps/web/src/components/ui/` Directory
+### `frontend/apps/web/src/components/ui/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -774,14 +774,14 @@ Serendipity/
 | `tabs.tsx` | A React component that implements a tabbed interface. |
 | `textarea.tsx` | A React component that renders an HTML `textarea` element with consistent styling. |
 
-### `frontensd/apps/web/src/lib/` Directory
+### `frontend/apps/web/src/lib/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
 | `supabase.js` | Initializes the Supabase client for the frontend. |
 | `utils.ts` | A utility file for conditionally combining Tailwind CSS classes. |
 
-### `frontensd/apps/web/src/utils/` Directory
+### `frontend/apps/web/src/utils/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |
@@ -795,7 +795,7 @@ Serendipity/
 | `useUpload.js` | A React hook that provides a function for uploading files to a generic API endpoint. |
 | `useUser.js` | A React hook that provides access to the user's authentication data. |
 
-### `frontensd/apps/web/test/` Directory
+### `frontend/apps/web/test/` Directory
 
 | File / Folder | Description |
 | :--- | :--- |

@@ -92,16 +92,16 @@ Simply create products using the add product form with the new categories and su
    - Migration script to populate categories
    - Creates sample products for testing
 
-2. **`frontensd/apps/web/src/utils/categories.js`**
+2. **`frontend/apps/web/src/utils/categories.js`**
    - Updated with new category structure
    - Added helper functions: `getAllCategories()`, `getCategoryByName()`
    - Used as fallback when API is unavailable
 
-3. **`frontensd/apps/web/src/app/seller/inventory/new/page.jsx`**
+3. **`frontend/apps/web/src/app/seller/inventory/new/page.jsx`**
    - Updated to use fallback categories from utility
    - Improved error handling
 
-4. **`frontensd/apps/web/src/app/seller/inventory/page.jsx`**
+4. **`frontend/apps/web/src/app/seller/inventory/page.jsx`**
    - Updated modal form to use new categories
    - Added fallback support
 

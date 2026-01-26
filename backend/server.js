@@ -49,6 +49,7 @@ app.use('/api/cart', require('./routes/cartRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use('/api/seller', require('./routes/sellerRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 
 // Profile Routes

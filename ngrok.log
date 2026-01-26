@@ -1,0 +1,12 @@
+t=2026-01-26T01:01:45+0530 lvl=info msg="no configuration paths supplied"
+t=2026-01-26T01:01:45+0530 lvl=info msg="using configuration at default config path" path=/home/aniket-karmakar/.config/ngrok/ngrok.yml
+t=2026-01-26T01:01:45+0530 lvl=info msg="open config file" path=/home/aniket-karmakar/.config/ngrok/ngrok.yml err=nil
+t=2026-01-26T01:01:45+0530 lvl=info msg="FIPS 140 mode" enabled=false
+t=2026-01-26T01:01:45+0530 lvl=warn msg="can't bind default web address, trying alternatives" obj=web addr=127.0.0.1:4040
+t=2026-01-26T01:01:45+0530 lvl=info msg="starting web service" obj=web addr=127.0.0.1:4041 allow_hosts=[]
+t=2026-01-26T01:01:45+0530 lvl=info msg="client session established" obj=tunnels.session
+t=2026-01-26T01:01:45+0530 lvl=info msg="tunnel session started" obj=tunnels.session
+t=2026-01-26T01:01:45+0530 lvl=info msg="started tunnel" obj=tunnels name=command_line addr=http://localhost:5000 url=https://tari-heliocentric-audriana.ngrok-free.dev
+t=2026-01-26T01:06:52+0530 lvl=info msg="join connections" obj=join id=bc2baabfc060 l=127.0.0.1:5000 r=[2401:4900:b2d8:6e9a:18d7:75ff:fe28:be4c]:49974
+t=2026-01-26T01:06:55+0530 lvl=info msg="join connections" obj=join id=52d22bdc28e9 l=127.0.0.1:5000 r=[2401:4900:b2d8:6e9a:18d7:75ff:fe28:be4c]:49974
+t=2026-01-26T01:31:14+0530 lvl=info msg="join connections" obj=join id=8ef4f357d8b6 l=127.0.0.1:5000 r=[2401:4900:b2d8:6e9a:18d7:75ff:fe28:be4c]:47994

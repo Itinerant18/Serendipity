@@ -5,7 +5,7 @@ A full-stack e-commerce application built with the MERN stack (MongoDB, Express,
 ## Project Structure
 
 - `backend/`: Node.js/Express backend server.
-- `frontensd/apps/web/`: React frontend application using Vite.
+- `frontend/apps/web/`: React frontend application using Vite.
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ If you prefer using **Bun** (faster than npm), follow these steps:
 5. **Frontend Setup:** (Open a new terminal)
 
     ```powershell
-    cd frontensd/apps/web
+    cd frontend/apps/web
     bun install
     bun run dev
     ```
@@ -70,7 +70,7 @@ If you prefer using **Bun** (faster than npm), follow these steps:
 3. **Install Frontend Dependencies:**
 
    ```bash
-   cd frontensd/apps/web
+   cd frontend/apps/web
    npm install
    # OR
    bun install
@@ -121,7 +121,7 @@ For detailed migration instructions, see [`backend/migrations/README_MIGRATION.m
 
 ### Frontend
 
-1. Navigate to the `frontensd/apps/web` directory.
+1. Navigate to the `frontend/apps/web` directory.
 2. Create a `.env` file and add the required environment variables (see `ENV_SETUP.md` for details).
 3. Update the `.env` file with your configuration:
    - Main Supabase URL and Anon Key
@@ -170,7 +170,7 @@ bun run server
 **Frontend:**
 
 ```bash
-cd frontensd/apps/web
+cd frontend/apps/web
 npm run dev
 # OR
 bun run dev
@@ -222,7 +222,7 @@ If you encounter issues with "module not found" or package installation errors, 
    **Windows (PowerShell):**
 
    ```powershell
-   cd frontensd/apps/web
+   cd frontend/apps/web
    Remove-Item -Recurse -Force node_modules
    Remove-Item package-lock.json
    npm install
@@ -231,7 +231,7 @@ If you encounter issues with "module not found" or package installation errors, 
    **Mac/Linux/Git Bash:**
 
    ```bash
-   cd frontensd/apps/web
+   cd frontend/apps/web
    rm -rf node_modules package-lock.json
    npm install
    ```
@@ -239,6 +239,6 @@ If you encounter issues with "module not found" or package installation errors, 
 2. **Run Frontend Web App:**
 
    ```bash
-   cd frontensd/apps/web
+   cd frontend/apps/web
    npm run dev / node node_modules/vite/bin/vite.js
    ```

@@ -107,7 +107,8 @@ if (-not (Test-Path $backendEnvPath)) {
     Write-Host "Creating backend .env file..." -ForegroundColor Yellow
     $backendEnvContent | Out-File -FilePath $backendEnvPath -Encoding UTF8
     Write-Host "✓ Backend .env file created at: $backendEnvPath" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "⚠ Backend .env file already exists at: $backendEnvPath" -ForegroundColor Yellow
     $overwrite = Read-Host "Do you want to overwrite it? (y/N)"
     if ($overwrite -eq "y" -or $overwrite -eq "Y") {
@@ -122,7 +123,8 @@ if (-not (Test-Path $frontendEnvPath)) {
     New-Item -ItemType Directory -Force -Path "frontensd\apps\web" | Out-Null
     $frontendEnvContent | Out-File -FilePath $frontendEnvPath -Encoding UTF8
     Write-Host "✓ Frontend .env file created at: $frontendEnvPath" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "⚠ Frontend .env file already exists at: $frontendEnvPath" -ForegroundColor Yellow
     $overwrite = Read-Host "Do you want to overwrite it? (y/N)"
     if ($overwrite -eq "y" -or $overwrite -eq "Y") {

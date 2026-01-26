@@ -61,7 +61,7 @@ This will:
 ### Step 4: Test the Application
 
 1. Start backend: `npm start`
-2. Start frontend: `cd ../frontensd/apps/web && npm run dev`
+2. Start frontend: `cd ../frontend/apps/web && npm run dev`
 3. Test seller registration
 4. Test product creation
 5. Test product browsing

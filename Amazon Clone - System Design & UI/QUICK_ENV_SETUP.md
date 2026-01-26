@@ -26,9 +26,9 @@ RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 STRIPE_SECRET_KEY=your_stripe_secret_key_here
 ```
 
-## Frontend `.env` File Location: `frontensd/apps/web/.env`
+## Frontend `.env` File Location: `frontend/apps/web/.env`
 
-Copy and paste this into your `frontensd/apps/web/.env` file, then replace the placeholder values:
+Copy and paste this into your `frontend/apps/web/.env` file, then replace the placeholder values:
 
 ```env
 NODE_ENV=development
@@ -95,7 +95,7 @@ npm start
 # Look for: "Seller Supabase Service Key Loaded: true"
 
 # Frontend
-cd frontensd/apps/web
+cd frontend/apps/web
 npm run dev
 # Check browser console for errors
 ```

@@ -65,7 +65,7 @@ STRIPE_SECRET_KEY=your_stripe_secret_key_here
 
 ### Frontend `.env` File
 
-Create or update `frontensd/apps/web/.env` with the following variables:
+Create or update `frontend/apps/web/.env` with the following variables:
 
 ```env
 # ===========================================
@@ -166,7 +166,7 @@ npm start
 ### 2. Frontend Verification
 
 ```bash
-cd frontensd/apps/web
+cd frontend/apps/web
 npm run dev
 ```
 

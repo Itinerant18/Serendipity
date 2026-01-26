@@ -29,7 +29,7 @@ router.post('/login', asyncHandler(async (req, res) => {
   // Fetch user profile from users table
   const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('name, mobile, is_admin, is_seller, seller_profile_id')
+    .select('name, mobile, is_admin, is_seller, seller_profile_id, avatar_url')
     .eq('id', data.user.id)
     .single();
 
@@ -41,6 +41,7 @@ router.post('/login', asyncHandler(async (req, res) => {
     isAdmin: profile ? profile.is_admin : false,
     isSeller: profile ? profile.is_seller : false,
     sellerProfileId: profile ? profile.seller_profile_id : null,
+    avatar: profile ? profile.avatar_url : null,
     token: data.session.access_token,
   });
 }));
@@ -163,7 +164,7 @@ router.post('/seller-login', asyncHandler(async (req, res) => {
   // Fetch user profile from users table
   const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('name, mobile, is_admin, is_seller, seller_profile_id')
+    .select('name, mobile, is_admin, is_seller, seller_profile_id, avatar_url')
     .eq('id', data.user.id)
     .single();
 
@@ -181,6 +182,7 @@ router.post('/seller-login', asyncHandler(async (req, res) => {
     isAdmin: profile.is_admin || false,
     isSeller: true,
     sellerProfileId: profile.seller_profile_id,
+    avatar: profile.avatar_url || null,
     token: data.session.access_token,
   });
 }));
