@@ -106,7 +106,7 @@ export default function HomePage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
                             <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                                <span className="text-3xl">🚚</span>
+                                <i className="fa-solid fa-truck text-2xl text-green-600"></i>
                             </div>
                             <h3 className="font-semibold text-gray-900 mb-2">Free Shipping</h3>
                             <p className="text-gray-500 text-sm">Free shipping on orders over ₹499</p>
@@ -114,7 +114,7 @@ export default function HomePage() {
 
                         <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
                             <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-3xl">🔒</span>
+                                <i className="fa-solid fa-lock text-2xl text-blue-600"></i>
                             </div>
                             <h3 className="font-semibold text-gray-900 mb-2">Secure Payment</h3>
                             <p className="text-gray-500 text-sm">100% secure payment processing</p>
@@ -122,7 +122,7 @@ export default function HomePage() {
 
                         <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
                             <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
-                                <span className="text-3xl">↩️</span>
+                                <i className="fa-solid fa-rotate-left text-2xl text-orange-600"></i>
                             </div>
                             <h3 className="font-semibold text-gray-900 mb-2">Easy Returns</h3>
                             <p className="text-gray-500 text-sm">30-day hassle-free returns</p>

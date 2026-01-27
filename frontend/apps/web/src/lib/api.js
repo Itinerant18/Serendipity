@@ -17,16 +17,32 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
  * Helper function for making API requests with proper error handling
  * Automatically includes auth token if user is logged in
  */
+import useAuthStore from '@/utils/authStore';
+
 export async function apiRequest(endpoint, options = {}) {
     const url = `${API_URL}${endpoint}`;
 
     // Get current session token
     let token = null;
+    
+    // 1. Try getting token from global auth store (Custom Auth)
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        token = session?.access_token;
+        const authState = useAuthStore.getState();
+        if (authState && authState.token) {
+            token = authState.token;
+        }
     } catch (e) {
-        console.warn('Could not get auth session:', e);
+        console.warn('Could not get auth store token:', e);
+    }
+
+    // 2. Fallback to Supabase session (Social Auth / Direct Supabase)
+    if (!token) {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            token = session?.access_token;
+        } catch (e) {
+            console.warn('Could not get supabase auth session:', e);
+        }
     }
 
     const headers = {

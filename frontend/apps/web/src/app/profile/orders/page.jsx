@@ -24,7 +24,7 @@ export default function OrdersPage() {
         const fetchOrders = async () => {
             try {
                 if (!token) return;
-                const res = await fetch("http://localhost:5000/api/orders/myorders", {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/orders/myorders`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 

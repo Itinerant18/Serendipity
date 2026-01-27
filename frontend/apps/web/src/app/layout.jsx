@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
   useEffect(() => {
     const fetchProfileAndLogin = async (session) => {
       try {
-        const profileRes = await fetch("http://localhost:5000/api/profile", {
+        const profileRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/profile`, {
           headers: { Authorization: `Bearer ${session.access_token}` }
         });
 

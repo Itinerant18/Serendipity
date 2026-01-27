@@ -43,7 +43,7 @@ export default function SearchPage() {
     setLoading(true);
     try {
       // Fetch all products then filter (temporary mock search)
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/products`);
       const data = await response.json();
 
       if (data) {
