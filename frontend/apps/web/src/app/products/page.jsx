@@ -200,10 +200,12 @@ export default function ProductsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen pt-32 pb-12 px-4 flex justify-center items-center bg-[#F0F9FF]">
+            <div className="min-h-screen pt-32 pb-12 px-4 flex justify-center items-center bg-black border-8 border-white">
                 <div className="flex flex-col items-center gap-6">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-sky-500"></div>
-                    <p className="text-sky-800 font-bold text-lg animate-pulse">Curating your collection...</p>
+                    <div className="border-4 border-black bg-yellow-400 p-8 animate-brutalist-jitter">
+                        <i className="fa-solid fa-bolt text-4xl text-black"></i>
+                    </div>
+                    <p className="text-white font-brutalist text-lg bg-black px-4 py-2 border-4 border-white">PROCESSING PRODUCTS...</p>
                 </div>
             </div>
         );
@@ -469,9 +471,9 @@ export default function ProductsPage() {
                                             <button
                                                 onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                                 disabled={currentPage === 1}
-                                                className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-500 transition-colors"
+                                                className="w-12 h-12 flex items-center justify-center border-4 border-black bg-white hover:bg-yellow-400 hover:text-black font-bold hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-transform duration-100 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-500"
                                             >
-                                                <i className="fa-solid fa-chevron-left"></i>
+                                                <i className="fa-solid fa-chevron-left text-black"></i>
                                             </button>
 
                                             <div className="flex gap-1">
@@ -519,18 +521,18 @@ export default function ProductsPage() {
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="flex flex-col items-center justify-center py-28 bg-white rounded-3xl border border-dashed border-gray-200 text-center"
+                                    className="flex flex-col items-center justify-center py-28 bg-black text-white border-4 border-black"
                                 >
-                                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-5">
-                                        <i className="fa-solid fa-magnifying-glass text-3xl text-gray-400"></i>
+                                    <div className="w-24 h-24 bg-yellow-400 border-4 border-black flex items-center justify-center mb-5 animate-brutalist-jitter">
+                                        <i className="fa-solid fa-magnifying-glass text-4xl text-black"></i>
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2 font-playfair">No matches found</h3>
-                                    <p className="text-gray-500 max-w-md px-4">
-                                        Try adjusting your filters or explore our full collection.
+                                    <h3 className="text-3xl font-brutalist text-black mb-2 bg-yellow-200 px-4 border-4 border-black">NO MATCHES FOUND</h3>
+                                    <p className="text-black max-w-md px-4 font-bold">
+                                        TRY ADJUSTING FILTERS
                                     </p>
                                     <button
                                         onClick={clearFilters}
-                                        className="mt-6 px-6 py-2.5 bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-xl font-semibold transition-colors"
+                                        className="mt-6 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white border-4 border-black font-bold hover:border-white hover:translate(-2px,-2px) hover:shadow-[8px_8px_0_#000000] transition-transform duration-100"
                                     >
                                         Reset Filters
                                     </button>
@@ -549,7 +551,7 @@ export default function ProductsPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/90 border-l-4 border-white"
                             onClick={() => setIsMobileFiltersOpen(false)}
                         />
                         <motion.div
@@ -557,13 +559,13 @@ export default function ProductsPage() {
                             animate={{ x: 0 }}
                             exit={{ x: "100%" }}
                             transition={{ type: "spring", damping: 28, stiffness: 220 }}
-                            className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col h-full"
+                            className="absolute inset-y-0 right-0 w-full max-w-md bg-white border-4 border-black flex flex-col h-full"
                         >
-                            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+                            <div className="flex items-center justify-between p-5 border-b-4 border-black">
                                 <h2 className="text-xl font-bold font-playfair text-gray-900">Refine Results</h2>
                                 <button
                                     onClick={() => setIsMobileFiltersOpen(false)}
-                                    className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+                                    className="w-12 h-12 flex items-center justify-center border-4 border-black bg-orange-500 hover:bg-orange-600 hover:text-white hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-transform duration-100"
                                 >
                                     <i className="fa-solid fa-xmark text-gray-700"></i>
                                 </button>
