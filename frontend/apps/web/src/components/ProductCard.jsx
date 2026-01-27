@@ -73,7 +73,7 @@ export default function ProductCard({
         if (url.startsWith("http") || url.startsWith("https")) return url;
 
         // Prepend API URL for relative paths
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
         // Ensure no double slashes
         const cleanUrl = url.startsWith("/") ? url.substring(1) : url;

@@ -137,7 +137,7 @@ export default function ProfilePage() {
             const formDataUpload = new FormData();
             formDataUpload.append('file', avatarFile);
 
-            const uploadUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/upload/profile-image`;
+            const uploadUrl = `${import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL || 'http://localhost:5000')}/api/upload/profile-image`;
             console.log('🌐 Upload URL:', uploadUrl);
 
             const response = await fetch(uploadUrl, {
@@ -167,7 +167,7 @@ export default function ProfilePage() {
             console.log('💾 Auto-saving profile with new avatar...');
             console.log('📋 Current formData:', formData);
             
-            const profileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/profile`;
+            const profileUrl = `${import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL || 'http://localhost:5000')}/api/user/profile`;
             console.log('🌐 Profile URL:', profileUrl);
             
             const savePayload = {
@@ -217,7 +217,7 @@ export default function ProfilePage() {
         setMessage({ type: "", text: "" });
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/profile`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL || 'http://localhost:5000')}/api/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
