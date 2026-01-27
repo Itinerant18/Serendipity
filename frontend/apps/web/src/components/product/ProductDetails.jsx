@@ -1,7 +1,7 @@
 import React from "react";
 
 import GlassCard from "@/components/ui/GlassCard";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format";
 
 export default function ProductDetails({

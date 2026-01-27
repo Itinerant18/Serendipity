@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import useCartStore from "@/utils/cartStore";
 import useAuth from "@/utils/useAuth";
 import GlassCard from "@/components/ui/GlassCard";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 // Import New Components
 import ProductHero from "@/components/product/ProductHero";

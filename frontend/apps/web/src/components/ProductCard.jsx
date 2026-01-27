@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import useAuth from "@/utils/useAuth";
 import { formatCurrency } from "@/utils/format";
 import GlassCard from "./ui/GlassCard";
-import Button from "./ui/Button";
+import { Button } from "./ui/button";
 
 /**
  * ProductCard Component
@@ -224,7 +224,7 @@ export default function ProductCard({
                     {showAddToCart && (
                         <Button
                             size="icon"
-                            variant={isOutOfStock ? "ghost" : "primary"}
+                            variant={isOutOfStock ? "ghost" : "default"}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();

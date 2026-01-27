@@ -24,7 +24,7 @@ export default function AuthCallbackPage() {
             }
 
             if (session?.user) {
-                // Fetch full profile from backend to get isSeller, isAdmin, etc.
+                // Fetch full profile from backend to get isSeller, isAdmin, avatar, etc.
                 try {
                     const profileRes = await fetch("http://localhost:5000/api/profile", {
                         headers: { Authorization: `Bearer ${session.access_token}` }
@@ -34,6 +34,8 @@ export default function AuthCallbackPage() {
                     let isAdmin = false;
                     let sellerProfileId = null;
                     let mobile = null;
+                    let dbAvatar = null;
+                    let dbName = null;
 
                     if (profileRes.ok) {
                         const profileData = await profileRes.json();
@@ -41,14 +43,20 @@ export default function AuthCallbackPage() {
                         isAdmin = profileData.user?.isAdmin || false;
                         sellerProfileId = profileData.user?.sellerProfileId || null;
                         mobile = profileData.user?.mobile || null;
+                        // Get avatar and name from database (takes priority over Google data)
+                        dbAvatar = profileData.user?.avatar || null;
+                        dbName = profileData.user?.name || null;
                     }
 
-                    // Map Supabase user to App user format with DB data
+                    // Map Supabase user to App user format
+                    // PRIORITY: Database values > Google OAuth metadata
                     const user = {
                         id: session.user.id,
                         email: session.user.email,
-                        name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-                        avatar: session.user.user_metadata?.avatar_url,
+                        // Use DB name first, fallback to Google name, then email
+                        name: dbName || session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+                        // Use DB avatar first, fallback to Google avatar
+                        avatar: dbAvatar || session.user.user_metadata?.avatar_url || null,
                         authProvider: 'google',
                         mobile,
                         isSeller,
@@ -57,6 +65,7 @@ export default function AuthCallbackPage() {
                     };
 
                     console.log("Profile fetched for user:", user.email, "isSeller:", isSeller, "ID:", user.id);
+                    console.log("Avatar source:", dbAvatar ? "database" : "google", "URL:", user.avatar?.substring(0, 50));
                     login(user, session.access_token);
 
                     // Check for role-based intent stored in localStorage
@@ -81,7 +90,7 @@ export default function AuthCallbackPage() {
                     }
                 } catch (err) {
                     console.error("Failed to fetch profile after Google login:", err);
-                    // Fallback to basic user data
+                    // Fallback to basic user data from Google
                     const user = {
                         id: session.user.id,
                         email: session.user.email,

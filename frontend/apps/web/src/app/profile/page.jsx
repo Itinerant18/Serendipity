@@ -62,14 +62,20 @@ export default function ProfilePage() {
         name: "",
         email: "",
         mobile: "",
-        avatar: ""
+        avatar: "",
+        date_of_birth: "",
+        gender: ""
     });
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
+    const [showGoogleWarning, setShowGoogleWarning] = useState(false);
     const fileInputRef = React.useRef(null);
+    
+    // Check if user logged in with Google
+    const isGoogleUser = user?.authProvider === 'google';
 
     // Initialize form with user data
     useEffect(() => {
@@ -78,7 +84,9 @@ export default function ProfilePage() {
                 name: user.name || "",
                 email: user.email || "",
                 mobile: user.mobile || "",
-                avatar: user.avatar || user.image || ""
+                avatar: user.avatar || user.image || "",
+                date_of_birth: user.date_of_birth || "",
+                gender: user.gender || ""
             });
             setAvatarPreview(user.avatar || user.image || null);
         }
@@ -123,10 +131,16 @@ export default function ProfilePage() {
         setMessage({ type: "", text: "" });
 
         try {
+            console.log('📤 Starting avatar upload...');
+            console.log('🔑 Token available:', !!token);
+            
             const formDataUpload = new FormData();
-            formDataUpload.append('file', avatarFile); // Changed from 'avatar' to 'file'
+            formDataUpload.append('file', avatarFile);
 
-            const response = await fetch('http://localhost:5000/api/upload/profile-image', { // Changed endpoint
+            const uploadUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/upload/profile-image`;
+            console.log('🌐 Upload URL:', uploadUrl);
+
+            const response = await fetch(uploadUrl, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -135,18 +149,63 @@ export default function ProfilePage() {
             });
 
             const data = await response.json();
+            console.log('📸 Upload response status:', response.status);
+            console.log('📸 Upload response data:', data);
 
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to upload avatar');
             }
 
-            // Update form data with new avatar URL (response has 'url' field)
-            setFormData(prev => ({ ...prev, avatar: data.url }));
-            setAvatarPreview(data.url); // Update preview with uploaded URL
-            setMessage({ type: "success", text: "Avatar uploaded successfully!" });
+            // Update form data with new avatar URL
+            const newAvatarUrl = data.url;
+            console.log('🔗 New avatar URL:', newAvatarUrl);
+            
+            setFormData(prev => ({ ...prev, avatar: newAvatarUrl }));
+            setAvatarPreview(newAvatarUrl);
             setAvatarFile(null);
+            
+            console.log('💾 Auto-saving profile with new avatar...');
+            console.log('📋 Current formData:', formData);
+            
+            const profileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/profile`;
+            console.log('🌐 Profile URL:', profileUrl);
+            
+            const savePayload = {
+                name: formData.name,
+                email: formData.email,
+                mobile: formData.mobile,
+                avatar: newAvatarUrl
+            };
+            console.log('📦 Save payload:', savePayload);
+            
+            // Automatically save the profile with the new avatar
+            const saveResponse = await fetch(profileUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(savePayload)
+            });
+
+            console.log('💾 Save response status:', saveResponse.status);
+            const saveData = await saveResponse.json();
+            console.log('✅ Save response data:', saveData);
+
+            if (!saveResponse.ok) {
+                throw new Error(saveData.message || 'Failed to save profile');
+            }
+
+            // Update local auth store
+            updateUser(saveData);
+            setMessage({ type: "success", text: "Profile picture updated successfully!" });
+            setIsEditing(false);
+            
         } catch (error) {
-            console.error('Avatar upload error:', error);
+            console.error('❌ Avatar upload error:', error);
+            console.error('❌ Error name:', error.name);
+            console.error('❌ Error message:', error.message);
+            console.error('❌ Error stack:', error.stack);
             setMessage({ type: "error", text: error.message || "Failed to upload avatar" });
         } finally {
             setUploadingAvatar(false);
@@ -158,7 +217,7 @@ export default function ProfilePage() {
         setMessage({ type: "", text: "" });
 
         try {
-            const response = await fetch('http://localhost:5000/api/user/profile', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -192,7 +251,9 @@ export default function ProfilePage() {
                 name: user.name || "",
                 email: user.email || "",
                 mobile: user.mobile || "",
-                avatar: user.avatar || user.image || ""
+                avatar: user.avatar || user.image || "",
+                date_of_birth: user.date_of_birth || "",
+                gender: user.gender || ""
             });
             setAvatarPreview(user.avatar || user.image || null);
         }
@@ -203,7 +264,6 @@ export default function ProfilePage() {
 
     const links = [
         { to: "/profile/orders", icon: "fa-solid fa-box", title: "Orders", subtitle: "Track & return items", color: "text-blue-500" },
-        { to: "/profile/edit", icon: "fa-solid fa-user", title: "Personal Info", subtitle: "Edit profile details", color: "text-purple-500" },
         { to: "/profile/addresses", icon: "fa-solid fa-location-dot", title: "Addresses", subtitle: "Manage shipping info", color: "text-emerald-500" },
         { to: "/profile/payment-methods", icon: "fa-solid fa-credit-card", title: "Payments", subtitle: "Saved cards & wallets", color: "text-rose-500" },
         { to: "/profile/security", icon: "fa-solid fa-shield-halved", title: "Security", subtitle: "Password & 2FA", color: "text-cyan-500" },
@@ -243,7 +303,13 @@ export default function ProfilePage() {
                                 </div>
                                 {isEditing && (
                                     <button
-                                        onClick={() => fileInputRef.current?.click()}
+                                        onClick={() => {
+                                            if (isGoogleUser) {
+                                                setShowGoogleWarning(true);
+                                            } else {
+                                                fileInputRef.current?.click();
+                                            }
+                                        }}
                                         type="button"
                                         className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-stone-800 border-2 border-stone-900 flex items-center justify-center text-white hover:bg-amber-500 transition-colors cursor-pointer"
                                     >
@@ -271,12 +337,12 @@ export default function ProfilePage() {
                                     {uploadingAvatar ? (
                                         <>
                                             <i className="fa-solid fa-spinner fa-spin"></i>
-                                            Uploading...
+                                            Saving...
                                         </>
                                     ) : (
                                         <>
-                                            <i className="fa-solid fa-upload"></i>
-                                            Upload
+                                            <i className="fa-solid fa-cloud-arrow-up"></i>
+                                            Upload & Save
                                         </>
                                     )}
                                 </button>
@@ -314,22 +380,32 @@ export default function ProfilePage() {
                                 </div>
                             )}
 
-                            {/* Form Grid */}
+                            {/* Form Grid - removed avatar URL field */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                         <i className="fa-solid fa-user mr-1"></i> Name
+                                        {isGoogleUser && isEditing && (
+                                            <span className="ml-2 text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                Google Managed
+                                            </span>
+                                        )}
                                     </label>
                                     <input
                                         type="text"
                                         name="name"
                                         value={formData.name}
                                         onChange={handleInputChange}
-                                        disabled={!isEditing}
+                                        onClick={() => {
+                                            if (isGoogleUser && isEditing) {
+                                                setShowGoogleWarning(true);
+                                            }
+                                        }}
+                                        disabled={!isEditing || isGoogleUser}
                                         className={cn(
                                             "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900",
                                             "focus:outline-none focus:border-[#D97534] focus:ring-2 focus:ring-[#D97534]/20 transition-all",
-                                            !isEditing && "opacity-60 cursor-not-allowed"
+                                            (!isEditing || isGoogleUser) && "opacity-60 cursor-not-allowed"
                                         )}
                                     />
                                 </div>
@@ -337,22 +413,32 @@ export default function ProfilePage() {
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                         <i className="fa-solid fa-envelope mr-1"></i> Email
+                                        {isGoogleUser && isEditing && (
+                                            <span className="ml-2 text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                                Google Managed
+                                            </span>
+                                        )}
                                     </label>
                                     <input
                                         type="email"
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
-                                        disabled={!isEditing}
+                                        onClick={() => {
+                                            if (isGoogleUser && isEditing) {
+                                                setShowGoogleWarning(true);
+                                            }
+                                        }}
+                                        disabled={!isEditing || isGoogleUser}
                                         className={cn(
                                             "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900",
                                             "focus:outline-none focus:border-[#D97534] focus:ring-2 focus:ring-[#D97534]/20 transition-all",
-                                            !isEditing && "opacity-60 cursor-not-allowed"
+                                            (!isEditing || isGoogleUser) && "opacity-60 cursor-not-allowed"
                                         )}
                                     />
                                 </div>
 
-                                <div>
+                                <div className="md:col-span-2">
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                                         <i className="fa-solid fa-phone mr-1"></i> Mobile
                                     </label>
@@ -369,24 +455,46 @@ export default function ProfilePage() {
                                         )}
                                     />
                                 </div>
-
+                                
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                                        <i className="fa-solid fa-image mr-1"></i> Avatar URL
+                                        <i className="fa-solid fa-cake-candles mr-1"></i> Date of Birth
                                     </label>
                                     <input
-                                        type="url"
-                                        name="avatar"
-                                        value={formData.avatar}
+                                        type="date"
+                                        name="date_of_birth"
+                                        value={formData.date_of_birth}
                                         onChange={handleInputChange}
                                         disabled={!isEditing}
-                                        placeholder="https://..."
                                         className={cn(
-                                            "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400",
+                                            "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900",
                                             "focus:outline-none focus:border-[#D97534] focus:ring-2 focus:ring-[#D97534]/20 transition-all",
                                             !isEditing && "opacity-60 cursor-not-allowed"
                                         )}
                                     />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                        <i className="fa-solid fa-venus-mars mr-1"></i> Gender
+                                    </label>
+                                    <select
+                                        name="gender"
+                                        value={formData.gender}
+                                        onChange={handleInputChange}
+                                        disabled={!isEditing}
+                                        className={cn(
+                                            "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900",
+                                            "focus:outline-none focus:border-[#D97534] focus:ring-2 focus:ring-[#D97534]/20 transition-all",
+                                            !isEditing && "opacity-60 cursor-not-allowed"
+                                        )}
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                        <option value="prefer_not_to_say">Prefer not to say</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -443,6 +551,58 @@ export default function ProfilePage() {
                     <span className="font-semibold">Sign Out</span>
                 </motion.button>
             </div>
+            
+            {/* Google Auth Warning Modal */}
+            {showGoogleWarning && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+                    >
+                        <div className="flex items-start gap-4 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <i className="fab fa-google text-blue-600 text-xl"></i>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                    Google Account Linked
+                                </h3>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    Your profile name, email, and picture are managed by your Google account. 
+                                    To update these, please visit your Google Account settings.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                            <p className="text-xs text-blue-700">
+                                <i className="fa-solid fa-info-circle mr-2"></i>
+                                You can still update your mobile number here.
+                            </p>
+                        </div>
+                        
+                        <div className="flex gap-3">
+                            <a
+                                href="https://myaccount.google.com/personal-info"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors text-center text-sm"
+                            >
+                                <i className="fa-solid fa-external-link mr-2"></i>
+                                Open Google Settings
+                            </a>
+                            <button
+                                onClick={() => setShowGoogleWarning(false)}
+                                className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors text-sm"
+                            >
+                                Got it
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

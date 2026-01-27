@@ -213,17 +213,28 @@ router.delete('/product-media', protect, protectSeller, async (req, res) => {
 // @access  Private (Authenticated Users)
 router.post('/profile-image', protect, upload.single('file'), async (req, res) => {
     try {
+        console.log('📸 Profile image upload request from user:', req.user?.id);
+        
         if (!req.file) {
+            console.log('❌ No file in request');
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
         const file = req.file;
         const userId = req.user.id;
+        
+        console.log('📁 File details:', {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+            sizeInMB: (file.size / (1024 * 1024)).toFixed(2) + 'MB'
+        });
 
         // Check file size limits for images
         const maxSize = 5 * 1024 * 1024; // 5MB for profile images
 
         if (file.size > maxSize) {
+            console.log('❌ File too large:', file.size, 'bytes');
             return res.status(400).json({
                 message: 'File too large. Maximum size: 5MB'
             });
@@ -233,6 +244,8 @@ router.post('/profile-image', protect, upload.single('file'), async (req, res) =
         const timestamp = Date.now();
         const ext = file.originalname.split('.').pop();
         const filename = `profiles/${userId}-${timestamp}.${ext}`;
+        
+        console.log('📝 Uploading to:', filename);
 
         // Upload to Supabase Storage
         const { data, error } = await supabaseAdmin.storage
@@ -244,14 +257,22 @@ router.post('/profile-image', protect, upload.single('file'), async (req, res) =
             });
 
         if (error) {
-            console.error('Supabase upload error:', error);
+            console.error('❌ Supabase upload error:', {
+                message: error.message,
+                statusCode: error.statusCode,
+                error: error
+            });
             return res.status(500).json({ message: 'Upload failed', error: error.message });
         }
+
+        console.log('✅ Upload successful:', data);
 
         // Get public URL
         const { data: urlData } = supabaseAdmin.storage
             .from('product-media')
             .getPublicUrl(filename);
+
+        console.log('🔗 Public URL generated:', urlData.publicUrl);
 
         res.json({
             success: true,
@@ -263,7 +284,7 @@ router.post('/profile-image', protect, upload.single('file'), async (req, res) =
         });
 
     } catch (error) {
-        console.error('Upload error:', error);
+        console.error('❌ Upload error:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });

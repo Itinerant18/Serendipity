@@ -87,6 +87,7 @@ router.get('/', protect, asyncHandler(async (req, res) => {
             email: user.email,
             mobile: user.mobile,
             avatar_url: user.avatar_url,
+            avatar: user.avatar_url, // Alias for compatibility
             date_of_birth: user.date_of_birth,
             gender: user.gender,
             created_at: user.created_at,
@@ -197,6 +198,71 @@ router.put('/preferences', protect, asyncHandler(async (req, res) => {
     }
 
     res.json({ success: true, preferences: data });
+}));
+
+// @desc    Change user password
+// @route   POST /api/profile/security/change-password
+// @access  Private
+router.post('/security/change-password', protect, asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const { current_password, new_password } = req.body;
+
+    // Validation
+    if (!current_password || !new_password) {
+        res.status(400);
+        throw new Error('Please provide current and new password');
+    }
+
+    if (new_password.length < 8) {
+        res.status(400);
+        throw new Error('New password must be at least 8 characters');
+    }
+
+    // Get user to check auth provider
+    const { data: user, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('email, auth_provider')
+        .eq('id', userId)
+        .single();
+
+    if (userError || !user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    // Check if user is Google OAuth user
+    if (user.auth_provider === 'google') {
+        res.status(403);
+        throw new Error('Cannot change password for Google OAuth accounts. Please manage your password through Google.');
+    }
+
+    // Verify current password by attempting to sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: current_password,
+    });
+
+    if (signInError) {
+        res.status(401);
+        throw new Error('Current password is incorrect');
+    }
+
+    // Update password using Supabase Admin
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { password: new_password }
+    );
+
+    if (updateError) {
+        console.error('Password update error:', updateError);
+        res.status(400);
+        throw new Error('Failed to update password');
+    }
+
+    res.json({ 
+        success: true, 
+        message: 'Password changed successfully' 
+    });
 }));
 
 module.exports = router;

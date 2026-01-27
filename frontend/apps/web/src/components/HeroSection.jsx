@@ -3,7 +3,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import GlassCard from "./ui/GlassCard";
-import Button from "./ui/Button";
+import { Button } from "./ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 

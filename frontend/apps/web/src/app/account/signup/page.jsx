@@ -239,7 +239,7 @@ export default function SignUpPage() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className={`h-5 w-5 ${getFieldError('password') ? 'text-red-400' : 'text-gray-400'}`} />
+                  <i className={`fa-solid fa-lock text-xl ${getFieldError('password') ? 'text-red-400' : 'text-gray-400'}`}></i>
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -307,7 +307,7 @@ export default function SignUpPage() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className={`h-5 w-5 ${getFieldError('confirmPassword') ? 'text-red-400' : confirmPassword && password === confirmPassword ? 'text-green-500' : 'text-gray-400'}`} />
+                  <i className={`fa-solid fa-lock text-xl ${getFieldError('confirmPassword') ? 'text-red-400' : confirmPassword && password === confirmPassword ? 'text-green-500' : 'text-gray-400'}`}></i>
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}

@@ -34,7 +34,7 @@ const protect = asyncHandler(async (req, res, next) => {
       const { data: profile } = await supabase
         .from('users')
         // Avoid pulling large/unused fields on every request
-        .select('id, name, email, mobile, is_admin, is_seller, seller_profile_id')
+        .select('id, name, email, mobile, is_admin, is_seller, seller_profile_id, avatar_url')
         .eq('id', user.id)
         .single();
 

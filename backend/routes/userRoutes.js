@@ -10,12 +10,22 @@ const { protect } = require('../middleware/authMiddleware');
 router.put('/profile', protect, asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const { name, email, mobile, avatar } = req.body;
+    
+    console.log('📝 Profile update request:', {
+        userId,
+        name,
+        email,
+        mobile,
+        avatar: avatar ? avatar.substring(0, 50) + '...' : 'null'
+    });
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (mobile !== undefined) updateData.mobile = mobile;
     if (avatar !== undefined) updateData.avatar_url = avatar;
+    
+    console.log('📊 Update data:', updateData);
 
     const { data, error } = await supabaseAdmin
         .from('users')
@@ -25,13 +35,19 @@ router.put('/profile', protect, asyncHandler(async (req, res) => {
         .single();
 
     if (error) {
-        console.error('Profile update error:', error);
+        console.error('❌ Profile update error:', error);
         res.status(400);
         throw new Error('Failed to update profile');
     }
+    
+    console.log('✅ Profile updated in database:', {
+        id: data.id,
+        name: data.name,
+        avatar_url: data.avatar_url ? data.avatar_url.substring(0, 50) + '...' : 'null'
+    });
 
     // Return data in format expected by frontend
-    res.json({
+    const responseData = {
         id: data.id,
         name: data.name,
         email: data.email,
@@ -40,7 +56,14 @@ router.put('/profile', protect, asyncHandler(async (req, res) => {
         image: data.avatar_url,
         isAdmin: data.is_admin || false,
         isSeller: data.is_seller || false
+    };
+    
+    console.log('📤 Sending response:', {
+        ...responseData,
+        avatar: responseData.avatar ? responseData.avatar.substring(0, 50) + '...' : 'null'
     });
+
+    res.json(responseData);
 }));
 
 module.exports = router;

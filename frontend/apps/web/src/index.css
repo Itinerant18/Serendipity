@@ -118,6 +118,19 @@
     --sidebar-accent-foreground: #0C4A6E;
     --sidebar-border: #BAE6FD;
     --sidebar-ring: #0EA5E9;
+
+    /* Added from Lumina Requirements */
+    --font-mono: "PPSupplyMono", monospace;
+    --font-sans: "PP Neue Montreal", sans-serif;
+    --font-display: "Cormorant Garamond", serif;
+    --color-bg: #0a0a0a;
+    --color-text: #ffffff;
+    --color-text-muted: rgba(255, 255, 255, 0.7);
+    --color-text-light: rgba(255, 255, 255, 0.5);
+    /* Note: color-accent is already defined, merging if needed. */
+    --font-size-mono: clamp(10px, 1.2vw, 12px);
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
 }
 
 /* Dark theme variables */

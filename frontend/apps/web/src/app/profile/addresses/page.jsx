@@ -122,120 +122,124 @@ export default function AddressesPage() {
 
     if (loading) {
         return (
-
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                <i className="fa-solid fa-spinner fa-spin text-4xl text-[#D97534] mx-auto"></i>
-                <p className="text-gray-500 mt-4">Loading addresses...</p>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                    <i className="fa-solid fa-spinner fa-spin text-4xl text-[#3B82F6] mx-auto"></i>
+                    <p className="text-gray-500 mt-4">Loading addresses...</p>
+                </div>
             </div>
-
         );
     }
 
     return (
-
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center justify-between">
-                <div>
-                    <h1 className="font-playfair font-bold text-2xl text-gray-900">My Addresses</h1>
-                    <p className="text-gray-600 mt-1">Manage your shipping and billing addresses</p>
-                </div>
-                <button
-                    onClick={() => openModal()}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#D97534] hover:bg-[#C86429] text-white font-medium rounded-lg"
-                >
-                    <i className="fa-solid fa-plus"></i>
-                    Add Address
-                </button>
-            </div>
-
-            {/* Address List */}
-            {addresses.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-                    <i className="fa-solid fa-location-dot text-5xl text-gray-300 mx-auto mb-4"></i>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No addresses saved</h3>
-                    <p className="text-gray-500 mb-6">Add a new address to get started</p>
+        <div className="min-h-screen bg-[#F8FAFC] py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h1 className="font-bold text-3xl text-[#1E293B]">My Addresses</h1>
+                        <p className="text-gray-600 mt-1">Manage your shipping and billing addresses</p>
+                    </div>
                     <button
                         onClick={() => openModal()}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#D97534] hover:bg-[#C86429] text-white font-medium rounded-lg"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium rounded-lg transition-colors cursor-pointer"
                     >
                         <i className="fa-solid fa-plus"></i>
                         Add Address
                     </button>
                 </div>
-            ) : (
-                <div className="grid gap-4">
-                    {addresses.map((address, index) => (
-                        <div
-                            key={address.id}
-                            className={`bg-white rounded-xl shadow-sm p-6 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer animate-fade-in-up ${address.is_default ? "border-[#D97534]" : "border-gray-100"
-                                }`}
-                            style={{ animationDelay: `${index * 100}ms` }}
+
+                {/* Address List */}
+                {addresses.length === 0 ? (
+                    <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-200">
+                        <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 mx-auto">
+                            <i className="fa-solid fa-location-dot text-5xl text-[#3B82F6]"></i>
+                        </div>
+                        <h3 className="font-bold text-2xl text-[#1E293B] mb-3">No addresses saved</h3>
+                        <p className="text-gray-500 mb-8">Add a new address to get started</p>
+                        <button
+                            onClick={() => openModal()}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium rounded-lg transition-colors cursor-pointer"
                         >
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-start gap-4">
-                                    <div className={`p-2 rounded-lg ${address.is_default ? "bg-orange-100" : "bg-gray-100"}`}>
-                                        <i className={`fa-solid fa-location-dot text-xl ${address.is_default ? "text-[#D97534]" : "text-gray-500"}`}></i>
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-medium text-gray-900">{address.full_name}</h3>
-                                            {address.is_default && (
-                                                <span className="px-2 py-0.5 bg-orange-100 text-[#D97534] text-xs font-medium rounded-full">
-                                                    Default
-                                                </span>
-                                            )}
+                            <i className="fa-solid fa-plus"></i>
+                            Add Address
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {addresses.map((address) => (
+                            <div
+                                key={address.id}
+                                className={`bg-white rounded-xl shadow-sm p-6 border transition-all duration-200 hover:shadow-md cursor-pointer ${address.is_default ? "border-[#3B82F6]" : "border-gray-200"
+                                    }`}
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-start gap-4">
+                                        <div className={`p-3 rounded-lg ${address.is_default ? "bg-blue-50" : "bg-gray-50"}`}>
+                                            <i className={`fa-solid fa-location-dot text-xl ${address.is_default ? "text-[#3B82F6]" : "text-gray-500"}`}></i>
                                         </div>
-                                        <p className="text-gray-600 text-sm">
-                                            {address.address_line1}
-                                            {address.address_line2 && `, ${address.address_line2}`}
-                                        </p>
-                                        <p className="text-gray-600 text-sm">
-                                            {address.city}, {address.state} {address.postal_code}
-                                        </p>
-                                        <p className="text-gray-600 text-sm">{address.country}</p>
-                                        <p className="text-gray-500 text-sm mt-1">Phone: {address.phone}</p>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <h3 className="font-semibold text-[#1E293B]">{address.full_name}</h3>
+                                                {address.is_default && (
+                                                    <span className="px-2 py-0.5 bg-blue-50 text-[#3B82F6] text-xs font-medium rounded-lg">
+                                                        Default
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-gray-600 text-sm">
+                                                {address.address_line1}
+                                                {address.address_line2 && `, ${address.address_line2}`}
+                                            </p>
+                                            <p className="text-gray-600 text-sm">
+                                                {address.city}, {address.state} {address.postal_code}
+                                            </p>
+                                            <p className="text-gray-600 text-sm">{address.country}</p>
+                                            <p className="text-gray-500 text-sm mt-2">
+                                                <i className="fa-solid fa-phone mr-1"></i>
+                                                {address.phone}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {!address.is_default && (
+                                    <div className="flex items-center gap-2">
+                                        {!address.is_default && (
+                                            <button
+                                                onClick={() => handleSetDefault(address.id)}
+                                                className="p-2.5 text-gray-400 hover:text-[#3B82F6] hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
+                                                title="Set as default"
+                                            >
+                                                <i className="fa-solid fa-check"></i>
+                                            </button>
+                                        )}
                                         <button
-                                            onClick={() => handleSetDefault(address.id)}
-                                            className="p-2 text-gray-400 hover:text-[#D97534] hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer hover:scale-110"
-                                            title="Set as default"
+                                            onClick={() => openModal(address)}
+                                            className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
                                         >
-                                            <i className="fa-solid fa-check"></i>
+                                            <i className="fa-solid fa-pen-to-square"></i>
                                         </button>
-                                    )}
-                                    <button
-                                        onClick={() => openModal(address)}
-                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer hover:scale-110"
-                                    >
-                                        <i className="fa-solid fa-pen-to-square"></i>
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(address.id)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer hover:scale-110"
-                                    >
-                                        <i className="fa-solid fa-trash"></i>
-                                    </button>
+                                        <button
+                                            onClick={() => handleDelete(address.id)}
+                                            className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                                        >
+                                            <i className="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
 
-            {/* Modal */}
-            {showModal && (
-                <AddressModal
-                    address={editingAddress}
-                    onSave={handleSave}
-                    onClose={closeModal}
-                />
-            )}
+                {/* Modal */}
+                {showModal && (
+                    <AddressModal
+                        address={editingAddress}
+                        onSave={handleSave}
+                        onClose={closeModal}
+                    />
+                )}
+            </div>
         </div>
-
     );
 }
 
@@ -269,10 +273,10 @@ function AddressModal({ address, onSave, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in-bounce">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6 border-b border-gray-200">
-                    <h2 className="font-playfair font-bold text-xl text-gray-900">
+                    <h2 className="font-bold text-xl text-[#1E293B]">
                         {address ? "Edit Address" : "Add New Address"}
                     </h2>
                 </div>
@@ -280,104 +284,104 @@ function AddressModal({ address, onSave, onClose }) {
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
                             <input
                                 type="text"
                                 name="full_name"
                                 value={formData.full_name}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
                             <input
                                 type="tel"
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Address Line 1</label>
                             <input
                                 type="text"
                                 name="address_line1"
                                 value={formData.address_line1}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2 (Optional)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Address Line 2 (Optional)</label>
                             <input
                                 type="text"
                                 name="address_line2"
                                 value={formData.address_line2}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
                             <input
                                 type="text"
                                 name="city"
                                 value={formData.city}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">State</label>
                             <input
                                 type="text"
                                 name="state"
                                 value={formData.state}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Postal Code</label>
                             <input
                                 type="text"
                                 name="postal_code"
                                 value={formData.postal_code}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Country</label>
                             <input
                                 type="text"
                                 name="country"
                                 value={formData.country}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D97534]"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
                             />
                         </div>
                     </div>
 
-                    <div className="flex items-center">
+                    <div className="flex items-center pt-2">
                         <input
                             type="checkbox"
                             id="is_default"
                             name="is_default"
                             checked={formData.is_default}
                             onChange={handleChange}
-                            className="w-4 h-4 text-[#D97534] border-gray-300 rounded focus:ring-[#D97534]"
+                            className="w-4 h-4 text-[#3B82F6] border-gray-300 rounded focus:ring-[#3B82F6] cursor-pointer"
                         />
-                        <label htmlFor="is_default" className="ml-2 text-sm text-gray-700">
+                        <label htmlFor="is_default" className="ml-2 text-sm text-gray-700 cursor-pointer">
                             Set as default address
                         </label>
                     </div>
@@ -386,14 +390,14 @@ function AddressModal({ address, onSave, onClose }) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                            className="px-5 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors cursor-pointer"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={saving}
-                            className="px-4 py-2 bg-[#D97534] hover:bg-[#C86429] text-white font-medium rounded-lg disabled:opacity-50"
+                            className="px-5 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium rounded-lg disabled:opacity-50 transition-colors cursor-pointer"
                         >
                             {saving ? "Saving..." : "Save Address"}
                         </button>
