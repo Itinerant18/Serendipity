@@ -1,7 +1,9 @@
 import lodash from 'lodash';
 const { partial } = lodash;
-import regularStripe from 'stripe';
 import type Stripe from 'stripe';
+
+let regularStripe: typeof Stripe;
+let stripe: Stripe;
 
 const env = process.env;
 
@@ -836,17 +838,43 @@ function getStripe({ projectGroupId, token }: GetStripeParams) {
   }
   return StripeClient;
 }
-const hasEnv =
+const hasEnvironmentVars =
   env.CREATE_TEMP_API_KEY &&
   env.NEXT_PUBLIC_PROJECT_GROUP_ID &&
   env.NEXT_PUBLIC_CREATE_API_BASE_URL;
 
-const stripe = hasEnv
-  ? getStripe({
-    projectGroupId: env.NEXT_PUBLIC_PROJECT_GROUP_ID!,
-    token: env.CREATE_TEMP_API_KEY!,
-  })
-  : regularStripe;
+// Dynamic import to avoid build errors
+const initializeStripe = async () => {
+  if (typeof window === 'undefined') {
+    // Server-side - import normally
+    regularStripe = (await import('stripe')).default;
+  } else {
+    // Client-side - import stripe only when needed
+    regularStripe = (await import('stripe')).default;
+  }
+  
+  let initializedStripe: Stripe;
+  if (hasEnvironmentVars) {
+    initializedStripe = getStripe({
+      projectGroupId: env.NEXT_PUBLIC_PROJECT_GROUP_ID!,
+      token: env.CREATE_TEMP_API_KEY!,
+    });
+  } else {
+    initializedStripe = regularStripe;
+  }
+  
+  return initializedStripe;
+};
 
-export default stripe;
-export { stripe as Stripe };
+// Cache the initialized stripe to avoid cycles
+let stripeInstance: Stripe | null = null;
+
+const getStripeInstance = async () => {
+  if (!stripeInstance) {
+    stripeInstance = await initializeStripe();
+  }
+  return stripeInstance;
+};
+
+export default getStripeInstance;
+export { getStripeInstance as getStripe };
