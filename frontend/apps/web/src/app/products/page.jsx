@@ -21,7 +21,7 @@ const FilterSection = ({ title, children, isOpen, onToggle, icon }) => (
         >
             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-3">
                 {icon && (
-                    <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600 group-hover:bg-sky-100 transition-colors">
+                    <div className="w-8 h-8 border-2 border-black bg-white flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-transform duration-100">
                         <i className={`fa-solid ${icon}`}></i>
                     </div>
                 )}
@@ -30,7 +30,7 @@ const FilterSection = ({ title, children, isOpen, onToggle, icon }) => (
             <motion.span
                 animate={{ rotate: isOpen ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
-                className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:shadow-sm"
+                className="w-8 h-8 border-2 border-black bg-black flex items-center justify-center text-white group-hover:bg-white group-hover:text-black group-hover:border-white transition-transform duration-100"
             >
                 <i className="fa-solid fa-chevron-down text-xs"></i>
             </motion.span>
@@ -58,7 +58,7 @@ const ActiveFilterChip = ({ label, onRemove }) => (
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.85 }}
         onClick={onRemove}
-        className="flex items-center gap-2 px-4 py-1.5 bg-sky-500/10 text-sky-700 border border-sky-200/50 backdrop-blur-md rounded-full text-sm font-bold hover:bg-sky-500/20 transition-all shadow-sm group"
+        className="flex items-center gap-2 px-4 py-1.5 bg-pink-500 text-white border-4 border-black text-sm font-bold hover:bg-orange-500 hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-transform duration-100"
     >
         <span>{label}</span>
         <i className="fa-solid fa-xmark text-xs opacity-60 group-hover:opacity-100"></i>
@@ -218,14 +218,14 @@ export default function ProductsPage() {
                         <motion.div
                             key={cat.name}
                             whileHover={{ x: 4 }}
-                            className={`flex items-center cursor-pointer group p-3 rounded-xl transition-all ${isSelected ? 'bg-sky-50 shadow-sm border border-sky-100' : 'hover:bg-slate-50 border border-transparent'}`}
+                            className={`flex items-center cursor-pointer group p-3 border-2 border-black transition-transform duration-100 ${isSelected ? 'bg-orange-500 text-white shadow-[8px_8px_0_#000000]' : 'bg-white hover:bg-pink-500 hover:text-white hover:border-white'}`}
                             onClick={() => toggleCategory(cat.name)}
                         >
                             <div className="relative flex items-center">
                                 <AnimatedCheckbox checked={isSelected} onChange={() => toggleCategory(cat.name)} />
                             </div>
                             <span className="ml-3 text-sm flex items-center gap-3 flex-1">
-                                <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-base transition-all ${isSelected ? 'bg-sky-100 text-sky-600' : 'bg-white text-slate-400 border border-slate-100 group-hover:bg-white group-hover:text-sky-500'}`}>
+                                <span className={`w-8 h-8 flex items-center justify-center border-2 border-black text-base transition-transform duration-100 ${isSelected ? 'bg-orange-500 text-white' : 'bg-white text-black group-hover:bg-pink-500 group-hover:text-white group-hover:border-white'}`}>
                                     <i className={`${cat.icon || 'fa-solid fa-box'}`}></i>
                                 </span>
                                 <span className={`font-semibold transition-colors ${isSelected ? 'text-sky-900' : 'text-slate-600 group-hover:text-slate-900'}`}>{cat.name}</span>
@@ -245,7 +245,7 @@ export default function ProductsPage() {
                                 <motion.div
                                     key={sub}
                                     whileHover={{ x: 4 }}
-                                    className={`flex items-center cursor-pointer group p-2.5 rounded-lg transition-all ${isSelected ? 'bg-indigo-50/60' : 'hover:bg-gray-50'}`}
+                                    className={`flex items-center cursor-pointer group p-2.5 border-2 border-black transition-transform duration-100 ${isSelected ? 'bg-blue-500 text-white' : 'bg-white hover:bg-orange-500 hover:text-white hover:border-white'}`}
                                     onClick={() => toggleSubcategory(sub)}
                                 >
                                     <div className="relative flex items-center">
@@ -284,7 +284,7 @@ export default function ProductsPage() {
                             placeholder="Search brands..."
                             value={brandSearch}
                             onChange={(e) => setBrandSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all"
+                            className="w-full pl-9 pr-3 py-2 bg-white border-4 border-black text-sm font-bold focus:outline-none focus:border-pink-500 focus:bg-yellow-200 transition-transform duration-100"
                         />
                         <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     </div>
@@ -316,7 +316,7 @@ export default function ProductsPage() {
                     <button
                         key={rating}
                         onClick={() => setMinRating(rating === minRating ? 0 : rating)}
-                        className={`flex items-center w-full p-2.5 rounded-lg transition-all ${minRating === rating ? 'bg-yellow-50 ring-1 ring-yellow-200' : 'hover:bg-gray-50'}`}
+                        className={`flex items-center w-full p-2.5 border-2 border-black transition-transform duration-100 ${minRating === rating ? 'bg-yellow-500 text-white' : 'bg-white hover:bg-yellow-500 hover:text-white hover:border-white'}`}
                     >
                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${minRating === rating ? 'border-yellow-500 bg-yellow-500 text-white' : 'border-gray-300'}`}>
                             {minRating === rating && <i className="fa-solid fa-check text-[9px]"></i>}
@@ -337,7 +337,7 @@ export default function ProductsPage() {
             {activeFiltersCount > 0 && (
                 <button
                     onClick={clearFilters}
-                    className="w-full mt-6 py-3 bg-gray-900 hover:bg-black text-white rounded-xl text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    className="w-full mt-6 py-3 bg-black hover:bg-gray-800 text-white border-4 border-white text-sm font-bold transition-transform duration-100 hover:translate(-2px,-2px) hover:shadow-[10px_10px_0_#ffffff] flex items-center justify-center gap-2"
                 >
                     <i className="fa-regular fa-trash-can"></i>
                     Reset Filters ({activeFiltersCount})
@@ -354,7 +354,7 @@ export default function ProductsPage() {
                 {/* Toolbar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sticky top-24 z-30 py-4 transition-all duration-300">
                     <button
-                        className="md:hidden flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white border border-sky-100 rounded-xl text-sm font-semibold shadow-sm text-sky-900"
+                        className="md:hidden flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white border-4 border-black text-sm font-bold text-black hover:bg-orange-500 hover:text-white hover:border-white transition-transform duration-100"
                         onClick={() => setIsMobileFiltersOpen(true)}
                     >
                         <i className="fa-solid fa-sliders text-indigo-600"></i>
@@ -381,7 +381,7 @@ export default function ProductsPage() {
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="appearance-none pl-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm cursor-pointer"
+                                className="appearance-none pl-4 pr-9 py-2.5 bg-white border-4 border-black text-sm font-bold text-black focus:outline-none focus:ring-0 focus:border-pink-500 cursor-pointer hover:bg-pink-500 hover:text-white transition-transform duration-100"
                             >
                                 <option value="popular">Most Popular</option>
                                 <option value="newest">Newest First</option>
@@ -430,7 +430,7 @@ export default function ProductsPage() {
                 <div className="flex gap-10">
                     {/* Sidebar - Desktop */}
                     <div className="hidden md:block w-[280px] shrink-0">
-                        <GlassCard className="sticky top-24 p-6 bg-white/70 backdrop-blur-xl border-white/60 shadow-glass max-h-[85vh] overflow-y-auto custom-scrollbar">
+                        <div className="sticky top-24 p-6 bg-white border-4 border-black shadow-[12px_12px_0_#000000] max-h-[85vh] overflow-y-auto custom-scrollbar">
                             <FilterContent />
                         </GlassCard>
                     </div>
@@ -457,7 +457,7 @@ export default function ProductsPage() {
                                                     product={product}
                                                     showAddToCart={true}
                                                     onAddToCart={handleAddToCart}
-                                                    className="h-full border border-gray-100 bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                                                    className="h-full border-4 border-black bg-white shadow-[8px_8px_0_#000000] hover:bg-pink-500 hover:text-white hover:border-white hover:translate(-2px,-2px) hover:shadow-[10px_10px_0_#000000] transition-transform duration-100 overflow-hidden"
                                                 />
                                             </motion.div>
                                         ))}
@@ -574,7 +574,7 @@ export default function ProductsPage() {
                             <div className="p-5 border-t border-gray-100 bg-gray-50">
                                 <button
                                     onClick={() => setIsMobileFiltersOpen(false)}
-                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-md transition-colors"
+                                    className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white border-4 border-black font-bold hover:border-white transition-transform duration-100 hover:translate(-2px,-2px) hover:shadow-[8px_8px_0_#000000]"
                                 >
                                     Show {filteredProducts.length} Items
                                 </button>

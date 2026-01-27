@@ -3,18 +3,6 @@ const { supabase, supabaseAdmin } = require('../config/supabase');
 const { supabaseSellerAdmin } = require('../config/supabaseSeller');
 
 const protect = asyncHandler(async (req, res, next) => {
-  // MOCK AUTH FOR VERIFICATION
-  if (false) {
-    req.user = {
-      id: '00000000-0000-0000-0000-000000000000',
-      name: 'Mock Admin',
-      email: 'admin@test.com',
-      isAdmin: true
-    };
-    next();
-    return;
-  }
-
   let token;
 
   if (

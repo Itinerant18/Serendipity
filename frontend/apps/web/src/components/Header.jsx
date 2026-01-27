@@ -138,7 +138,7 @@ export default function Header() {
                                         <Link
                                             to="/profile"
                                             onClick={() => setIsUserMenuOpen(false)}
-                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            className="flex items-center gap-3 px-4 py-2 text-sm font-bold border-2 border-black bg-white hover:bg-pink-500 hover:text-white hover:border-white transition-transform duration-100"
                                         >
                                             <i className="fa-solid fa-user text-base"></i>
                                             My Account
@@ -147,7 +147,7 @@ export default function Header() {
                                         <Link
                                             to="/orders"
                                             onClick={() => setIsUserMenuOpen(false)}
-                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            className="flex items-center gap-3 px-4 py-2 text-sm font-bold border-2 border-black bg-white hover:bg-orange-500 hover:text-white hover:border-white transition-transform duration-100"
                                         >
                                             <i className="fa-solid fa-box text-base"></i>
                                             My Orders
@@ -156,7 +156,7 @@ export default function Header() {
                                         <Link
                                             to="/wishlist"
                                             onClick={() => setIsUserMenuOpen(false)}
-                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            className="flex items-center gap-3 px-4 py-2 text-sm font-bold border-2 border-black bg-white hover:bg-blue-500 hover:text-white hover:border-white transition-transform duration-100"
                                         >
                                             <i className="fa-solid fa-heart text-base"></i>
                                             My Wishlist
@@ -185,10 +185,10 @@ export default function Header() {
                                         )}
 
                                         <div className="border-t border-gray-100 mt-2 pt-2">
-                                            <button
-                                                onClick={handleSignOut}
-                                                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                            >
+                            <button
+                                onClick={handleSignOut}
+                                className="flex items-center gap-3 w-full px-4 py-2 text-sm font-bold border-2 border-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-white transition-transform duration-100"
+                            >
                                                 <i className="fa-solid fa-right-from-bracket text-base"></i>
                                                 Sign Out
                                             </button>

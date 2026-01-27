@@ -12,13 +12,13 @@ export default function Footer() {
     const currentYear = new Date().getFullYear();
 
     const footerLinks = {
-        shop: [
-            { name: "All Products", href: "/products" },
-            ...MAIN_CATEGORIES.map(cat => ({
-                name: cat.name,
-                href: `/category/${encodeURIComponent(cat.name)}`
-            }))
-        ],
+    shop: [
+        { name: "ALL PRODUCTS", href: "/products" },
+        ...MAIN_CATEGORIES.map(cat => ({
+            name: cat.name.toUpperCase(),
+            href: `/category/${encodeURIComponent(cat.name)}`
+        }))
+    ],
         account: [
             { name: "My Account", href: "/profile" },
             { name: "My Orders", href: "/profile/orders" },
@@ -40,56 +40,56 @@ export default function Footer() {
 
     return (
         <footer className="relative mt-20">
-            {/* Background Gradient Extension */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-slate-900/50 pointer-events-none" />
+            {/* Brutalist Background Pattern */}
+            <div className="absolute inset-0 bg-black border-t-8 border-white pointer-events-none" />
 
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-                {/* Back to top - Soft Floating Pill */}
+                {/* Back to top - Brutalist Button */}
                 <div className="flex justify-center -translate-y-1/2 mb-8">
                     <button
                         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                        className="group flex items-center gap-2 px-6 py-3 bg-amber-500/90 hover:bg-amber-400 backdrop-blur-md text-stone-900 font-semibold rounded-full shadow-lg shadow-amber-500/30 transition-all duration-300 hover:-translate-y-1"
+                        className="group flex items-center gap-2 px-6 py-3 bg-orange-500 border-4 border-black text-white font-bold shadow-[8px_8px_0_#000000] hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[10px_10px_0_#000000] transition-transform duration-100 animate-brutalist-jitter"
                     >
-                        <span className="text-sm font-semibold">Back to Top</span>
-                        <FontAwesomeIcon icon={faArrowUp} className="group-hover:-translate-y-1 transition-transform duration-300" />
+                        <span className="text-sm font-bold">BACK TO TOP</span>
+                        <FontAwesomeIcon icon={faArrowUp} className="group-hover:animate-brutalist-glitch" />
                     </button>
                 </div>
 
-                <GlassCard className="p-10 md:p-16 bg-slate-900/40 border-white/5 backdrop-blur-md shadow-2xl">
+                <div className="p-10 md:p-16 bg-black border-4 border-white shadow-[12px_12px_0_#ffffff]">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8">
                         {/* Brand Column */}
-                        <div className="col-span-1 md:col-span-2 lg:col-span-2">
+                         <div className="col-span-1 md:col-span-2 lg:col-span-2">
                             <Link to="/" className="flex items-center gap-3 mb-6 group">
-                                <div className="p-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg group-hover:rotate-6 transition-transform duration-300">
-                                    <FontAwesomeIcon icon={faStore} className="text-xl text-white" />
+                                <div className="p-2 bg-orange-500 border-4 border-black text-white font-bold shadow-[8px_8px_0_#000000] group-hover:bg-pink-500 group-hover:translate(-1px,-1px) transition-transform duration-100">
+                                    <FontAwesomeIcon icon={faStore} className="text-xl" />
                                 </div>
-                                <span className="font-playfair text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-amber-200">
-                                    Serendipity
+                                <span className="font-brutalist text-3xl text-black bg-white border-2 border-black p-1">
+                                    SERENDIPITY
                                 </span>
                             </Link>
                             <p className="text-stone-300 text-base mb-8 max-w-xs leading-relaxed font-light">
                                 "Finding something good unintentionally" – Your destination for curated global treasures.
                             </p>
 
-                            <div className="space-y-4 text-sm text-stone-400">
-                                <div className="flex items-center gap-3 group cursor-pointer hover:text-white transition-colors">
-                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                            <div className="space-y-4 text-sm text-white">
+                                <div className="flex items-center gap-3 group cursor-pointer hover:bg-white hover:text-black transition-transform duration-100">
+                                    <div className="w-8 h-8 border-2 border-white bg-black flex items-center justify-center text-white group-hover:bg-white group-hover:text-black">
                                         <FontAwesomeIcon icon={faEnvelope} />
                                     </div>
-                                    <span>support@serendipity.com</span>
+                                    <span className="font-bold">support@serendipity.com</span>
                                 </div>
-                                <div className="flex items-center gap-3 group cursor-pointer hover:text-white transition-colors">
-                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                                <div className="flex items-center gap-3 group cursor-pointer hover:bg-white hover:text-black transition-transform duration-100">
+                                    <div className="w-8 h-8 border-2 border-white bg-black flex items-center justify-center text-white group-hover:bg-white group-hover:text-black">
                                         <FontAwesomeIcon icon={faPhone} />
                                     </div>
-                                    <span>1-800-SHOP-NOW</span>
+                                    <span className="font-bold">1-800-SHOP-NOW</span>
                                 </div>
                             </div>
 
                             {/* Socials */}
                             <div className="flex gap-4 mt-8">
                                 {[faFacebook, faTwitter, faInstagram, faLinkedin].map((icon, idx) => (
-                                    <a key={idx} href="#" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-stone-300 hover:bg-amber-500 hover:text-stone-900 transition-all duration-300">
+                                    <a key={idx} href="#" className="w-9 h-9 border-2 border-white bg-black flex items-center justify-center text-white hover:bg-white hover:text-black hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#ffffff] transition-transform duration-100">
                                         <FontAwesomeIcon icon={icon} />
                                     </a>
                                 ))}
@@ -103,7 +103,7 @@ export default function Footer() {
                             { title: "Sell", links: footerLinks.sell },
                         ].map((section) => (
                             <div key={section.title}>
-                                <h4 className="font-semibold text-white text-lg mb-6 tracking-wide border-b border-white/10 pb-2 inline-block">
+                                <h4 className="font-brutalist text-white text-lg mb-6 tracking-wide border-4 border-black bg-black p-2 inline-block shadow-[8px_8px_0_#000000]">
                                     {section.title}
                                 </h4>
                                 <ul className="space-y-3">
@@ -111,7 +111,7 @@ export default function Footer() {
                                         <li key={link.name}>
                                             <Link
                                                 to={link.href}
-                                                className="text-stone-400 hover:text-amber-400 hover:translate-x-1 inline-block transition-all duration-200 text-sm"
+                                                className="text-white hover:text-pink-500 hover:bg-pink-500 hover:border-white font-bold px-4 py-2 transition-all duration-100 hover:translate(-1px,-1px) border-2 border-black"
                                             >
                                                 {link.name}
                                             </Link>
@@ -123,24 +123,24 @@ export default function Footer() {
                     </div>
 
                     {/* Bottom Bar */}
-                    <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <p className="text-stone-500 text-sm text-center md:text-left">
-                            © {currentYear} Serendipity Inc. All rights reserved.
+                    <div className="mt-16 pt-8 border-t-4 border-white flex flex-col md:flex-row items-center justify-between gap-6">
+                        <p className="text-white font-bold text-sm text-center md:text-left">
+                            © {currentYear} SERENDIPITY INC. ALL RIGHTS RESERVED.
                         </p>
-                        <div className="flex items-center gap-6 text-sm text-stone-500">
+                        <div className="flex items-center gap-6 text-sm text-white">
                             {[
-                                { name: "Privacy Policy", href: "/privacy" },
-                                { name: "Terms of Service", href: "/terms" },
-                                { name: "Cookie Policy", href: "/cookies" },
-                                { name: "Seller Policy", href: "/seller/policies" }
+                                { name: "PRIVACY POLICY", href: "/privacy" },
+                                { name: "TERMS OF SERVICE", href: "/terms" },
+                                { name: "COOKIE POLICY", href: "/cookies" },
+                                { name: "SELLER POLICY", href: "/seller/policies" }
                             ].map((item) => (
-                                <Link key={item.name} to={item.href} className="hover:text-amber-400 transition-colors">
+                                <Link key={item.name} to={item.href} className="border-2 border-black bg-white hover:bg-orange-500 hover:text-white hover:border-white font-bold px-4 py-2 transition-transform duration-100 hover:translate(-1px,-1px)">
                                     {item.name}
                                 </Link>
                             ))}
                         </div>
                     </div>
-                </GlassCard>
+                </div>
             </div>
         </footer>
     );
