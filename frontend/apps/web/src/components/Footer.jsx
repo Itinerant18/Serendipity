@@ -48,7 +48,7 @@ export default function Footer() {
                 <div className="flex justify-center -translate-y-1/2 mb-8">
                     <button
                         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                        className="group flex items-center gap-2 px-6 py-3 bg-blue-600/90 hover:bg-blue-500 backdrop-blur-md text-white rounded-full shadow-lg shadow-blue-500/30 transition-all duration-300 hover:-translate-y-1"
+                        className="group flex items-center gap-2 px-6 py-3 bg-amber-500/90 hover:bg-amber-400 backdrop-blur-md text-stone-900 font-semibold rounded-full shadow-lg shadow-amber-500/30 transition-all duration-300 hover:-translate-y-1"
                     >
                         <span className="text-sm font-semibold">Back to Top</span>
                         <FontAwesomeIcon icon={faArrowUp} className="group-hover:-translate-y-1 transition-transform duration-300" />
@@ -63,23 +63,23 @@ export default function Footer() {
                                 <div className="p-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg group-hover:rotate-6 transition-transform duration-300">
                                     <FontAwesomeIcon icon={faStore} className="text-xl text-white" />
                                 </div>
-                                <span className="font-playfair text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-200">
+                                <span className="font-playfair text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-amber-200">
                                     Serendipity
                                 </span>
                             </Link>
-                            <p className="text-blue-200/80 text-base mb-8 max-w-xs leading-relaxed font-light">
+                            <p className="text-stone-300 text-base mb-8 max-w-xs leading-relaxed font-light">
                                 "Finding something good unintentionally" – Your destination for curated global treasures.
                             </p>
 
-                            <div className="space-y-4 text-sm text-blue-200/70">
+                            <div className="space-y-4 text-sm text-stone-400">
                                 <div className="flex items-center gap-3 group cursor-pointer hover:text-white transition-colors">
-                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
                                         <FontAwesomeIcon icon={faEnvelope} />
                                     </div>
                                     <span>support@serendipity.com</span>
                                 </div>
                                 <div className="flex items-center gap-3 group cursor-pointer hover:text-white transition-colors">
-                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
                                         <FontAwesomeIcon icon={faPhone} />
                                     </div>
                                     <span>1-800-SHOP-NOW</span>
@@ -89,7 +89,7 @@ export default function Footer() {
                             {/* Socials */}
                             <div className="flex gap-4 mt-8">
                                 {[faFacebook, faTwitter, faInstagram, faLinkedin].map((icon, idx) => (
-                                    <a key={idx} href="#" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-blue-200 hover:bg-white hover:text-blue-600 transition-all duration-300">
+                                    <a key={idx} href="#" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-stone-300 hover:bg-amber-500 hover:text-stone-900 transition-all duration-300">
                                         <FontAwesomeIcon icon={icon} />
                                     </a>
                                 ))}
@@ -111,7 +111,7 @@ export default function Footer() {
                                         <li key={link.name}>
                                             <Link
                                                 to={link.href}
-                                                className="text-blue-200/60 hover:text-white hover:translate-x-1 inline-block transition-all duration-200 text-sm"
+                                                className="text-stone-400 hover:text-amber-400 hover:translate-x-1 inline-block transition-all duration-200 text-sm"
                                             >
                                                 {link.name}
                                             </Link>
@@ -124,17 +124,17 @@ export default function Footer() {
 
                     {/* Bottom Bar */}
                     <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <p className="text-blue-200/40 text-sm text-center md:text-left">
+                        <p className="text-stone-500 text-sm text-center md:text-left">
                             © {currentYear} Serendipity Inc. All rights reserved.
                         </p>
-                        <div className="flex items-center gap-6 text-sm text-blue-200/40">
+                        <div className="flex items-center gap-6 text-sm text-stone-500">
                             {[
                                 { name: "Privacy Policy", href: "/privacy" },
                                 { name: "Terms of Service", href: "/terms" },
                                 { name: "Cookie Policy", href: "/cookies" },
                                 { name: "Seller Policy", href: "/seller/policies" }
                             ].map((item) => (
-                                <Link key={item.name} to={item.href} className="hover:text-white transition-colors">
+                                <Link key={item.name} to={item.href} className="hover:text-amber-400 transition-colors">
                                     {item.name}
                                 </Link>
                             ))}

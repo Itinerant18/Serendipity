@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import useAuthStore from './authStore';
+import useCartStore from './cartStore';
 import { supabase } from '@/lib/supabase';
 
 function useAuth() {
@@ -176,6 +177,10 @@ function useAuth() {
         console.error('Error signing out from supabase:', error);
       }
       logout();
+      useCartStore.getState().clearCart();
+      // Force synchronous localStorage clear to prevent race condition
+      // (persist middleware is async, redirect might happen before it writes)
+      localStorage.removeItem('cart-storage');
       window.location.href = '/account/signin';
     },
     updateUser,

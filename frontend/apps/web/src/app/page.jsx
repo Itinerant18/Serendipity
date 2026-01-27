@@ -13,6 +13,7 @@ const LuminaHero = lazy(() => import("@/components/ui/lumina-interactive-list").
 const ProductCard = lazy(() => import("@/components/ProductCard"));
 const MonochromaticCategories = lazy(() => import("@/components/monochromatic-categories").then(module => ({ default: module.MonochromaticCategories })));
 const FeaturedProducts = lazy(() => import("@/components/FeaturedProducts"));
+const BecomeSellerSection = lazy(() => import("@/components/ui/hero-dithering-card").then(module => ({ default: module.BecomeSellerSection })));
 
 export default function HomePage() {
     const addToCart = useCartStore((state) => state.addToCart);
@@ -50,7 +51,7 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-[#F3F3F3]">
             {/* Hero Section */}
-            <Suspense fallback={<div className="h-screen bg-black flex items-center justify-center"><i className="fa-solid fa-spinner fa-spin text-white/20 text-4xl"></i></div>}>
+            <Suspense fallback={<div className="h-[70vh] min-h-[500px] max-h-[800px] bg-black flex items-center justify-center"><i className="fa-solid fa-spinner fa-spin text-white/20 text-4xl"></i></div>}>
                 <LuminaHero />
             </Suspense>
 
@@ -130,23 +131,9 @@ export default function HomePage() {
                 </section>
 
                 {/* Become a Seller CTA */}
-                <section className="mb-8">
-                    <div className="bg-gradient-to-r from-[#232f3e] to-[#37475a] rounded-2xl p-8 md:p-12 text-center text-white">
-                        <h2 className="text-2xl md:text-3xl font-bold mb-4 font-playfair">
-                            Start Selling Today
-                        </h2>
-                        <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                            Join thousands of sellers and reach millions of customers. Set up your store in minutes and start earning.
-                        </p>
-                        <Link
-                            to="/seller/signup"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-[#febd69] hover:bg-[#f3a847] text-[#232f3e] font-bold rounded-lg transition-all duration-200 hover:shadow-lg"
-                        >
-                            Become a Seller
-                            <i className="fa-solid fa-arrow-right text-xl"></i>
-                        </Link>
-                    </div>
-                </section>
+                <Suspense fallback={<div className="h-[500px] bg-stone-900/50 rounded-[48px] animate-pulse" />}>
+                    <BecomeSellerSection />
+                </Suspense>
             </main>
         </div>
     );
