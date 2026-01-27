@@ -151,10 +151,10 @@ export default function ProductCard({
             className={cn("group flex flex-col w-full h-full", className)}
             hoverEffect={true}
         >
-            <Link to={`/product/${productId}`} className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 block">
+            <Link to={`/product/${productId}`} className="relative aspect-[4/5] overflow-hidden bg-white border-4 border-black block">
                 {/* Background skeleton loader - only visible while loading */}
                 {!imgLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center animate-pulse">
+                    <div className="absolute inset-0 flex items-center justify-center animate-brutalist-jitter">
                         <i className="fa-solid fa-image text-gray-300 text-3xl"></i>
                     </div>
                 )}
@@ -164,7 +164,7 @@ export default function ProductCard({
                     alt={name}
                     loading="lazy"
                     className={cn(
-                        "absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
+                        "absolute inset-0 w-full h-full object-cover transition-transform duration-100 group-hover:scale-110 group-hover:translate(-2px,-2px) group-hover:shadow-[8px_8px_0_#000000]",
                         imgLoaded ? "opacity-100" : "opacity-0"
                     )}
                     onLoad={() => setImgLoaded(true)}
@@ -179,12 +179,12 @@ export default function ProductCard({
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                     {hasDiscount && (
-                        <div className="rounded-full bg-red-500/90 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm border border-white/20">
+                        <div className="border-4 border-black bg-red-500 text-white text-[10px] font-bold px-2.5 py-0.5 shadow-[6px_6px_0_#000000]">
                             -{discountPercentage}%
                         </div>
                     )}
                     {isOutOfStock && (
-                        <div className="rounded-full bg-slate-900/90 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm border border-white/20">
+                        <div className="border-4 border-black bg-black text-white text-[10px] font-bold px-2.5 py-0.5 shadow-[6px_6px_0_#ffffff]">
                             No Stock
                         </div>
                     )}
@@ -246,7 +246,7 @@ export default function ProductCard({
                                     toggleWishlist(product);
                                 }}
                                 className={cn(
-                                    "rounded-full hover:bg-red-50 hover:text-red-500 transition-colors",
+                                    "border-4 border-black bg-white hover:bg-red-500 hover:text-white transition-transform duration-100 hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#000000]",
                                     isInWishlist(productId) ? "text-red-500" : "text-gray-400"
                                 )}
                                 title={isInWishlist(productId) ? "Remove from Wishlist" : "Add to Wishlist"}
@@ -272,7 +272,7 @@ export default function ProductCard({
                                 }}
                                 disabled={isOutOfStock}
                                 className={cn(
-                                    "rounded-full shadow-lg transition-transform active:scale-95",
+                                    "border-4 border-black bg-white shadow-[8px_8px_0_#000000] transition-transform duration-100 active:scale-95 hover:translate(-1px,-1px) hover:shadow-[10px_10px_0_#000000]",
                                     isOutOfStock && "opacity-50 cursor-not-allowed"
                                 )}
                                 title={isOutOfStock ? "Out of Stock" : "Add to Cart"}
