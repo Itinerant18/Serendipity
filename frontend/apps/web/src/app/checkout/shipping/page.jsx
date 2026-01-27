@@ -149,49 +149,49 @@ export default function ShippingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFF8F0] py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-pink-50 border-8 border-black py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
                 <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-[#8B4513] mb-8 text-center">
                     Shipping Address
                 </h1>
 
-                <div className="bg-white rounded-2xl shadow-xl p-8 transform transition-all hover:scale-[1.01]">
+                <div className="bg-white border-4 border-black shadow-[12px_12px_0_#000000] p-8 transition-transform duration-100 hover:translate(-2px,-2px) hover:shadow-[14px_14px_0_#000000]">
                     <form onSubmit={handlePayment} className="space-y-6">
                         <div>
-                            <label className="block font-inter font-semibold text-gray-700 mb-2">Address</label>
+                            <label className="block font-brutalist text-black font-bold mb-2 border-2 border-black bg-white p-1">ADDRESS</label>
                             <input
                                 type="text"
                                 name="address"
                                 required
                                 value={formData.address}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#D97534] focus:border-transparent transition-all font-inter"
+                                className="w-full px-4 py-3 border-4 border-black bg-white text-black font-bold focus:ring-0 focus:border-pink-500 focus:bg-yellow-200 transition-transform duration-100"
                                 placeholder="123 Main St"
                             />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label className="block font-inter font-semibold text-gray-700 mb-2">City</label>
+                                <label className="block font-brutalist text-black font-bold mb-2 border-2 border-black bg-white p-1">CITY</label>
                                 <input
                                     type="text"
                                     name="city"
                                     required
                                     value={formData.city}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#D97534] focus:border-transparent transition-all font-inter"
+                                    className="w-full px-4 py-3 border-4 border-black bg-white text-black font-bold focus:ring-0 focus:border-pink-500 focus:bg-yellow-200 transition-transform duration-100"
                                     placeholder="New York"
                                 />
                             </div>
                             <div>
-                                <label className="block font-inter font-semibold text-gray-700 mb-2">Postal Code</label>
+                                <label className="block font-brutalist text-black font-bold mb-2 border-2 border-black bg-white p-1">POSTAL CODE</label>
                                 <input
                                     type="text"
                                     name="postalCode"
                                     required
                                     value={formData.postalCode}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#D97534] focus:border-transparent transition-all font-inter"
+                                    className="w-full px-4 py-3 border-4 border-black bg-white text-black font-bold focus:ring-0 focus:border-pink-500 focus:bg-yellow-200 transition-transform duration-100"
                                     placeholder="10001"
                                 />
                             </div>
@@ -205,12 +205,12 @@ export default function ShippingPage() {
                                 required
                                 value={formData.country}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#D97534] focus:border-transparent transition-all font-inter"
+                                className="w-full px-4 py-3 border-4 border-black bg-white text-black font-bold focus:ring-0 focus:border-pink-500 focus:bg-yellow-200 transition-transform duration-100"
                                 placeholder="United States"
                             />
                         </div>
 
-                        <div className="pt-6 border-t border-gray-100 mt-6">
+                        <div className="pt-6 border-t-4 border-black mt-6">
                             <div className="flex justify-between items-center mb-6">
                                 <span className="font-playfair text-xl text-gray-600">Total Amount</span>
                                 <span className="font-playfair font-bold text-2xl text-[#8B4513]">{formatCurrency(calculateTotal())}</span>
@@ -219,7 +219,7 @@ export default function ShippingPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-[#D97534] hover:bg-[#C86429] text-white font-inter font-bold text-lg py-4 rounded-full transition-all shadow-lg transform active:scale-95 disabled:opacity-50"
+                                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-brutalist text-lg py-4 border-4 border-black hover:border-white transition-transform duration-100 hover:translate(-2px,-2px) hover:shadow-[10px_10px_0_#000000] disabled:opacity-50"
                             >
                                 {loading ? "Processing..." : "Continue to Payment"}
                             </button>

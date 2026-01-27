@@ -14,17 +14,17 @@ export default function OrderSuccessPage() {
     const orderId = searchParams.get("orderId");
 
     return (
-        <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4">
-            <div className="bg-white max-w-lg w-full rounded-2xl shadow-xl p-8 py-12 text-center transform transition-all hover:scale-[1.01]">
-                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i className="fa-solid fa-circle-check text-5xl text-green-600"></i>
+        <div className="min-h-screen bg-green-50 border-8 border-black flex items-center justify-center p-4">
+            <div className="bg-white border-4 border-black shadow-[12px_12px_0_#000000] max-w-lg w-full p-8 py-12 text-center transition-transform duration-100 hover:translate(-2px,-2px)">
+                <div className="w-24 h-24 bg-green-500 border-4 border-black flex items-center justify-center mx-auto mb-6">
+                    <i className="fa-solid fa-circle-check text-5xl text-white"></i>
                 </div>
 
-                <h1 className="font-playfair font-bold text-3xl text-[#8B4513] mb-4">
-                    Order Placed Successfully!
+                <h1 className="font-brutalist text-black font-bold text-3xl mb-4 border-4 border-black bg-yellow-200 p-2">
+                    ORDER PLACED SUCCESSFULLY!
                 </h1>
 
-                <p className="font-inter text-gray-600 mb-8 max-w-xs mx-auto">
+                <p className="font-brutalist text-black mb-8 max-w-xs mx-auto">
                     Thank you for your purchase. Your order has been confirmed and will be shipped soon.
                 </p>
 

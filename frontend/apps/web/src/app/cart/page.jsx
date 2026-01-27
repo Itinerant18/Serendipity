@@ -39,13 +39,13 @@ export default function CartPage() {
                 <h1 className="text-3xl font-bold font-playfair text-gray-900 mb-8">Shopping Cart</h1>
 
                 {items.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <div className="bg-white border-4 border-black shadow-[12px_12px_0_#000000] p-12 text-center">
                         <i className="fa-solid fa-bag-shopping text-6xl mx-auto text-gray-300 mb-4"></i>
                         <h2 className="text-2xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
                         <p className="text-gray-500 mb-8">Looks like you haven't added anything to your cart yet.</p>
                         <Link
                             to="/"
-                            className="inline-flex items-center px-6 py-3 bg-[#D97534] hover:bg-[#C86429] text-white font-medium rounded-lg transition-colors"
+                            className="inline-flex items-center px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold border-4 border-black transition-transform duration-100 hover:translate(-2px,-2px) hover:shadow-[8px_8px_0_#000000]"
                         >
                             Start Shopping
                         </Link>
@@ -53,8 +53,8 @@ export default function CartPage() {
                 ) : (
                     <div className="flex flex-col lg:flex-row gap-8">
                         {/* Cart Items */}
-                        <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
-                            <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
+                        <div className="flex-1 bg-white border-4 border-black shadow-[8px_8px_0_#000000] p-6">
+                            <div className="flex justify-between items-center border-b-4 border-black pb-4 mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Cart Items</h2>
                                 <span className="text-sm text-gray-500">Price</span>
                             </div>
@@ -62,7 +62,7 @@ export default function CartPage() {
                             <div className="space-y-6">
                                 {items.map((item) => (
                                     <div key={item.product} className="flex gap-4 py-4 border-b border-gray-100 last:border-0">
-                                        <div className="w-24 h-24 flex-shrink-0 bg-gray-50 rounded-md overflow-hidden">
+                                        <div className="w-24 h-24 flex-shrink-0 bg-white border-4 border-black overflow-hidden">
                                             <img
                                                 src={item.image}
                                                 alt={item.name || item.title}
@@ -82,17 +82,17 @@ export default function CartPage() {
                                             <p className="text-sm text-green-600 mb-4">In Stock</p>
 
                                             <div className="flex items-center gap-4">
-                                                <div className="flex items-center border border-gray-200 rounded-lg">
+                                                <div className="flex items-center border-4 border-black">
                                                     <button
                                                         onClick={() => handleQuantityChange(item.product, -1)}
-                                                        className="p-2 hover:bg-gray-50 text-gray-600 rounded-l-lg"
+                                                        className="p-2 hover:bg-orange-500 hover:text-white border-2 border-black text-black hover:border-white transition-transform duration-100"
                                                     >
                                                         <i className="fa-solid fa-minus text-base"></i>
                                                     </button>
                                                     <span className="px-4 font-medium text-gray-900">{item.qty}</span>
                                                     <button
                                                         onClick={() => handleQuantityChange(item.product, 1)}
-                                                        className="p-2 hover:bg-gray-50 text-gray-600 rounded-r-lg"
+                                                        className="p-2 hover:bg-orange-500 hover:text-white border-2 border-black text-black hover:border-white transition-transform duration-100"
                                                     >
                                                         <i className="fa-solid fa-plus text-base"></i>
                                                     </button>
@@ -112,7 +112,7 @@ export default function CartPage() {
                         </div>
 
                         {/* Order Summary */}
-                        <div className="lg:w-80 h-fit bg-white rounded-lg shadow-sm p-6">
+                        <div className="lg:w-80 h-fit bg-white border-4 border-black shadow-[12px_12px_0_#000000] p-6">
                             <div className="flex items-center gap-2 mb-4 text-green-700 text-sm">
                                 <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">✓</span>
                                 <span>Part of your order qualifies for FREE Delivery.</span>
@@ -126,7 +126,7 @@ export default function CartPage() {
 
                                 <button
                                     onClick={handleCheckout}
-                                    className="w-full bg-[#FFD814] hover:bg-[#F7CA00] text-[#0F1111] py-3 rounded-lg font-medium shadow-sm active:scale-95 transition-all text-sm"
+                                    className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 border-4 border-black font-bold text-sm hover:translate(-2px,-2px) hover:shadow-[10px_10px_0_#000000] transition-transform duration-100"
                                 >
                                     Proceed to Checkout
                                 </button>

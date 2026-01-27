@@ -432,7 +432,7 @@ export default function ProductsPage() {
                     <div className="hidden md:block w-[280px] shrink-0">
                         <div className="sticky top-24 p-6 bg-white border-4 border-black shadow-[12px_12px_0_#000000] max-h-[85vh] overflow-y-auto custom-scrollbar">
                             <FilterContent />
-                        </GlassCard>
+                        </div>
                     </div>
 
                     {/* Product Grid */}
