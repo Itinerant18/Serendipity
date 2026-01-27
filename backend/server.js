@@ -56,6 +56,7 @@ app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/profile/addresses', require('./routes/addressRoutes'));
 app.use('/api/profile/payment-methods', require('./routes/paymentMethodRoutes'));
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 

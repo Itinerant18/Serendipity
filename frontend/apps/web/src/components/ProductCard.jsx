@@ -4,6 +4,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import useAuth from "@/utils/useAuth";
+import useWishlistStore from "@/utils/wishlistStore";
 import { formatCurrency } from "@/utils/format";
 import GlassCard from "./ui/GlassCard";
 import { Button } from "./ui/button";
@@ -135,6 +136,15 @@ export default function ProductCard({
 
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlistStore();
+
+    const toggleWishlist = (product) => {
+        if (isInWishlist(product.id || product._id)) {
+            removeFromWishlist(product.id || product._id);
+        } else {
+            addToWishlist(product);
+        }
+    };
 
     return (
         <GlassCard
@@ -220,32 +230,57 @@ export default function ProductCard({
                         </div>
                     </div>
 
-                    {/* Add to Cart Button */}
-                    {showAddToCart && (
-                        <Button
-                            size="icon"
-                            variant={isOutOfStock ? "ghost" : "default"}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
+                    {/* Add to Cart & Wishlist Buttons */}
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (!isAuthenticated) {
+                                        navigate('/account/signin');
+                                        return;
+                                    }
+                                    toggleWishlist(product);
+                                }}
+                                className={cn(
+                                    "rounded-full hover:bg-red-50 hover:text-red-500 transition-colors",
+                                    isInWishlist(productId) ? "text-red-500" : "text-gray-400"
+                                )}
+                                title={isInWishlist(productId) ? "Remove from Wishlist" : "Add to Wishlist"}
+                            >
+                                <i className={cn("fa-heart text-sm", isInWishlist(productId) ? "fa-solid" : "fa-regular")}></i>
+                            </Button>
+                        </div>
 
-                                if (!isAuthenticated) {
-                                    navigate('/account/signin');
-                                    return;
-                                }
+                        {showAddToCart && (
+                            <Button
+                                size="icon"
+                                variant={isOutOfStock ? "ghost" : "default"}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
 
-                                if (!isOutOfStock) onAddToCart?.(product);
-                            }}
-                            disabled={isOutOfStock}
-                            className={cn(
-                                "rounded-full shadow-lg transition-transform active:scale-95",
-                                isOutOfStock && "opacity-50 cursor-not-allowed"
-                            )}
-                            title={isOutOfStock ? "Out of Stock" : "Add to Cart"}
-                        >
-                            <i className="fa-solid fa-cart-shopping text-sm"></i>
-                        </Button>
-                    )}
+                                    if (!isAuthenticated) {
+                                        navigate('/account/signin');
+                                        return;
+                                    }
+
+                                    if (!isOutOfStock) onAddToCart?.(product);
+                                }}
+                                disabled={isOutOfStock}
+                                className={cn(
+                                    "rounded-full shadow-lg transition-transform active:scale-95",
+                                    isOutOfStock && "opacity-50 cursor-not-allowed"
+                                )}
+                                title={isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                            >
+                                <i className="fa-solid fa-cart-shopping text-sm"></i>
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </div>
         </GlassCard>

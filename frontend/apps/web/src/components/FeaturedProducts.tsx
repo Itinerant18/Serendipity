@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
+import useWishlistStore from "@/utils/wishlistStore";
+import useAuth from "@/utils/useAuth";
 
 // Types
 interface Product {
@@ -35,7 +37,13 @@ const ProductCard = ({
 }) => {
     const [imgSrc, setImgSrc] = useState(product.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400&auto=format&fit=crop");
     const [imgLoaded, setImgLoaded] = useState(false);
-    const [isWishlisted, setIsWishlisted] = useState(false);
+
+    // Global State
+    const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlistStore();
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+
+    const isWishlisted = isInWishlist(product.id);
 
     useEffect(() => {
         setImgSrc(product.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400&auto=format&fit=crop");
@@ -61,7 +69,17 @@ const ProductCard = ({
                 onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setIsWishlisted(!isWishlisted);
+
+                    if (!isAuthenticated) {
+                        navigate('/account/signin');
+                        return;
+                    }
+
+                    if (isWishlisted) {
+                        removeFromWishlist(product.id);
+                    } else {
+                        addToWishlist(product);
+                    }
                 }}
                 className={cn(
                     "absolute top-4 right-4 z-20 w-9 h-9 rounded-full",

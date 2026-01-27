@@ -153,6 +153,15 @@ export default function Header() {
                                             My Orders
                                         </Link>
 
+                                        <Link
+                                            to="/wishlist"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <i className="fa-solid fa-heart text-base"></i>
+                                            My Wishlist
+                                        </Link>
+
                                         {user?.isSeller && (
                                             <Link
                                                 to="/seller"

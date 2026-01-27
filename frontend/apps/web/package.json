@@ -53,6 +53,7 @@
 		"downshift": "^9.0.9",
 		"embla-carousel-autoplay": "^8.6.0",
 		"embla-carousel-react": "^8.6.0",
+		"framer-motion": "^12.29.2",
 		"html-to-image": "^1.11.13",
 		"isbot": "^5.1.27",
 		"lodash-es": "^4.17.21",
