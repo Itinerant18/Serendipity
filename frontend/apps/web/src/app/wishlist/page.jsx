@@ -72,7 +72,7 @@ export default function WishlistPage() {
     if (!isAuthenticated) return null;
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-[#F3F3F3]">
+        <div className="min-h-screen relative overflow-hidden bg-blue-50 border-8 border-black">
             <Toaster
                 position="top-right"
                 toastOptions={{

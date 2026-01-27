@@ -46,9 +46,9 @@ export default function Header() {
 
     return (
         <header
-            className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
-                ? "bg-stone-900/95 backdrop-blur-xl shadow-xl border-b border-stone-800/50"
-                : "bg-stone-900"
+            className={`sticky top-0 z-50 transition-transform duration-100 ${isScrolled
+                ? "bg-black border-4 border-b-4 border-white shadow-[8px_8px_0_#ffffff]"
+                : "bg-black border-4 border-b-4 border-white"
                 }`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,10 +56,10 @@ export default function Header() {
                     {/* Logo */}
                     <Link
                         to="/"
-                        className="flex items-center gap-2 text-white font-bold text-xl hover:text-amber-400 transition-colors"
+                        className="flex items-center gap-2 text-white font-bold text-xl hover:bg-orange-500 px-2 py-1 -translate-x-1 -translate-y-1 border-2 border-white shadow-[4px_4px_0_#000000] transition-transform"
                     >
-                        <i className="fa-solid fa-store text-3xl text-amber-500"></i>
-                        <span className="font-playfair hidden sm:block">Serendipity</span>
+                        <i className="fa-solid fa-store text-3xl bg-orange-500 p-1 border-2 border-white"></i>
+                        <span className="font-brutalist hidden sm:block">Serendipity</span>
                     </Link>
 
                     {/* Search Bar - Desktop */}
@@ -73,11 +73,11 @@ export default function Header() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search products..."
-                                className="w-full px-4 py-2.5 pl-4 pr-12 rounded-xl bg-stone-800/50 backdrop-blur border border-stone-700/50 text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                                className="w-full px-4 py-2.5 pl-4 pr-12 border-2 border-white bg-white text-black placeholder-gray-500 focus:outline-none focus:bg-yellow-200 focus:border-black transition-colors font-bold"
                             />
                             <button
                                 type="submit"
-                                className="absolute right-0 top-0 h-full px-4 bg-amber-500 hover:bg-amber-400 rounded-r-xl transition-colors"
+                                className="absolute right-0 top-0 h-full px-4 bg-orange-500 hover:bg-pink-500 text-black font-bold border-l-2 border-white transition-colors -translate-y-1 shadow-[4px_4px_0_#000000]"
                             >
                                 <i className="fa-solid fa-magnifying-glass text-xl text-stone-900"></i>
                             </button>
@@ -105,10 +105,10 @@ export default function Header() {
                         {/* Cart */}
                         <Link
                             to="/cart"
-                            className="relative p-2 text-stone-300 hover:text-white transition-colors"
+                            className="relative p-2 text-white hover:bg-pink-500 border-2 border-white -translate-x-1 -translate-y-1 shadow-[4px_4px_0_#000000] transition-transform"
                         >
                             <i className="fa-solid fa-cart-shopping text-2xl"></i>
-                            <span className="absolute -top-1 -right-1 bg-amber-500 text-stone-900 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold border-2 border-black w-5 h-5 flex items-center justify-center">
                                 {cartCount || 0}
                             </span>
                         </Link>
@@ -118,7 +118,7 @@ export default function Header() {
                             <div className="relative">
                                 <button
                                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center gap-2 p-2 text-gray-300 hover:text-white transition-colors"
+                                    className="flex items-center gap-2 p-2 text-white hover:bg-orange-500 border-2 border-white -translate-x-1 -translate-y-1 shadow-[4px_4px_0_#000000] transition-transform"
                                 >
                                     <i className="fa-solid fa-user text-2xl"></i>
                                     <span className="hidden sm:block text-sm font-medium">
@@ -129,7 +129,7 @@ export default function Header() {
 
                                 {/* Dropdown */}
                                 {isUserMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-2 animate-fadeIn">
+                                    <div className="absolute right-0 mt-2 w-56 bg-white border-4 border-black shadow-[8px_8px_0_#000000] animate-brutalist-fadeIn">
                                         <div className="px-4 py-2 border-b border-gray-100">
                                             <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                                             <p className="text-xs text-gray-500">{user?.email}</p>

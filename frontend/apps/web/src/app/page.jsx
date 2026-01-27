@@ -49,7 +49,7 @@ export default function HomePage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#F3F3F3]">
+        <div className="min-h-screen bg-white border-8 border-black">
             {/* Hero Section */}
             <Suspense fallback={<div className="h-[70vh] min-h-[500px] max-h-[800px] bg-black flex items-center justify-center"><i className="fa-solid fa-spinner fa-spin text-white/20 text-4xl"></i></div>}>
                 <LuminaHero />
