@@ -1,12 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
 
 declare const gsap: any;
 declare const THREE: any;
 
 export function Component() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // --- DYNAMIC SCRIPT LOADING ---
@@ -74,14 +72,13 @@ export function Component() {
         const PROGRESS_UPDATE_INTERVAL = 50;
         const TRANSITION_DURATION = () => SLIDER_CONFIG.settings.transitionDuration;
 
-        // UPDATED: Using Serendipity Categories with Navigation Links
         const slides = [
-            { title: "Electronics", description: "Discover the latest gadgets and devices.", media: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800", link: "/category/Electronics" },
-            { title: "Fashion", description: "Stay stylish with our latest collections.", media: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80&w=800", link: "/category/Fashion" },
-            { title: "Home & Living", description: "Transform your home with elegant decor.", media: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&q=80&w=800", link: "/category/Home%20%26%20Living" },
-            { title: "Beauty", description: "Enhance your natural beauty.", media: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=800", link: "/category/Beauty" },
-            { title: "Sports", description: "Gear up for performance with high-quality sports equipment.", media: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=800", link: "/category/Sports" },
-            { title: "Books", description: "Fuel your mind with our vast library.", media: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&q=80&w=800", link: "/category/Books" }
+            { title: "Ethereal Glow", description: "A soft, radiant light that illuminates the soul.", media: "https://assets.codepen.io/7558/orange-portrait-001.jpg" },
+            { title: "Rose Mirage", description: "Lost in a desert of blooming dreams and endless horizons.", media: "https://assets.codepen.io/7558/orange-portrait-002.jpg" },
+            { title: "Velvet Mystique", description: "Wrapped in the deep, luxurious embrace of the night.", media: "https://assets.codepen.io/7558/orange-portrait-003.jpg" },
+            { title: "Golden Hour", description: "That fleeting moment when the world is dipped in gold.", media: "https://assets.codepen.io/7558/orange-portrait-004.jpg" },
+            { title: "Midnight Dreams", description: "Where reality fades and imagination takes flight.", media: "https://assets.codepen.io/7558/orange-portrait-005.jpg" },
+            { title: "Silver Light", description: "A cool, metallic shimmer reflecting the urban pulse.", media: "https://assets.codepen.io/7558/orange-portrait-006.jpg" }
         ];
 
         // --- SHADERS ---
@@ -167,29 +164,19 @@ export function Component() {
         const updateContent = (idx: number) => {
             const titleEl = document.getElementById('mainTitle');
             const descEl = document.getElementById('mainDesc');
-            const ctaEl = document.getElementById('mainCta'); // Added selector
-
             if (titleEl && descEl) {
                  // Universal animate out (fade up)
                  gsap.to(titleEl.children, { y: -20, opacity: 0, duration: 0.5, stagger: 0.02, ease: "power2.in" });
                  gsap.to(descEl, { y: -10, opacity: 0, duration: 0.4, ease: "power2.in" });
                  
-                 // CTA Animate Out
-                 if (ctaEl) gsap.to(ctaEl, { y: -10, opacity: 0, duration: 0.4, ease: "power2.in" });
-
                  setTimeout(() => {
                      // Set new content
                      titleEl.innerHTML = splitText(slides[idx].title);
                      descEl.textContent = slides[idx].description; 
-                     if (ctaEl) ctaEl.dataset.link = slides[idx].link; // Update link
-
+                     
                      // Reset state (general reset, specific animations might override)
                      gsap.set(titleEl.children, { opacity: 0 });
                      gsap.set(descEl, { y: 20, opacity: 0 });
-                     if (ctaEl) gsap.set(ctaEl, { y: 20, opacity: 0 });
-
-                     // Common CTA Animation Trigger (Delayed to match text)
-                     const commonCtaIn = () => { if (ctaEl) gsap.to(ctaEl, { y: 0, opacity: 1, duration: 0.8, delay: 0.4, ease: "power3.out" }); };
 
                      // 6 Different Animations
                      const children = titleEl.children;
@@ -198,43 +185,36 @@ export function Component() {
                             gsap.set(children, { y: 20 });
                             gsap.to(children, { y: 0, opacity: 1, duration: 0.8, stagger: 0.03, ease: "power3.out" });
                             gsap.to(descEl, { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" });
-                            commonCtaIn();
                             break;
                         case 1: // Stagger Down
                             gsap.set(children, { y: -20 });
                             gsap.to(children, { y: 0, opacity: 1, duration: 0.8, stagger: 0.03, ease: "back.out(1.7)" });
                             gsap.to(descEl, { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" });
-                            commonCtaIn();
                             break;
                         case 2: // Blur Reveal (Randomish)
                             gsap.set(children, { filter: "blur(10px)", scale: 1.5, y: 0 });
                             gsap.to(children, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 1, stagger: { amount: 0.5, from: "random" }, ease: "power2.out" });
                             gsap.to(descEl, { y: 0, opacity: 1, duration: 1, delay: 0.3, ease: "power2.out" });
-                            commonCtaIn();
                             break;
                         case 3: // Scale In
                             gsap.set(children, { scale: 0, y: 0 });
                             gsap.to(children, { scale: 1, opacity: 1, duration: 0.6, stagger: 0.05, ease: "back.out(1.5)" });
                             gsap.to(descEl, { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" });
-                            commonCtaIn(); 
                             break;
                         case 4: // Rotate X (Flip)
                             gsap.set(children, { rotationX: 90, y: 0, transformOrigin: "50% 50%" });
                             gsap.to(children, { rotationX: 0, opacity: 1, duration: 0.8, stagger: 0.04, ease: "power2.out" });
                             gsap.to(descEl, { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power2.out" });
-                            commonCtaIn();
                             break;
                         case 5: // Side Reveal (Slide Left)
                             gsap.set(children, { x: 30, y: 0 });
                             gsap.to(children, { x: 0, opacity: 1, duration: 0.8, stagger: 0.03, ease: "power3.out" });
                             gsap.to(descEl, { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" });
-                            commonCtaIn();
                             break;
                         default: // Fallback
                             gsap.set(children, { y: 20 });
                             gsap.to(children, { y: 0, opacity: 1, duration: 0.8, stagger: 0.03, ease: "power3.out" });
                             gsap.to(descEl, { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" });
-                            commonCtaIn();
                      }
 
                  }, 500); 
@@ -382,24 +362,12 @@ export function Component() {
         // Init text content
         const tEl = document.getElementById('mainTitle');
         const dEl = document.getElementById('mainDesc');
-        const ctaEl = document.getElementById('mainCta'); // Added selector
-
         if (tEl && dEl) {
             tEl.innerHTML = splitText(slides[0].title);
             dEl.textContent = slides[0].description;
             // animate initial in
             gsap.fromTo(tEl.children, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 1, stagger: 0.03, ease: "power3.out", delay: 0.5 });
             gsap.fromTo(dEl, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.8 });
-        
-            if (ctaEl) {
-               ctaEl.dataset.link = slides[0].link;
-               ctaEl.onclick = (e) => {
-                   e.preventDefault();
-                   const lnk = (e.currentTarget as HTMLElement).dataset.link;
-                   if (lnk) navigate(lnk);
-               };
-               gsap.fromTo(ctaEl, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 1.0 });
-            }
         }
 
         initRenderer();
@@ -415,136 +383,6 @@ export function Component() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{__html: `
-        .slider-wrapper {
-             position: relative;
-             width: 100vw;
-             height: 100vh;
-             background-color: var(--color-bg, #0a0a0a);
-             color: var(--color-text, #ffffff);
-             overflow: hidden;
-             font-family: var(--font-sans, sans-serif);
-             opacity: 0;
-             transition: opacity 1s ease-in-out;
-        }
-        .slider-wrapper.loaded { opacity: 1; }
-        .webgl-canvas {
-             position: absolute;
-             top: 0;
-             left: 0;
-             width: 100%;
-             height: 100%;
-             z-index: 1;
-        }
-        .slide-content {
-             position: absolute;
-             top: 50%;
-             left: 10%;
-             transform: translateY(-50%);
-             z-index: 10;
-             max-width: 600px;
-             pointer-events: none; /* Let clicks pass through */
-        }
-        .slide-title {
-             font-family: var(--font-display, serif);
-             font-size: clamp(3rem, 8vw, 6rem);
-             font-weight: 300;
-             line-height: 1.1;
-             margin: 0 0 1rem 0;
-             letter-spacing: -0.02em;
-        }
-        .slide-description {
-             font-family: var(--font-sans, sans-serif);
-             font-size: clamp(1rem, 1.5vw, 1.25rem);
-             line-height: 1.6;
-             opacity: 0.8;
-             max-width: 400px;
-        }
-        
-        /* New CTA Button Style */
-        .slide-cta {
-            position: relative;
-            display: inline-block;
-            margin-top: 2rem;
-            padding: 1rem 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: var(--color-text, #fff);
-            text-decoration: none;
-            text-transform: uppercase;
-            font-family: var(--font-mono, monospace);
-            font-size: 0.8rem;
-            letter-spacing: 0.1em;
-            transition: all 0.3s ease;
-            pointer-events: auto;
-            overflow: hidden;
-            z-index: 20;
-            background: rgba(0,0,0,0.2);
-            backdrop-filter: blur(5px);
-            cursor: pointer;
-        }
-        .slide-cta:hover {
-            background: var(--color-text, #fff);
-            color: var(--color-bg, #000);
-            border-color: var(--color-text, #fff);
-        }
-
-        .slides-navigation {
-             position: absolute;
-             bottom: 5%;
-             left: 10%;
-             z-index: 10;
-             display: flex;
-             gap: 2rem;
-        }
-        .slide-nav-item {
-             cursor: pointer;
-             opacity: 0.5;
-             transition: opacity 0.3s ease;
-             display: flex;
-             flex-direction: column;
-             gap: 0.5rem;
-             width: 120px;
-        }
-        .slide-nav-item.active, .slide-nav-item:hover { opacity: 1; }
-        .slide-progress-line {
-             width: 100%;
-             height: 2px;
-             background: rgba(255, 255, 255, 0.2);
-             position: relative;
-             overflow: hidden;
-        }
-        .slide-progress-fill {
-             position: absolute;
-             top: 0;
-             left: 0;
-             height: 100%;
-             width: 0%;
-             background: var(--color-text, #ffffff);
-        }
-        .slide-nav-title {
-             font-family: var(--font-mono, monospace);
-             font-size: var(--font-size-mono, 12px);
-             text-transform: uppercase;
-             letter-spacing: 0.05em;
-        }
-        .slide-number, .slide-total {
-             position: absolute;
-             font-family: var(--font-mono, monospace);
-             font-size: var(--font-size-mono, 12px);
-             z-index: 10;
-             color: var(--color-text-muted, rgba(255,255,255,0.7));
-        }
-        .slide-number { top: 5%; left: 10%; }
-        .slide-total { top: 5%; left: 12%; }
-        .slide-total::before { content: "/"; margin-right: 10px; opacity: 0.5; }
-
-        @media (max-width: 768px) {
-            .slide-title { font-size: 3rem; }
-            .slides-navigation { display: none; }
-            .slide-content { left: 5%; width: 90%; }
-            .slide-description { max-width: 100%; }
-        }
-      `}} />
 
       <main className="slider-wrapper" ref={containerRef}>
         <canvas className="webgl-canvas"></canvas>
@@ -554,7 +392,6 @@ export function Component() {
         <div className="slide-content">
             <h1 className="slide-title" id="mainTitle"></h1>
             <p className="slide-description" id="mainDesc"></p>
-            <a href="#" className="slide-cta" id="mainCta">Shop Collection</a>
         </div>
        
         <nav className="slides-navigation" id="slidesNav"></nav>
