@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import useCartStore from "@/utils/cartStore";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import ProductHero from "@/components/product/ProductHero";
 import ProductDetails from "@/components/product/ProductDetails";
 import RelatedProducts from "@/components/product/RelatedProducts";
+import ReviewSection from "@/components/reviews/ReviewSection";
 
 const getValidImageUrl = (url) => {
     if (!url) return "";
@@ -40,15 +41,8 @@ export default function ProductPage() {
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [activeTab, setActiveTab] = useState("description"); // description, specs, reviews
 
-    // Scroll Animations
+    // Simplified scroll effect
     const targetRef = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: targetRef,
-        offset: ["start start", "end start"],
-    });
-    // Adjust hero fade/scale based on scroll
-    const heroOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-    const heroScale = useTransform(scrollYProgress, [0, 0.4], [1, 1.1]);
 
     const videoRef = useRef(null);
 
@@ -146,17 +140,36 @@ export default function ProductPage() {
     };
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+        <div className="min-h-screen flex items-center justify-center bg-white border-8 border-black">
+            <div className="text-center">
+                <div className="w-16 h-16 bg-yellow-400 border-4 border-black animate-brutalist-jitter mx-auto mb-4 flex items-center justify-center">
+                    <i className="fa-solid fa-bolt text-2xl text-black"></i>
+                </div>
+                <p className="text-black font-bold bg-black px-4 py-2 border-4 border-white">LOADING PRODUCT...</p>
+            </div>
         </div>
     );
 
-    if (!product) return <div className="text-center py-20 text-xl text-slate-500">Product not found.</div>;
+    if (!product) return (
+        <div className="min-h-screen flex items-center justify-center bg-black text-white border-8 border-white">
+            <div className="text-center">
+                <div className="w-24 h-24 bg-red-500 border-4 border-black mb-4 mx-auto flex items-center justify-center">
+                    <i className="fa-solid fa-exclamation-triangle text-4xl text-white"></i>
+                </div>
+                <h2 className="text-3xl font-bold bg-white text-black px-6 py-2 border-4 border-black mb-4">PRODUCT NOT FOUND</h2>
+                <p className="text-lg text-white mb-6">The product you're looking for doesn't exist.</p>
+                <a href="/products" className="inline-block px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold border-4 border-black hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-all">
+                    <i className="fa-solid fa-arrow-left mr-2"></i>
+                    Back to Products
+                </a>
+            </div>
+        </div>
+    );
 
     const currentMedia = product.media[activeMediaIndex];
 
     return (
-        <div className="min-h-screen bg-[#F0F9FF]" ref={targetRef}>
+        <div className="min-h-screen bg-white border-8 border-black" ref={targetRef}>
 
             {/* --- HERO COMPONENT --- */}
             <ProductHero
@@ -165,26 +178,24 @@ export default function ProductPage() {
                 isPlaying={isPlaying}
                 togglePlay={togglePlay}
                 videoRef={videoRef}
-                opacity={heroOpacity}
-                scale={heroScale}
             />
 
-            {/* --- MAIN CONTENT (Overlapping Hero) --- */}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 pb-20">
+            {/* --- MAIN CONTENT --- */}
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
                     {/* Left Column: Media Gallery & Details (7 cols) */}
                     <div className="lg:col-span-8 space-y-8">
 
                         {/* Media Selector (Thumbnails) */}
-                        <GlassCard className="p-4 flex gap-4 overflow-x-auto custom-scrollbar bg-white/60 backdrop-blur-xl border-white/50 shadow-glass">
+                        <GlassCard className="p-4 flex gap-4 overflow-x-auto custom-scrollbar" variant="elevated">
                             {product.media.map((item, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => { setActiveMediaIndex(idx); setIsPlaying(true); }}
                                     className={cn(
-                                        "relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all transform hover:scale-105",
-                                        activeMediaIndex === idx ? "border-sky-500 shadow-md scale-105 ring-2 ring-sky-200" : "border-transparent opacity-70 hover:opacity-100"
+                                        "relative flex-shrink-0 w-24 h-24 overflow-hidden border-4 border-black transition-transform duration-100 hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#000000]",
+                                        activeMediaIndex === idx ? "bg-yellow-400 border-black" : "bg-white border-black opacity-70 hover:opacity-100"
                                     )}
                                 >
                                     {item.type === 'video' ? (
@@ -199,24 +210,24 @@ export default function ProductPage() {
                         </GlassCard>
 
                         {/* Product Info Tabs */}
-                        <GlassCard className="min-h-[400px] p-0 bg-white/80 border-white/60 shadow-xl overflow-hidden">
-                            <div className="flex border-b border-slate-100">
+                        <GlassCard className="min-h-[400px] p-0 overflow-hidden" variant="elevated">
+                            <div className="flex border-b-4 border-black">
                                 {['description', 'specs', 'reviews'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
                                         className={cn(
-                                            "flex-1 py-5 text-sm font-bold uppercase tracking-wider transition-all relative",
+                                            "flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-all relative border-4 border-black border-r-0 last:border-r-4",
                                             activeTab === tab
-                                                ? "text-sky-600 bg-sky-50/30"
-                                                : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                                                ? "bg-yellow-400 text-black"
+                                                : "bg-white text-black hover:bg-orange-500 hover:text-white"
                                         )}
                                     >
                                         {tab === 'specs' ? 'Specifications' : tab}
                                         {activeTab === tab && (
                                             <motion.div
                                                 layoutId="activeTab"
-                                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-sky-500"
+                                                className="absolute bottom-0 left-0 right-0 h-1 bg-black"
                                             />
                                         )}
                                     </button>
@@ -253,16 +264,18 @@ export default function ProductPage() {
                                             ))}
                                         </motion.div>
                                     )}
-                                    {/* Reviews would go here */}
+                                    {/* Reviews */}
                                     {activeTab === 'reviews' && (
                                         <motion.div
                                             key="reviews"
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -10 }}
-                                            className="text-center py-12"
                                         >
-                                            <p className="text-slate-400">Review system integration pending...</p>
+                                            <ReviewSection
+                                                productId={product.id || params.id}
+                                                productTitle={product.name}
+                                            />
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

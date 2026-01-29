@@ -1,46 +1,30 @@
 "use client";
 
 import React from "react";
-// FontAwesome icons loaded globally
+import { Link } from "react-router-dom";
 import { formatCurrency } from "@/utils/format";
 
-/**
- * Order card component for displaying order information
- * @param {Object} props
- * @param {Object} props.order - Order data
- * @param {string} props.order.id - Order ID
- * @param {string} props.order.order_number - Display order number
- * @param {number} props.order.total_amount - Order total
- * @param {string} props.order.status - Order status
- * @param {string} props.order.created_at - Creation timestamp
- * @param {boolean} [props.isNew] - Whether this is a new order (highlight)
- * @param {Function} [props.onViewDetails] - Click handler for view details
- */
 export default function OrderCard({ order, isNew = false, onViewDetails }) {
     const getStatusConfig = (status) => {
         const configs = {
             pending: {
                 label: "Pending",
-                bgColor: "bg-yellow-100",
-                textColor: "text-yellow-700",
+                bgColor: "bg-yellow-200",
                 icon: "fa-clock"
             },
             processing: {
                 label: "Processing",
-                bgColor: "bg-blue-100",
-                textColor: "text-blue-700",
+                bgColor: "bg-blue-200",
                 icon: "fa-box"
             },
             shipped: {
                 label: "Shipped",
-                bgColor: "bg-purple-100",
-                textColor: "text-purple-700",
+                bgColor: "bg-purple-200",
                 icon: "fa-truck"
             },
             delivered: {
                 label: "Delivered",
-                bgColor: "bg-green-100",
-                textColor: "text-green-700",
+                bgColor: "bg-green-200",
                 icon: "fa-circle-check"
             }
         };
@@ -67,45 +51,45 @@ export default function OrderCard({ order, isNew = false, onViewDetails }) {
     return (
         <div
             className={`
-                p-4 rounded-lg border-l-4 transition-all duration-300
+                p-4 border-4 border-black transition-all duration-100
                 ${isNew
-                    ? "border-l-green-500 bg-green-50 animate-pulse"
-                    : "border-l-[#D97534] bg-white hover:bg-orange-50"
+                    ? "bg-green-200 animate-pulse"
+                    : "bg-white hover:bg-orange-50"
                 }
-                hover:shadow-md cursor-pointer
+                hover:translate(-2px,-2px) hover:shadow-[4px_4px_0_#000000] cursor-pointer
             `}
             onClick={onViewDetails}
         >
             <div className="flex items-center justify-between">
                 {/* Left: Order Info */}
                 <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full ${isNew ? "bg-green-200" : "bg-blue-100"}`}>
-                        <i className={`fa-solid fa-bag-shopping text-xl ${isNew ? "text-green-600" : "text-blue-600"}`}></i>
+                    <div className={`w-12 h-12 flex items-center justify-center border-4 border-black ${isNew ? "bg-green-500" : "bg-blue-500"}`}>
+                        <i className={`fa-solid ${statusIconClass} text-xl text-white`}></i>
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <p className="font-bold text-gray-900 font-inter">
-                                {isNew && <span className="text-green-600">🔔 NEW - </span>}
+                            <p className="font-brutalist text-black">
+                                {isNew && <span className="bg-black text-white px-2 py-0.5 mr-2">NEW</span>}
                                 Order #{order.order_number || order.id?.slice(0, 8)}
                             </p>
                         </div>
-                        <p className="text-sm text-gray-500">
-                            Total: <span className="text-green-600 font-bold">{formatCurrency(order.total_amount)}</span>
+                        <p className="font-bold text-sm text-black">
+                            Total: <span className="text-green-600">{formatCurrency(order.total_amount)}</span>
                         </p>
                     </div>
                 </div>
 
                 {/* Right: Status & Time */}
                 <div className="text-right">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
-                        <i className={`fa-solid ${statusIconClass} text-xs mr-1`}></i>
+                    <span className={`inline-flex items-center px-3 py-1 text-sm font-bold border-4 border-black ${statusConfig.bgColor}`}>
+                        <i className={`fa-solid ${statusIconClass} text-xs mr-2`}></i>
                         {statusConfig.label}
                     </span>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="font-bold text-xs text-gray-500 mt-1">
                         {formatTime(order.created_at)}
                     </p>
                     {onViewDetails && (
-                        <button className="text-[#D97534] text-sm font-medium hover:underline mt-1">
+                        <button className="text-orange-500 text-sm font-bold hover:text-pink-500 mt-1 hover:underline">
                             View Details →
                         </button>
                     )}

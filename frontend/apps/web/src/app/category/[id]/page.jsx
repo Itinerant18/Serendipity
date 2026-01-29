@@ -16,7 +16,7 @@ const CategoryHero = ({ category, totalProducts }) => {
     const isVideo = category.video ? true : false;
 
     return (
-        <div className="relative w-full h-[350px] md:h-[450px] rounded-[2.5rem] overflow-hidden mb-12 shadow-2xl ring-1 ring-white/20 bg-gray-900 group">
+        <div className="relative w-full h-[350px] md:h-[450px] border-4 border-black overflow-hidden mb-12 shadow-[12px_12px_0_#ffffff] bg-black group">
             {/* Background Media (Blurred) */}
             <div className="absolute inset-0 overflow-hidden">
                 {isVideo ? (
@@ -91,15 +91,15 @@ const CategoryHero = ({ category, totalProducts }) => {
 };
 
 const FilterSection = ({ title, children, isOpen, onToggle }) => (
-    <div className="border-b border-gray-100/50 py-5 last:border-0">
+    <div className="border-b-4 border-black py-5 last:border-0">
         <button
             onClick={onToggle}
             className="flex items-center justify-between w-full group py-2"
         >
-            <h3 className="font-bold text-slate-800 text-base group-hover:text-sky-600 transition-colors">
+            <h3 className="font-brutalist text-black text-base bg-white px-2 py-1 border-2 border-black group-hover:bg-orange-500 group-hover:text-white group-hover:border-white transition-transform duration-100">
                 {title}
             </h3>
-            <span className={`w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center transition-all ${isOpen ? 'bg-sky-100 text-sky-600 rotate-180' : 'text-slate-400'}`}>
+            <span className={`w-6 h-6 border-2 border-black bg-white flex items-center justify-center transition-transform duration-100 ${isOpen ? 'bg-orange-500 text-white rotate-180' : 'text-black'}`}>
                 <i className="fa-solid fa-chevron-down text-xs"></i>
             </span>
         </button>
@@ -286,7 +286,7 @@ export default function CategoryPage() {
                 {currentCategory.subcategories.map((sub) => {
                     const iconClass = subcategoryIconMap[sub] || 'fa-solid fa-circle-small';
                     return (
-                        <label key={sub} className="flex items-center cursor-pointer group p-3 hover:bg-slate-50/80 rounded-xl transition-all duration-200">
+                        <label key={sub} className="flex items-center cursor-pointer group p-3 hover:bg-yellow-400 hover:text-white border-2 border-black rounded-none transition-transform duration-100 hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#000000]">
                             <div className="relative flex items-center justify-center w-5 h-5">
                                 <input
                                     type="checkbox"
@@ -297,7 +297,7 @@ export default function CategoryPage() {
                                 <i className="fa-solid fa-check text-white text-[10px] absolute opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
                             </div>
                             <span className="ml-3 text-sm flex items-center gap-3 flex-1">
-                                <span className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${selectedSubcategories.includes(sub) ? 'bg-sky-100 text-sky-600' : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:scale-110'}`}>
+                                <span className={`w-8 h-8 border-2 border-black bg-white flex items-center justify-center transition-transform duration-100 ${selectedSubcategories.includes(sub) ? 'bg-orange-500 text-white' : 'text-black group-hover:bg-yellow-400 group-hover:text-white group-hover:border-white'}`}>
                                     <i className={`${iconClass} text-xs`}></i>
                                 </span>
                                 <span className={`font-medium transition-colors ${selectedSubcategories.includes(sub) ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'}`}>
@@ -318,7 +318,7 @@ export default function CategoryPage() {
                                 type="number"
                                 value={priceRange[0]}
                                 onChange={(e) => setPriceRange([+e.target.value, priceRange[1]])}
-                                className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all group-hover:bg-white"
+                                className="w-full pl-7 pr-3 py-2.5 bg-white border-4 border-black text-sm font-bold focus:outline-none focus:ring-0 focus:border-orange-500 focus:bg-yellow-200 transition-transform duration-100 hover:bg-yellow-400 hover:text-black hover:border-white"
                                 placeholder="Min"
                             />
                         </div>
@@ -329,7 +329,7 @@ export default function CategoryPage() {
                                 type="number"
                                 value={priceRange[1]}
                                 onChange={(e) => setPriceRange([priceRange[0], +e.target.value])}
-                                className="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all group-hover:bg-white"
+                                className="w-full pl-7 pr-3 py-2.5 bg-white border-4 border-black text-sm font-bold focus:outline-none focus:ring-0 focus:border-orange-500 focus:bg-yellow-200 transition-transform duration-100 hover:bg-yellow-400 hover:text-black hover:border-white"
                                 placeholder="Max"
                             />
                         </div>
@@ -351,7 +351,7 @@ export default function CategoryPage() {
                                         type="checkbox"
                                         checked={selectedBrands.includes(brand)}
                                         onChange={() => toggleBrand(brand)}
-                                        className="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded-md checked:bg-sky-500 checked:border-sky-500 transition-all"
+className="peer appearance-none w-5 h-5 border-2 border-black bg-white checked:bg-orange-500 checked:border-black transition-transform duration-100"
                                     />
                                     <i className="fa-solid fa-check text-white text-[10px] absolute opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
                                 </div>
@@ -441,7 +441,7 @@ export default function CategoryPage() {
                 <div className="flex gap-10">
                     {/* Sidebar - Desktop Glass Panel */}
                     <div className="hidden md:block w-[280px] shrink-0">
-                        <div className="sticky top-28 bg-white/60 backdrop-blur-xl p-6 rounded-3xl shadow-glass border border-white/40 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
+                        <div className="sticky top-28 bg-white border-4 border-black p-6 shadow-[12px_12px_0_#000000] overflow-y-auto custom-scrollbar">
                             <FilterContent />
                         </div>
                     </div>
@@ -468,7 +468,7 @@ export default function CategoryPage() {
                                                     product={product}
                                                     showAddToCart={true}
                                                     onAddToCart={handleAddToCart}
-                                                    className="h-full border-white/40 bg-white/60 backdrop-blur-lg hover:bg-white/80 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                                                    className="h-full border-4 border-black bg-white hover:bg-pink-500 hover:text-white hover:border-white hover:translate(-2px,-2px) hover:shadow-[10px_10px_0_#000000] transition-transform duration-100"
                                                 />
                                             </motion.div>
                                         ))}
@@ -573,7 +573,7 @@ export default function CategoryPage() {
                                 <h2 className="text-2xl font-bold font-playfair text-slate-900">Filter & Sort</h2>
                                 <button
                                     onClick={() => setIsMobileFiltersOpen(false)}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100/50 hover:bg-red-50 hover:text-red-500 transition-all font-bold"
+                                    className="w-12 h-12 flex items-center justify-center border-4 border-black bg-white hover:bg-red-500 hover:text-white hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-transform duration-100 font-bold"
                                 >
                                     <i className="fa-solid fa-xmark text-lg"></i>
                                 </button>

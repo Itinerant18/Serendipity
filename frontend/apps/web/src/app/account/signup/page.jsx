@@ -180,7 +180,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F4E4D7] via-[#FFF8F0] to-[#FAE5D3] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-green-50 border-8 border-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-6">
@@ -190,7 +190,7 @@ export default function SignUpPage() {
           </a>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white border-4 border-black shadow-[12px_12px_0_#000000] p-8">
           <div className="text-center mb-8">
             <h1 className="font-playfair font-bold text-3xl text-[#8B4513] mb-2">
               Create Account
@@ -247,10 +247,10 @@ export default function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
                   placeholder="At least 6 characters"
-                  className={`w-full pl-10 pr-10 py-3 rounded-lg border ${getFieldError('password')
-                    ? 'border-red-300 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-[#D97534]'
-                    } focus:outline-none focus:ring-2 font-inter transition-all`}
+className={`w-full pl-10 pr-10 py-3 border-4 border-black bg-white text-black font-bold focus:outline-none focus:ring-0 focus:border-pink-500 focus:bg-yellow-200 transition-transform duration-100 ${getFieldError('password')
+                      ? 'border-red-500'
+                      : ''
+                      }`}
                   required
                 />
                 <button
@@ -315,12 +315,10 @@ export default function SignUpPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => setTouched(prev => ({ ...prev, confirmPassword: true }))}
                   placeholder="Re-enter your password"
-                  className={`w-full pl-10 pr-10 py-3 rounded-lg border ${getFieldError('confirmPassword')
-                    ? 'border-red-300 focus:ring-red-500'
-                    : confirmPassword && password === confirmPassword
-                      ? 'border-green-300 focus:ring-green-500'
-                      : 'border-gray-300 focus:ring-[#D97534]'
-                    } focus:outline-none focus:ring-2 font-inter transition-all`}
+className={`w-full pl-10 pr-10 py-3 border-4 border-black bg-white text-black font-bold focus:outline-none focus:ring-0 focus:border-pink-500 focus:bg-yellow-200 transition-transform duration-100 ${getFieldError('confirmPassword')
+                        ? 'border-red-500'
+                        : ''
+                        }`}
                   required
                 />
                 {touched.confirmPassword && (
@@ -348,7 +346,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#D97534] hover:bg-[#C86429] text-white font-inter font-bold py-3 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-brutalist font-bold py-3 border-4 border-black transition-transform duration-100 hover:translate(-2px,-2px) hover:shadow-[10px_10px_0_#000000] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

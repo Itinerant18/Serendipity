@@ -43,15 +43,18 @@ export default function HomePage() {
     // Fallback loading component
     const LoadingSpinner = () => (
         <div className="flex items-center justify-center py-20">
-            <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
-            <span className="ml-3 text-gray-600">Loading...</span>
+            <div className="relative">
+                <i className="fa-solid fa-spinner fa-spin text-5xl text-[#D97534] animate-brutalist-scale"></i>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent animate-pulse"></div>
+            </div>
+            <span className="ml-3 text-gray-600 font-bold animate-brutalist-pulse">Loading amazing products...</span>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-[#F3F3F3]">
+        <div className="min-h-screen bg-white border-8 border-black animated-gradient">
             {/* Hero Section */}
-            <Suspense fallback={<div className="h-[70vh] min-h-[500px] max-h-[800px] bg-black flex items-center justify-center"><i className="fa-solid fa-spinner fa-spin text-white/20 text-4xl"></i></div>}>
+            <Suspense fallback={<div className="h-[70vh] min-h-[500px] max-h-[800px] bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center"><i className="fa-solid fa-spinner fa-spin text-white text-4xl animate-brutalist-scale"></i></div>}>
                 <LuminaHero />
             </Suspense>
 
@@ -59,14 +62,14 @@ export default function HomePage() {
             <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
                 {/* Categories Section */}
-                <section className="mb-16">
+                <section className="mb-16 bg-gradient-to-br from-white/50 via-transparent to-purple-50/30 py-8 animate-brutalist-fadeIn">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 font-playfair">
+                        <h2 className="text-2xl font-bold text-gray-900 font-playfair brutalist-text-gradient animate-brutalist-fadeIn">
                             Shop by Category
                         </h2>
                         <Link
                             to="/products"
-                            className="text-[#D97534] hover:text-[#C86429] font-semibold text-sm flex items-center gap-1"
+                            className="text-[#D97534] hover:text-[#C86429] font-semibold text-sm flex items-center gap-1 btn-brutalist transition-all duration-300 hover-brutalist-sm"
                         >
                             View All
                             <i className="fa-solid fa-arrow-right text-base"></i>

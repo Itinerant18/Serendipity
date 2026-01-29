@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
+import GlassCard from "@/components/ui/GlassCard";
 // FontAwesome icons loaded globally
 
 /**
@@ -24,35 +25,35 @@ export default function QuickActionCard({
     const content = (
         <>
             {/* Icon */}
-            <div className={`p-3 rounded-xl ${iconBgColor} group-hover:scale-110 transition-transform duration-300`}>
+            <div className={`p-4 ${iconBgColor} border-4 border-black group-hover:bg-yellow-300 transition-colors`}>
                 {icon && <i className={`fa-solid ${icon} text-2xl ${iconColor}`}></i>}
             </div>
 
             {/* Text Content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                    <h4 className="font-semibold text-gray-900 group-hover:text-[#D97534] transition-colors">
-                        {title}
+                    <h4 className="font-brutalist font-bold text-black group-hover:text-orange-600 transition-colors">
+                        {title.toUpperCase()}
                     </h4>
                     {badge && (
-                        <span className={`px-2 py-0.5 text-xs font-bold text-white rounded-full ${badgeColor}`}>
+                        <span className={`px-3 py-1 text-xs font-bold text-white border-2 border-black ${badgeColor}`}>
                             {badge}
                         </span>
                     )}
                 </div>
                 {description && (
-                    <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">
+                    <p className="text-sm text-black mt-1 line-clamp-2">
                         {description}
                     </p>
                 )}
             </div>
 
             {/* Arrow */}
-            <i className="fa-solid fa-chevron-right text-xl text-gray-400 group-hover:text-[#D97534] group-hover:translate-x-1 transition-all"></i>
+            <i className="fa-solid fa-chevron-right text-xl text-black group-hover:text-orange-600 group-hover:translate-x-1 transition-all"></i>
         </>
     );
 
-    const baseClasses = `group flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:border-[#D97534]/30 hover:shadow-lg transition-all duration-300 ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+    const baseClasses = `group flex items-center gap-4 p-4 bg-white border-4 border-black hover:translate(-2px,-2px) hover:shadow-[12px_12px_0_#000000] transition-all duration-100 ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
         }`;
 
     if (href && !disabled) {
@@ -104,42 +105,44 @@ export function LargeActionCard({
     icon: Icon,
     href,
     stats,
-    bgGradient = "from-orange-500 to-amber-500"
+    bgGradient = "from-orange-500 to-pink-500"
 }) {
     return (
         <Link
             to={href}
-            className={`group block relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 text-white hover:shadow-xl transition-all duration-300`}
+            className="group block relative overflow-hidden border-4 border-black"
         >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white" />
-                <div className="absolute -left-4 -bottom-4 w-24 h-24 rounded-full bg-white" />
-            </div>
-
-            {/* Content */}
-            <div className="relative">
-                <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                        {icon && <i className={`fa-solid ${icon} text-3xl`}></i>}
-                    </div>
-                    <i className="fa-solid fa-chevron-right text-2xl opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+            <GlassCard className="bg-gradient-to-br from-orange-500 to-pink-500 text-white p-6 hover:translate(-2px,-2px) hover:shadow-[12px_12px_0_#000000] transition-all duration-100">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute -right-8 -top-8 w-32 h-32 bg-yellow-400 border-4 border-black" />
+                    <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-pink-400 border-4 border-black" />
                 </div>
 
-                <h3 className="text-xl font-bold mb-2">{title}</h3>
-                <p className="text-white/80 text-sm mb-4">{description}</p>
-
-                {stats && (
-                    <div className="flex items-center gap-4 pt-4 border-t border-white/20">
-                        {stats.map((stat, index) => (
-                            <div key={index}>
-                                <div className="text-2xl font-bold">{stat.value}</div>
-                                <div className="text-xs text-white/70">{stat.label}</div>
-                            </div>
-                        ))}
+                {/* Content */}
+                <div className="relative">
+                    <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-white/20 backdrop-blur-sm border-4 border-black">
+                            {icon && <i className={`fa-solid ${icon} text-3xl`}></i>}
+                        </div>
+                        <i className="fa-solid fa-chevron-right text-2xl opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </div>
-                )}
-            </div>
+
+                    <h3 className="text-2xl font-brutalist font-bold mb-2">{title.toUpperCase()}</h3>
+                    <p className="text-white/90 text-sm mb-4">{description}</p>
+
+                    {stats && (
+                        <div className="flex items-center gap-4 pt-4 border-t-4 border-white/20">
+                            {stats.map((stat, index) => (
+                                <div key={index} className="text-center">
+                                    <div className="text-2xl font-brutalist font-bold">{stat.value}</div>
+                                    <div className="text-xs text-white/90 font-bold">{stat.label.toUpperCase()}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </GlassCard>
         </Link>
     );
 }

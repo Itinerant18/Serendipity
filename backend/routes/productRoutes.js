@@ -241,13 +241,41 @@ router.get('/:id', asyncHandler(async (req, res) => {
     }
   }
 
+  // Calculate review stats
+  // Since we are moving to a separate reviews table, product.rating/num_reviews in products table might become stale
+  // So let's fetch fresh stats on the fly or rely on a periodic sync.
+  // For consistency, let's fetch stats from reviews table now.
+
+  const { count: reviewCount, error: countError } = await supabase
+    .from('reviews')
+    .select('*', { count: 'exact', head: true })
+    .eq('product_id', req.params.id);
+
+  const { data: ratingData, error: ratingError } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('product_id', req.params.id);
+
+  let avgRating = 0;
+  if (ratingData && Array.isArray(ratingData) && ratingData.length > 0) {
+    const sum = ratingData.reduce((acc, curr) => acc + curr.rating, 0);
+    avgRating = sum / ratingData.length;
+  }
+
+  if (countError || ratingError) {
+    console.warn("Reviews table stats fetch failed (table might be missing):", countError || ratingError);
+  }
+
   if (product) {
     // Flatten structure slightly for easier consumption
     const productWithSeller = {
       ...product,
       _id: product.id,
       seller_store_name: sellerProfile?.store_name,
-      seller_rating: sellerProfile?.rating
+      seller_rating: sellerProfile?.rating,
+      // Override with fresh stats
+      num_reviews: reviewCount || 0,
+      rating: parseFloat(avgRating.toFixed(1))
     };
     res.json(productWithSeller);
   } else {

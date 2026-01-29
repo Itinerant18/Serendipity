@@ -1,34 +1,42 @@
-import React from "react";
-import { cn } from "@/lib/utils";
-
 /**
- * GlassCard Component
- * A wrapper component that applies premium Glassmorphism effect.
- * Uses the glass utilities defined in global.css.
+ * BrutalistCard Component
+ * A wrapper component that applies aggressive brutalist styling.
+ * Replaces all glass morphism with thick borders and harsh shadows.
  */
+import React from 'react';
+import { cn } from '@/lib/utils';
+
 export default function GlassCard({
     children,
     className = "",
     hoverEffect = false,
-    variant = "default", // "default" | "elevated" | "subtle"
+    variant = "default", // "default" | "elevated" | "accent" | "warning"
     ...props
 }) {
-    const variants = {
-        default: "bg-white/90 backdrop-blur-lg border border-stone-200/50 shadow-sm",
-        elevated: "bg-white/95 backdrop-blur-xl border border-stone-100 shadow-lg",
-        subtle: "bg-white/70 backdrop-blur-md border border-stone-100/30"
+    const brutalistVariants = {
+        default: "bg-white border-4 border-black shadow-[8px_8px_0_#000000]",
+        elevated: "bg-white border-4 border-black shadow-[12px_12px_0_#000000]",
+        accent: "bg-blue-500 text-white border-4 border-white shadow-[8px_8px_0_#000000]",
+        warning: "bg-orange-500 border-4 border-black shadow-[8px_8px_0_#000000]"
+    };
+
+    const hoverVariants = {
+        default: hoverEffect ? "hover:translate(-2px,-2px) shadow-[10px_10px_0_#000000] transition-transform duration-100 animate-brutalist-jitter" : "",
+        elevated: hoverEffect ? "hover:translate(-3px,-3px) shadow-[15px_15px_0_#000000] transition-transform duration-100 animate-brutalist-jitter" : "",
+        accent: hoverEffect ? "hover:translate(-2px,-2px) bg-blue-600 border-white shadow-[10px_10px_0_#000000] transition-transform duration-100" : "",
+        warning: hoverEffect ? "hover:translate(-2px,-2px) bg-orange-600 border-black shadow-[10px_10px_0_#000000] transition-transform duration-100" : ""
     };
 
     return (
         <div
             className={cn(
-                "rounded-2xl overflow-hidden transition-all duration-300",
-                variants[variant] || variants.default,
-                hoverEffect && "hover:-translate-y-1 hover:shadow-xl hover:bg-white/95 hover:border-amber-200/30 cursor-pointer",
+                "rounded-none",
+                brutalistVariants[variant] || brutalistVariants.default,
+                hoverVariants[variant] || hoverVariants.default,
                 className
             )}
             style={{
-                boxShadow: hoverEffect ? undefined : "0 4px 6px -1px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6)"
+                transform: hoverEffect ? "translate(1px, 1px)" : "translate(0, 0)",
             }}
             {...props}
         >
@@ -36,4 +44,3 @@ export default function GlassCard({
         </div>
     );
 }
-
