@@ -19,6 +19,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   // Keep them available via import.meta.env.NEXT_PUBLIC_*
   envPrefix: ['NEXT_PUBLIC_', 'VITE_'],
+  build: {
+    target: 'es2022', // Support top-level await
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router', 'react-router-dom'],
+          'ui-vendor': ['framer-motion', 'lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-slot'],
+          'three-vendor': ['three', '@paper-design/shaders-react'] // Heavy 3D libs
+        }
+      }
+    }
+  },
   optimizeDeps: {
     // Explicitly include fast-glob, since it gets dynamically imported and we
     // don't want that to cause a re-bundle.
@@ -27,8 +39,6 @@ export default defineConfig({
       '@hono/auth-js/react',
       '@hono/auth-js',
       '@auth/core',
-      '@hono/auth-js',
-      'hono/context-storage',
       '@auth/core/errors',
       'fsevents',
       'lightningcss',

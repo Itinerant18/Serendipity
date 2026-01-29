@@ -1583,55 +1583,8 @@ module.exports = {
 				'zhi-mang-xing': 'Zhi Mang Xing',
 				'zilla-slab': 'Zilla Slab',
 				'zilla-slab-highlight': 'Zilla Slab Highlight',
-},
+			},
+		},
+		
 	},
-	boxShadow: {
-		'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-		'brutalist': '8px 8px 0px 0px rgba(0, 0, 0, 1)',
-		'brutalist-lg': '12px 12px 0px 0px rgba(0, 0, 0, 1)',
-		'brutalist-sm': '4px 4px 0px 0px rgba(0, 0, 0, 1)',
-	},
-	animation: {
-		'brutalist-jitter': 'brutalist-jitter 0.3s ease-in-out',
-		'brutalist-fadeIn': 'brutalist-fadeIn 0.6s ease-out',
-		'brutalist-scale': 'brutalist-scale 0.4s ease-in-out infinite',
-		'brutalist-bounce': 'brutalist-bounce 1s ease-in-out infinite',
-		'brutalist-pulse': 'brutalist-pulse 2s ease-in-out infinite',
-		'animate-gradient': 'gradient-shift 15s ease infinite',
-		'animate-float': 'float 6s ease-in-out infinite',
-	},
-	keyframes: {
-		'brutalist-jitter': {
-			'0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
-			'25%': { transform: 'translate(-2px, 2px) rotate(-1deg)' },
-			'50%': { transform: 'translate(2px, -2px) rotate(1deg)' },
-			'75%': { transform: 'translate(-1px, 1px) rotate(0deg)' },
-		},
-		'brutalist-fadeIn': {
-			'0%': { opacity: '0', transform: 'translateY(20px) scale(0.95)', filter: 'blur(2px)' },
-			'100%': { opacity: '1', transform: 'translateY(0) scale(1)', filter: 'blur(0)' },
-		},
-		'brutalist-scale': {
-			'0%, 100%': { transform: 'scale(1)' },
-			'50%': { transform: 'scale(1.05)' },
-		},
-		'brutalist-bounce': {
-			'0%, 100%': { transform: 'translateY(0)' },
-			'50%': { transform: 'translateY(-10px)' },
-		},
-		'brutalist-pulse': {
-			'0%, 100%': { transform: 'scale(1)', opacity: '1' },
-			'50%': { transform: 'scale(1.1)', opacity: '0.8' },
-		},
-		'gradient-shift': {
-			'0%': { backgroundPosition: '0% 50%' },
-			'50%': { backgroundPosition: '100% 50%' },
-			'100%': { backgroundPosition: '0% 50%' },
-		},
-		'float': {
-			'0%, 100%': { transform: 'translateY(0px)' },
-			'50%': { transform: 'translateY(-20px)' },
-		},
-	},
-	// ✅ Fixed: Added all custom utility definitions and animations
-// shadow-glass, shadow-brutalist, animate-brutalist-*, hover-brutalist, btn-brutalist, card-brutalist, etc.
+};

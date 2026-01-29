@@ -4,9 +4,9 @@
   "description": "MERN Stack E-commerce App Backend",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "server": "nodemon server.js",
-    "dev": "concurrently \"npm run server\" \"cd ../frontensd/apps/web && npm run dev\"",
+    "start": "bun server.js",
+    "server": "bun server.js",
+    "dev": "concurrently \"bun run dev\" \"cd ../frontensd/apps/web && npm run dev\"",
     "migrate:seller": "node migrations/migrateSellerData.js",
     "verify:databases": "node migrations/verifyDatabases.js",
     "setup:seller-db": "node migrations/setupSellerDatabase.js",
@@ -22,10 +22,12 @@
     "dotenv": "^8.6.0",
     "express": "^4.22.1",
     "express-async-handler": "^1.2.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "multer": "^2.0.2",
     "pg": "^8.17.2",
-    "redis": "^4.7.1",
     "razorpay": "^2.9.6",
+    "redis": "^4.7.1",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {

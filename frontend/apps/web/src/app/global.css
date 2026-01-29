@@ -1,753 +1,181 @@
-/* Serendipity Premium Design System */
-
-/* Google Fonts - Neo Brutalism Typography */
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&family=Anton:wght@400&family=Bebas+Neue:wght@400&display=swap");
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
-
-/* ===== Neo Brutalism Design Tokens ===== */
-:root {
-  /* Neo Brutalism Core Colors */
-  --brutalist-black: #000000;
-  --brutalist-white: #ffffff;
-  --brutalist-blue: #0066ff;
-  --brutalist-pink: #ff006e;
-  --brutalist-orange: #ff6b00;
-  --brutalist-yellow: #ffcc00;
-  --brutalist-gray: #808080;
-  --brutalist-light-gray: #f0f0f0;
-
-  /* Brutalist Design Tokens */
-  --brutalist-border: 4px;
-  --brutalist-border-thick: 8px;
-  --brutalist-shadow-offset: 8px;
-  --brutalist-shadow-large: 12px;
-  --brutalist-radius: 0px;
-  --brutalist-radius-small: 2px;
-
-  /* Status Colors (High Contrast) */
-  --success-green: #00ff00;
-  --warning-amber: #ff9900;
-  --error-red: #ff0000;
-  --info-blue: #0066ff;
-
-  /* Brutalist Solid Variables (No Glass) */
-  --brutalist-bg: rgba(255, 255, 255, 1);
-  --brutalist-bg-dark: rgba(0, 0, 0, 1);
-  --brutalist-border-color: rgba(0, 0, 0, 1);
-  --brutalist-border-color-light: rgba(255, 255, 255, 1);
-
-  /* Legacy compatibility - Map to Brutalist */
-  --color-charcoal: #000000;
-  --color-charcoal-light: #808080;
-  --color-charcoal-dark: #000000;
-  --color-gold: #ff6b00;
-  --color-gold-light: #ff9900;
-  --color-gold-dark: #ff6b00;
-  --color-gold-muted: #fff3cd;
-  --color-warm-white: #ffffff;
-  --color-warm-gray: #f0f0f0;
-  --color-stone: #808080;
-  --color-stone-light: #cccccc;
-  --glass-bg: #ffffff;
-  --glass-bg-dark: #000000;
-  --glass-border: #000000;
-  --glass-blur: 0px;
-
-  /* Legacy compatibility */
-  --amazon-orange: #ca8a04;
-  --amazon-dark-blue: #1c1917;
-  --brand-primary: #ca8a04;
-  --brand-primary-hover: #a16207;
-  --brand-secondary: #eab308;
-  --brand-bg-light: #fafaf9;
-  --brand-bg-cream: #fef3c7;
-
-  /* Lumina Component Variables */
-  --font-mono: "PPSupplyMono", monospace;
-  --font-sans: "PP Neue Montreal", sans-serif;
-  --font-display: "Cormorant Garamond", serif;
-  --color-bg: #0a0a0a;
-  --color-text: #ffffff;
-  --color-text-muted: rgba(255, 255, 255, 0.7);
-  --color-text-light: rgba(255, 255, 255, 0.5);
-  --color-accent: #d4af37;
-  --font-size-mono: clamp(10px, 1.2vw, 12px);
-  --spacing-sm: 0.75rem;
-  --spacing-md: 1rem;
-}
+@plugin "tailwindcss-animate";
+/* @import "tw-animate-css"; */
 
 /* Custom dark variant for targeting dark mode elements */
-@custom-variant dark (&:is(.dark *));
+/* @custom-variant dark (&:is(.dark *)); - REMOVED CAUSING BUILD ISSUES */
 
-/* shadcn/ui Theme Variables - Updated for Premium Look */
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-}
-
-/* Neo Brutalism Light Theme */
-:root {
-  --radius: var(--brutalist-radius);
-  --background: var(--brutalist-white);
-  --foreground: var(--brutalist-black);
-  --card: var(--brutalist-white);
-  --card-foreground: var(--brutalist-black);
-  --popover: var(--brutalist-white);
-  --popover-foreground: var(--brutalist-black);
-  --primary: var(--brutalist-orange);
-  --primary-foreground: var(--brutalist-white);
-  --secondary: var(--brutalist-light-gray);
-  --secondary-foreground: var(--brutalist-black);
-  --muted: var(--brutalist-light-gray);
-  --muted-foreground: var(--brutalist-gray);
-  --accent: var(--brutalist-yellow);
-  --accent-foreground: var(--brutalist-black);
-  --destructive: var(--error-red);
-  --border: var(--brutalist-black);
-  --input: var(--brutalist-black);
-  --ring: var(--brutalist-orange);
-}
-
-/* Neo Brutalism Dark Theme */
-.dark {
-  --background: var(--brutalist-black);
-  --foreground: var(--brutalist-white);
-  --card: var(--brutalist-black);
-  --card-foreground: var(--brutalist-white);
-  --popover: var(--brutalist-black);
-  --popover-foreground: var(--brutalist-white);
-  --primary: var(--brutalist-pink);
-  --primary-foreground: var(--brutalist-black);
-  --secondary: #333333;
-  --secondary-foreground: var(--brutalist-white);
-  --muted: #333333;
-  --muted-foreground: var(--brutalist-gray);
-  --accent: var(--brutalist-blue);
-  --accent-foreground: var(--brutalist-black);
-  --destructive: var(--error-red);
-  --border: var(--brutalist-white);
-  --input: var(--brutalist-white);
-  --ring: var(--brutalist-pink);
-}
-
-/* Font Families - Neo Brutalism Typography */
 @theme {
-  --font-sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  --font-inter: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  --font-playfair: "Bebas Neue", Impact, sans-serif;
-  --font-caveat: "Anton", sans-serif;
-  --font-quicksand: "Space Grotesk", sans-serif;
-  --font-brutalist: "Anton", sans-serif;
-  --font-display: "Bebas Neue", sans-serif;
+    --font-sans: "Inter", sans-serif;
+    --font-heading: "Rubik", sans-serif;
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --animate-accordion-down: accordion-down 0.2s ease-out;
+    --animate-accordion-up: accordion-up 0.2s ease-out;
+
+    @keyframes accordion-down {
+        from {
+            height: 0
+        }
+
+        to {
+            height: var(--radix-accordion-content-height)
+        }
+    }
+
+    @keyframes accordion-up {
+        from {
+            height: var(--radix-accordion-content-height)
+        }
+
+        to {
+            height: 0
+        }
+    }
 }
 
-/* Brutalist Animations */
-@keyframes brutalist-fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-10px) scale(1.1);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Base Variables */
+:root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Brutalist Variables */
+    --brutalist-black: #000000;
+    --brutalist-white: #ffffff;
+    --brutalist-blue: #0066ff;
+    --brutalist-pink: #ff006e;
+    --brutalist-orange: #ff6b00;
+    --brutalist-accent: #FCD34D;
+    --brutalist-primary: #D97534;
+    --brutalist-secondary: #3B82F6;
+
+    --brutalist-border: 4px;
+    --brutalist-shadow-offset: 8px;
+    --brutalist-radius: 0px;
 }
 
-@keyframes brutalist-slideInLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-100px) rotate(-5deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) rotate(0deg);
-  }
+.dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
 }
 
-@keyframes brutalist-slideInRight {
-  0% {
-    opacity: 0;
-    transform: translateX(100px) rotate(5deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) rotate(0deg);
-  }
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
 }
 
-@keyframes brutalist-scaleIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.5) rotate(-10deg);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2) rotate(5deg);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-}
-
-@keyframes brutalist-jitter {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  25% {
-    transform: translate(-2px, 2px);
-  }
-  50% {
-    transform: translate(2px, -2px);
-  }
-  75% {
-    transform: translate(-1px, -1px);
-  }
-}
-
-@keyframes brutalist-glitch {
-  0%, 100% {
-    transform: translate(0);
-    filter: hue-rotate(0deg);
-  }
-  20% {
-    transform: translate(-2px, 2px);
-    filter: hue-rotate(90deg);
-  }
-  40% {
-    transform: translate(-2px, -2px);
-    filter: hue-rotate(180deg);
-  }
-  60% {
-    transform: translate(2px, 2px);
-    filter: hue-rotate(270deg);
-  }
-  80% {
-    transform: translate(2px, -2px);
-    filter: hue-rotate(360deg);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-@keyframes pulse-subtle {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
-}
-
-/* Brutalist Animation Utility Classes */
-.animate-fadeIn,
-.animate-brutalist-fadeIn {
-  animation: brutalist-fadeIn 0.3s ease-out forwards;
-}
-
-.animate-slideInLeft,
-.animate-brutalist-slideInLeft {
-  animation: brutalist-slideInLeft 0.4s ease-out forwards;
-}
-
-.animate-slideInRight,
-.animate-brutalist-slideInRight {
-  animation: brutalist-slideInRight 0.4s ease-out forwards;
-}
-
-.animate-scaleIn,
-.animate-brutalist-scaleIn {
-  animation: brutalist-scaleIn 0.3s ease-out forwards;
-}
-
-.animate-brutalist-jitter {
-  animation: brutalist-jitter 0.2s infinite;
-}
-
-.animate-brutalist-glitch {
-  animation: brutalist-glitch 0.5s infinite;
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    to right,
-    #f6f7f8 0%,
-    #edeef1 20%,
-    #f6f7f8 40%,
-    #f6f7f8 100%
-  );
-  background-size: 1000px 100%;
-}
-
-/* Stagger delay for multiple elements */
-.animate-staggerIn:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.animate-staggerIn:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.animate-staggerIn:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-.animate-staggerIn:nth-child(4) {
-  animation-delay: 0.4s;
-}
-
-.animate-staggerIn:nth-child(5) {
-  animation-delay: 0.5s;
-}
-
-.animate-staggerIn:nth-child(6) {
-  animation-delay: 0.6s;
-}
-
-/* Motion-Driven Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scaleInBounce {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes bounceIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
-
-  70% {
-    transform: scale(0.9);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Animation Utility Classes */
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
-}
-
-.animate-scale-in-bounce {
-  animation: scaleInBounce 0.5s ease-out forwards;
-}
-
-.animate-slide-in-right {
-  animation: slideInRight 0.6s ease-out forwards;
-}
-
-.animate-bounce-in {
-  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-}
-
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Custom Component Styles */
+/* Brutalist Utilities */
 @layer components {
-  /* ===== Brutalist Effect Utilities ===== */
-  .glass,
-  .glass-dark,
-  .glass-card {
-    @apply bg-white border-black;
-    background-color: var(--brutalist-white, #ffffff);
-    border: var(--brutalist-border, 4px) solid var(--brutalist-black, #000000);
-    box-shadow: var(--brutalist-shadow-offset, 8px) var(--brutalist-shadow-offset, 8px) 0 var(--brutalist-black, #000000);
-    border-radius: var(--brutalist-radius, 0px);
-    backdrop-filter: none;
-    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-  }
 
-  .glass-dark {
-    background-color: var(--brutalist-black, #000000);
-    border-color: var(--brutalist-white, #ffffff);
-    color: var(--brutalist-white, #ffffff);
-    box-shadow: var(--brutalist-shadow-offset, 8px) var(--brutalist-shadow-offset, 8px) 0 var(--brutalist-white, #ffffff);
-  }
+    /* Redefine shadow-glass to just be brutalist-card for compatibility, or a solid shadow */
+    .shadow-glass {
+        box-shadow: 8px 8px 0 0 #000;
+    }
 
-  .glass-card {
-    border-radius: var(--brutalist-radius-small, 2px);
-    box-shadow: var(--brutalist-shadow-large, 12px) var(--brutalist-shadow-large, 12px) 0 var(--brutalist-black, #000000);
-  }
+    .brutalist-card {
+        @apply bg-white border-4 border-black;
+        box-shadow: 8px 8px 0 0 #000;
+    }
 
-  .glass-hover,
-  .brutalist-hover {
-    @apply transition-transform duration-100;
-    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-  }
+    .brutalist-btn,
+    .glass-button {
+        @apply bg-white border-4 border-black px-6 py-2 font-bold transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+        box-shadow: 4px 4px 0 0 #000;
+    }
 
-  .glass-hover:hover,
-  .brutalist-hover:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: calc(var(--brutalist-shadow-offset, 8px) + 4px) calc(var(--brutalist-shadow-offset, 8px) + 4px) 0 var(--brutalist-black, #000000);
-  }
-
-  /* New Brutalist Classes */
-  .brutalist-card {
-    background-color: var(--brutalist-white, #ffffff);
-    border: var(--brutalist-border, 4px) solid var(--brutalist-black, #000000);
-    box-shadow: var(--brutalist-shadow-offset, 8px) var(--brutalist-shadow-offset, 8px) 0 var(--brutalist-black, #000000);
-    border-radius: var(--brutalist-radius, 0px);
-    transition: all 0.1s ease-out;
-  }
-
-  .brutalist-card:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: calc(var(--brutalist-shadow-offset, 8px) + 2px) calc(var(--brutalist-shadow-offset, 8px) + 2px) 0 var(--brutalist-black, #000000);
-  }
-
-  .brutalist-card-accent {
-    background-color: var(--brutalist-blue, #0066ff);
-    border-color: var(--brutalist-white, #ffffff);
-    color: var(--brutalist-white, #ffffff);
-    box-shadow: var(--brutalist-shadow-offset, 8px) var(--brutalist-shadow-offset, 8px) 0 var(--brutalist-black, #000000);
-  }
-
-  /* ===== Brutalist Buttons ===== */
-  .btn-primary {
-    @apply px-6 py-3 bg-black text-white font-bold border-4 border-white;
-    @apply transition-transform duration-100;
-    box-shadow: 6px 6px 0 #000000;
-    transform: translate(-2px, -2px);
-    border-radius: var(--brutalist-radius-small, 2px);
-  }
-
-  .btn-primary:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: 8px 8px 0 #000000;
-  }
-
-  .btn-primary:active {
-    transform: translate(0, 0);
-    box-shadow: 2px 2px 0 #000000;
-  }
-
-  .btn-secondary {
-    @apply px-6 py-3 bg-white text-black font-bold border-4 border-black;
-    @apply transition-transform duration-100;
-    box-shadow: 6px 6px 0 #000000;
-    transform: translate(-2px, -2px);
-    border-radius: var(--brutalist-radius-small, 2px);
-  }
-
-  .btn-secondary:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: 8px 8px 0 #000000;
-    background-color: var(--brutalist-orange, #ff6b00);
-    color: var(--brutalist-white, #ffffff);
-  }
-
-  .btn-ghost {
-    @apply px-4 py-2 bg-white text-black font-bold border-4 border-black;
-    @apply transition-transform duration-100;
-    box-shadow: 4px 4px 0 #000000;
-    border-radius: var(--brutalist-radius-small, 2px);
-  }
-
-  .btn-ghost:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 #000000;
-    background-color: var(--brutalist-yellow, #ffcc00);
-  }
-
-  .btn-gold {
-    @apply px-6 py-3 font-bold border-4 border-black;
-    background-color: var(--brutalist-orange, #ff6b00);
-    color: var(--brutalist-white, #ffffff);
-    box-shadow: 6px 6px 0 #000000;
-    transform: translate(-2px, -2px);
-    border-radius: var(--brutalist-radius-small, 2px);
-    transition: all 0.1s ease-out;
-  }
-
-  .btn-gold:hover {
-    background-color: var(--brutalist-pink, #ff006e);
-    transform: translate(-4px, -4px);
-    box-shadow: 8px 8px 0 #000000;
-  }
-
-  .btn-blue {
-    @apply px-6 py-3 font-bold border-4 border-black;
-    background-color: var(--brutalist-blue, #0066ff);
-    color: var(--brutalist-white, #ffffff);
-    box-shadow: 6px 6px 0 #000000;
-    transform: translate(-2px, -2px);
-    border-radius: var(--brutalist-radius-small, 2px);
-    transition: all 0.1s ease-out;
-  }
-
-  .btn-blue:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: 8px 8px 0 #000000;
-  }
-
-  /* ===== Brutalist Cards ===== */
-  .card-premium {
-    @apply bg-white border-4 border-black shadow-[12px_12px_0_#000000];
-    @apply transition-transform duration-100;
-  }
-
-  .card-premium:hover {
-    @apply shadow-[14px_14px_0_#000000] -translate-y-2 border-pink-500;
-    box-shadow: 0 14px 14px 0px #000000;
-  }
-
-  .card-product {
-    @apply bg-white border-4 border-black shadow-[8px_8px_0_#000000] overflow-hidden;
-    @apply transition-transform duration-100 cursor-pointer;
-  }
-
-  .card-product:hover {
-    @apply shadow-xl -translate-y-1;
-  }
-
-  /* Input Styles */
-  .input-primary {
-    @apply w-full px-4 py-3 border-4 border-black bg-white;
-    @apply font-brutalist text-black bg-white;
-    @apply transition-transform duration-100;
-    @apply focus:border-pink-500 focus:ring-0 focus:bg-yellow-200 focus:outline-none;
-    @apply placeholder:text-black;
-  }
-
-  .input-error {
-    @apply border-red-500 focus:border-red-500 focus:ring-red-500/10;
-  }
-
-  /* Badge Styles */
-  .badge {
-    @apply px-3 py-1 rounded-full text-xs font-semibold;
-  }
-
-  .badge-success {
-    @apply bg-green-100 text-green-700;
-  }
-
-  .badge-warning {
-    @apply bg-yellow-100 text-yellow-700;
-  }
-
-  .badge-error {
-    @apply bg-red-100 text-red-700;
-  }
-
-  .badge-info {
-    @apply bg-blue-100 text-blue-700;
-  }
-
-  /* Skeleton Loader */
-  .skeleton,
-  .skeleton-text,
-  .skeleton-title,
-  .skeleton-image {
-    @apply bg-gray-200 rounded;
-    animation: shimmer 2s infinite linear;
-    background: linear-gradient(
-      to right,
-      #f6f7f8 0%,
-      #edeef1 20%,
-      #f6f7f8 40%,
-      #f6f7f8 100%
-    );
-    background-size: 1000px 100%;
-  }
-
-  .skeleton-text {
-    @apply h-4 w-3/4 mb-2;
-  }
-
-  .skeleton-title {
-    @apply h-6 w-1/2 mb-4;
-  }
-
-  .skeleton-image {
-    @apply h-48 w-full;
-  }
-
-  /* Toast Notification */
-  .toast {
-    @apply fixed top-4 right-4 z-50 max-w-md;
-    @apply bg-white rounded-lg shadow-2xl border-l-4;
-    @apply p-4 flex items-center gap-3;
-    animation: slideInRight 0.6s ease-out forwards;
-  }
-
-  .toast-success {
-    @apply border-green-500;
-  }
-
-  .toast-error {
-    @apply border-red-500;
-  }
-
-  .toast-warning {
-    @apply border-yellow-500;
-  }
-
-  .toast-info {
-    @apply border-blue-500;
-  }
-}
-
-/* Brutalist Scrollbar */
-::-webkit-scrollbar {
-  width: 16px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--brutalist-light-gray, #f0f0f0);
-  border: 2px solid var(--brutalist-black, #000000);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--brutalist-black, #000000);
-  border: 2px solid var(--brutalist-black, #000000);
-  border-radius: 0px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--brutalist-orange, #ff6b00);
-}
-
-/* Brutalist Selection */
-::selection {
-  background-color: var(--brutalist-pink, #ff006e);
-  color: var(--brutalist-white, #ffffff);
-}
-
-/* Smooth Scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Focus Visible for Accessibility */
-*:focus-visible {
-  outline: 2px solid #d97534;
-  outline-offset: 2px;
-}
-
-/* Prevent FOUC (Flash of Unstyled Content) */
-body {
-  @apply font-inter text-black antialiased;
-  background-color: var(--brutalist-white);
-  background-image: none;
-  border: none;
-  min-height: 100vh;
-  /* Emergency fallback */
-  background-color: #ffffff;
-  color: #000000;
-}
-
-@utility transform-style-3d {
-  transform-style: preserve-3d;
-}
-
-/* Emergency Rollback - Add .emergency-rollback to body to revert all styles */
-.emergency-rollback * {
-  background: initial !important;
-  border: initial !important;
-  box-shadow: initial !important;
-  backdrop-filter: initial !important;
-  transform: initial !important;
-  border-radius: initial !important;
-  color: initial !important;
-}
-
-/* Error Monitoring */
-.brutalist-error {
-  background-color: #ff0000 !important;
-  border: 8px solid #000000 !important;
-  color: #ffffff !important;
-  padding: 20px;
-  font-family: monospace;
-  font-weight: bold;
+    /* Override glass classes to be brutalist */
+    .glass,
+    .glass-panel {
+        @apply bg-white border-4 border-black;
+        box-shadow: 8px 8px 0 0 #000;
+        backdrop-filter: none;
+    }
 }

@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from "react";
 import useAuth from "@/utils/useAuth";
 import useSocket from "@/utils/useSocket";
-// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 import OrderCard from "@/components/OrderCard";
+import GlassCard from "@/components/ui/GlassCard";
 
 export default function SellerOrdersPage() {
     const { token, user } = useAuth();
@@ -14,19 +14,16 @@ export default function SellerOrdersPage() {
     const [isConnected, setIsConnected] = useState(false);
     const [filter, setFilter] = useState("all");
 
-    // Real-time order notifications via Socket.io
     useSocket((event, data) => {
         if (event === 'NEW_ORDER') {
             console.log('New order received:', data);
 
-            // Play notification sound
             try {
                 new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3').play();
             } catch (e) {
                 console.log('Audio play failed', e);
             }
 
-            // Add to orders list with isNew flag
             const newOrder = {
                 id: data.orderId,
                 order_number: data.orderNumber,
@@ -38,7 +35,6 @@ export default function SellerOrdersPage() {
 
             setOrders(prev => [newOrder, ...prev]);
 
-            // Remove isNew flag after 5 seconds
             setTimeout(() => {
                 setOrders(prev => prev.map(o =>
                     o.id === data.orderId ? { ...o, isNew: false } : o
@@ -48,7 +44,6 @@ export default function SellerOrdersPage() {
         setIsConnected(true);
     });
 
-    // Fetch existing orders
     useEffect(() => {
         const fetchOrders = async () => {
             try {
@@ -69,7 +64,6 @@ export default function SellerOrdersPage() {
         if (token) fetchOrders();
     }, [token, filter]);
 
-    // Filter orders client-side for safety (in case backend returns mixed statuses)
     const filteredOrders = orders.filter(order => {
         if (!order?.status) return filter === "all";
         const status = (order.status || '').toLowerCase();
@@ -87,67 +81,79 @@ export default function SellerOrdersPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold font-playfair text-[#232f3e]">Live Order Feed</h1>
+            <GlassCard className="p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="font-brutalist text-3xl text-black bg-black text-white px-6 py-2 inline-block">
+                            LIVE ORDER FEED
+                        </h1>
+                        <p className="font-bold text-black mt-2 bg-yellow-200 border-2 border-black px-4 py-1 inline-block">
+                            Real-time orders for your store
+                        </p>
+                    </div>
 
-                {/* Connection Status */}
-                <div className={`flex items-center px-4 py-2 rounded-full text-sm font-bold transition-all ${isConnected
-                    ? "bg-green-100 text-green-700 shadow-sm"
-                    : "bg-gray-100 text-gray-500"
+                    <div className={`flex items-center gap-2 px-4 py-2 border-4 border-black font-bold transition-all ${
+                        isConnected
+                            ? "bg-green-200 animate-pulse"
+                            : "bg-gray-200"
                     }`}>
-                    {isConnected ? (
-                        <>
-                            <span className="relative flex h-2.5 w-2.5 mr-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                            </span>
-                            <i className="fa-solid fa-wifi text-base"></i>
-                            REAL-TIME ACTIVE
-                        </>
-                    ) : (
-                        <>
-                            <i className="fa-solid fa-wifi-slash text-base"></i>
-                            Connecting...
-                        </>
-                    )}
+                        {isConnected ? (
+                            <>
+                                <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                </span>
+                                <i className="fa-solid fa-wifi text-base"></i>
+                                REAL-TIME ACTIVE
+                            </>
+                        ) : (
+                            <>
+                                <i className="fa-solid fa-wifi-slash text-base"></i>
+                                CONNECTING...
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </GlassCard>
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-3">
-                <i className="fa-solid fa-filter text-base text-gray-400"></i>
+                <span className="font-bold text-black bg-black text-white px-3 py-1 border-4 border-black">
+                    <i className="fa-solid fa-filter mr-2"></i>FILTER
+                </span>
                 {filterOptions.map(option => (
                     <button
                         key={option.value}
                         onClick={() => setFilter(option.value)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === option.value
-                            ? "bg-[#D97534] text-white shadow-md"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                        className={`px-4 py-2 border-4 border-black font-bold transition-all ${
+                            filter === option.value
+                                ? "bg-orange-500 text-white translate(-2px,-2px) shadow-[4px_4px_0_#000000]"
+                                : "bg-white text-black hover:bg-pink-500 hover:text-white hover:translate(-2px,-2px)"
+                        }`}
                     >
                         {option.label}
                     </button>
                 ))}
                 <button
                     onClick={() => window.location.reload()}
-                    className="ml-auto p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                    className="ml-auto p-3 bg-black border-4 border-white text-white hover:bg-orange-500 transition-all"
                     title="Refresh"
                 >
-                    <i className="fa-solid fa-arrows-rotate text-base"></i>
+                    <i className="fa-solid fa-arrows-rotate text-xl"></i>
                 </button>
             </div>
 
             {/* Orders Container */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <GlassCard className="p-0 overflow-hidden">
                 {loading ? (
                     <div className="p-8 text-center">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#D97534] mx-auto"></div>
-                        <p className="text-gray-500 mt-4">Loading orders...</p>
+                        <i className="fa-solid fa-spinner fa-spin text-6xl text-orange-500 animate-brutalist-jitter"></i>
+                        <p className="font-brutalist text-xl text-black mt-4">LOADING ORDERS...</p>
                     </div>
                 ) : filteredOrders.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                    <div className="flex flex-col items-center justify-center py-20">
                         <div className="relative">
-                            <i className="fa-solid fa-clock text-6xl text-gray-200"></i>
+                            <i className="fa-solid fa-clock text-6xl text-gray-300"></i>
                             {isConnected && (
                                 <span className="absolute -top-1 -right-1 flex h-4 w-4">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -155,17 +161,19 @@ export default function SellerOrdersPage() {
                                 </span>
                             )}
                         </div>
-                        <p className="text-lg mt-4 font-medium">Waiting for new orders...</p>
-                        <p className="text-sm text-gray-400 mt-1">
-                            Orders containing your products will appear here instantly.
+                        <p className="font-brutalist text-2xl text-black bg-black text-white px-6 py-2 mt-4">
+                            WAITING FOR NEW ORDERS...
                         </p>
-                        <div className="mt-6 flex items-center text-xs text-gray-400">
-                            <i className="fa-solid fa-bell text-sm"></i>
+                        <p className="font-bold text-black mt-2">
+                            Orders will appear here instantly.
+                        </p>
+                        <div className="mt-6 flex items-center gap-2 font-bold text-black bg-yellow-200 border-4 border-black px-4 py-2">
+                            <i className="fa-solid fa-bell text-orange-500"></i>
                             Sound notifications enabled
                         </div>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y-4 divide-black">
                         {filteredOrders.map((order, index) => (
                             <div key={order.id || index} className="p-4">
                                 <OrderCard
@@ -177,26 +185,26 @@ export default function SellerOrdersPage() {
                         ))}
                     </div>
                 )}
-            </div>
+            </GlassCard>
 
             {/* Stats Summary */}
             <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg p-4 text-center border border-gray-100">
-                    <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
-                    <p className="text-xs text-gray-500">Total Orders Today</p>
-                </div>
-                <div className="bg-white rounded-lg p-4 text-center border border-gray-100">
-                    <p className="text-2xl font-bold text-yellow-600">
+                <GlassCard className="p-4 text-center">
+                    <p className="font-brutalist text-3xl text-black">{orders.length}</p>
+                    <p className="font-bold text-sm text-black bg-yellow-200 border-2 border-black px-2 py-1 mt-1">TOTAL ORDERS TODAY</p>
+                </GlassCard>
+                <GlassCard className="p-4 text-center">
+                    <p className="font-brutalist text-3xl text-yellow-600">
                         {orders.filter(o => o.status === 'pending').length}
                     </p>
-                    <p className="text-xs text-gray-500">Pending</p>
-                </div>
-                <div className="bg-white rounded-lg p-4 text-center border border-gray-100">
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="font-bold text-sm text-black bg-yellow-200 border-2 border-black px-2 py-1 mt-1">PENDING</p>
+                </GlassCard>
+                <GlassCard className="p-4 text-center">
+                    <p className="font-brutalist text-3xl text-green-600">
                         {formatCurrency(orders.reduce((sum, o) => sum + (o.total_amount || 0), 0))}
                     </p>
-                    <p className="text-xs text-gray-500">Revenue Today</p>
-                </div>
+                    <p className="font-bold text-sm text-black bg-yellow-200 border-2 border-black px-2 py-1 mt-1">REVENUE TODAY</p>
+                </GlassCard>
             </div>
         </div>
     );

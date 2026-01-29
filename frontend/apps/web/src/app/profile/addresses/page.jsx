@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
+import GlassCard from "@/components/ui/GlassCard";
+import { API_URL } from "@/lib/api";
 
 export default function AddressesPage() {
     const token = useAuthStore(state => state.token);
@@ -19,7 +20,7 @@ export default function AddressesPage() {
         try {
             if (!token) return;
 
-            const res = await fetch("http://localhost:5000/api/profile/addresses", {
+            const res = await fetch(`${API_URL}/api/addresses`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -31,7 +32,7 @@ export default function AddressesPage() {
 
             if (res.ok) {
                 const data = await res.json();
-                setAddresses(data.addresses || []);
+                setAddresses(Array.isArray(data) ? data : (data.addresses || []));
             }
         } catch (error) {
             console.error("Failed to fetch addresses", error);
@@ -44,7 +45,7 @@ export default function AddressesPage() {
         if (!window.confirm("Are you sure you want to delete this address?")) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/api/profile/addresses/${id}`, {
+            const res = await fetch(`${API_URL}/api/addresses/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -65,7 +66,7 @@ export default function AddressesPage() {
 
     const handleSetDefault = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/profile/addresses/${id}/set-default`, {
+            const res = await fetch(`${API_URL}/api/addresses/${id}/set-default`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -96,8 +97,8 @@ export default function AddressesPage() {
 
     const handleSave = async (formData) => {
         const url = editingAddress
-            ? `http://localhost:5000/api/profile/addresses/${editingAddress.id}`
-            : "http://localhost:5000/api/profile/addresses";
+            ? `${API_URL}/api/addresses/${editingAddress.id}`
+            : `${API_URL}/api/addresses`;
 
         const res = await fetch(url, {
             method: editingAddress ? "PUT" : "POST",
@@ -122,81 +123,85 @@ export default function AddressesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                    <i className="fa-solid fa-spinner fa-spin text-4xl text-[#3B82F6] mx-auto"></i>
-                    <p className="text-gray-500 mt-4">Loading addresses...</p>
+            <div className="min-h-screen bg-white border-8 border-black flex items-center justify-center">
+                <div className="text-center">
+                    <i className="fa-solid fa-spinner fa-spin text-6xl text-orange-500 animate-brutalist-jitter"></i>
+                    <p className="font-brutalist text-xl text-black mt-4">LOADING ADDRESSES...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-5xl mx-auto space-y-6">
+        <div className="min-h-screen bg-white border-8 border-black">
+            <div className="max-w-5xl mx-auto px-4 py-8">
                 {/* Header */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 flex items-center justify-between">
-                    <div>
-                        <h1 className="font-bold text-3xl text-[#1E293B]">My Addresses</h1>
-                        <p className="text-gray-600 mt-1">Manage your shipping and billing addresses</p>
+                <GlassCard className="p-6 mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="font-brutalist text-4xl text-black bg-black text-white px-6 py-2 inline-block">
+                                MY ADDRESSES
+                            </h1>
+                            <p className="font-bold text-black mt-2 bg-yellow-200 border-2 border-black px-4 py-1 inline-block">
+                                Manage your shipping addresses
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => openModal()}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 border-4 border-black text-white font-bold hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-all"
+                        >
+                            <i className="fa-solid fa-plus"></i>
+                            ADD ADDRESS
+                        </button>
                     </div>
-                    <button
-                        onClick={() => openModal()}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium rounded-lg transition-colors cursor-pointer"
-                    >
-                        <i className="fa-solid fa-plus"></i>
-                        Add Address
-                    </button>
-                </div>
+                </GlassCard>
 
                 {/* Address List */}
                 {addresses.length === 0 ? (
-                    <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-200">
-                        <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 mx-auto">
-                            <i className="fa-solid fa-location-dot text-5xl text-[#3B82F6]"></i>
+                    <GlassCard className="p-16 text-center">
+                        <div className="w-24 h-24 bg-gray-200 border-4 border-black flex items-center justify-center mx-auto mb-6 animate-brutalist-jitter">
+                            <i className="fa-solid fa-location-dot text-5xl text-black"></i>
                         </div>
-                        <h3 className="font-bold text-2xl text-[#1E293B] mb-3">No addresses saved</h3>
-                        <p className="text-gray-500 mb-8">Add a new address to get started</p>
+                        <h3 className="font-brutalist text-3xl text-black bg-black text-white px-6 py-2 inline-block mb-4">
+                            NO ADDRESSES SAVED
+                        </h3>
+                        <p className="font-bold text-black mb-8">Add a new address to get started</p>
                         <button
                             onClick={() => openModal()}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium rounded-lg transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 border-4 border-black text-white font-bold hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[8px_8px_0_#000000] transition-all"
                         >
                             <i className="fa-solid fa-plus"></i>
-                            Add Address
+                            ADD ADDRESS
                         </button>
-                    </div>
+                    </GlassCard>
                 ) : (
                     <div className="grid gap-4">
                         {addresses.map((address) => (
-                            <div
-                                key={address.id}
-                                className={`bg-white rounded-xl shadow-sm p-6 border transition-all duration-200 hover:shadow-md cursor-pointer ${address.is_default ? "border-[#3B82F6]" : "border-gray-200"
-                                    }`}
-                            >
+                            <GlassCard key={address.id} className="p-6">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start gap-4">
-                                        <div className={`p-3 rounded-lg ${address.is_default ? "bg-blue-50" : "bg-gray-50"}`}>
-                                            <i className={`fa-solid fa-location-dot text-xl ${address.is_default ? "text-[#3B82F6]" : "text-gray-500"}`}></i>
+                                        <div className={`w-12 h-12 border-4 border-black flex items-center justify-center ${address.is_default ? "bg-yellow-200" : "bg-gray-200"}`}>
+                                            <i className={`fa-solid fa-location-dot text-xl ${address.is_default ? "text-black" : "text-gray-500"}`}></i>
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <h3 className="font-semibold text-[#1E293B]">{address.full_name}</h3>
+                                                <h3 className="font-brutalist text-xl text-black">{address.full_name}</h3>
                                                 {address.is_default && (
-                                                    <span className="px-2 py-0.5 bg-blue-50 text-[#3B82F6] text-xs font-medium rounded-lg">
-                                                        Default
+                                                    <span className="bg-yellow-200 border-2 border-black px-3 py-1 text-xs font-bold">
+                                                        DEFAULT
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-gray-600 text-sm">
+                                            <p className="font-bold text-black">
                                                 {address.address_line1}
                                                 {address.address_line2 && `, ${address.address_line2}`}
                                             </p>
-                                            <p className="text-gray-600 text-sm">
+                                            <p className="font-bold text-black">
                                                 {address.city}, {address.state} {address.postal_code}
                                             </p>
-                                            <p className="text-gray-600 text-sm">{address.country}</p>
-                                            <p className="text-gray-500 text-sm mt-2">
-                                                <i className="fa-solid fa-phone mr-1"></i>
+                                            <p className="font-bold text-black">{address.country}</p>
+                                            <p className="font-bold text-sm text-gray-600 mt-2">
+                                                <i className="fa-solid fa-phone mr-2"></i>
                                                 {address.phone}
                                             </p>
                                         </div>
@@ -205,27 +210,27 @@ export default function AddressesPage() {
                                         {!address.is_default && (
                                             <button
                                                 onClick={() => handleSetDefault(address.id)}
-                                                className="p-2.5 text-gray-400 hover:text-[#3B82F6] hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
+                                                className="p-3 bg-yellow-200 border-4 border-black hover:bg-orange-500 hover:text-white transition-all"
                                                 title="Set as default"
                                             >
-                                                <i className="fa-solid fa-check"></i>
+                                                <i className="fa-solid fa-check text-lg"></i>
                                             </button>
                                         )}
                                         <button
                                             onClick={() => openModal(address)}
-                                            className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
+                                            className="p-3 bg-white border-4 border-black hover:bg-pink-500 hover:text-white hover:border-pink-500 transition-all"
                                         >
-                                            <i className="fa-solid fa-pen-to-square"></i>
+                                            <i className="fa-solid fa-pen-to-square text-lg"></i>
                                         </button>
                                         <button
                                             onClick={() => handleDelete(address.id)}
-                                            className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                                            className="p-3 bg-white border-4 border-black hover:bg-red-500 hover:text-white hover:border-red-500 transition-all"
                                         >
-                                            <i className="fa-solid fa-trash"></i>
+                                            <i className="fa-solid fa-trash text-lg"></i>
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                            </GlassCard>
                         ))}
                     </div>
                 )}
@@ -273,101 +278,117 @@ function AddressModal({ address, onSave, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="font-bold text-xl text-[#1E293B]">
-                        {address ? "Edit Address" : "Add New Address"}
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white border-4 border-black shadow-[12px_12px_0_#000000] max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b-4 border-black bg-yellow-200">
+                    <h2 className="font-brutalist text-2xl text-black">
+                        {address ? "EDIT ADDRESS" : "ADD NEW ADDRESS"}
                     </h2>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                FULL NAME
+                            </label>
                             <input
                                 type="text"
                                 name="full_name"
                                 value={formData.full_name}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                PHONE NUMBER
+                            </label>
                             <input
                                 type="tel"
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Address Line 1</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                ADDRESS LINE 1
+                            </label>
                             <input
                                 type="text"
                                 name="address_line1"
                                 value={formData.address_line1}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Address Line 2 (Optional)</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                ADDRESS LINE 2 (OPTIONAL)
+                            </label>
                             <input
                                 type="text"
                                 name="address_line2"
                                 value={formData.address_line2}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                CITY
+                            </label>
                             <input
                                 type="text"
                                 name="city"
                                 value={formData.city}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">State</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                STATE
+                            </label>
                             <input
                                 type="text"
                                 name="state"
                                 value={formData.state}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Postal Code</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                POSTAL CODE
+                            </label>
                             <input
                                 type="text"
                                 name="postal_code"
                                 value={formData.postal_code}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Country</label>
+                            <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                COUNTRY
+                            </label>
                             <input
                                 type="text"
                                 name="country"
                                 value={formData.country}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
+                                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-200 transition-colors"
                             />
                         </div>
                     </div>
@@ -379,27 +400,27 @@ function AddressModal({ address, onSave, onClose }) {
                             name="is_default"
                             checked={formData.is_default}
                             onChange={handleChange}
-                            className="w-4 h-4 text-[#3B82F6] border-gray-300 rounded focus:ring-[#3B82F6] cursor-pointer"
+                            className="w-5 h-5 border-4 border-black cursor-pointer accent-orange-500"
                         />
-                        <label htmlFor="is_default" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                        <label htmlFor="is_default" className="ml-3 font-bold text-black cursor-pointer">
                             Set as default address
                         </label>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <div className="flex justify-end gap-3 pt-4 border-t-4 border-black">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors cursor-pointer"
+                            className="px-6 py-3 bg-white border-4 border-black text-black font-bold hover:bg-gray-100 transition-all"
                         >
-                            Cancel
+                            CANCEL
                         </button>
                         <button
                             type="submit"
                             disabled={saving}
-                            className="px-5 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium rounded-lg disabled:opacity-50 transition-colors cursor-pointer"
+                            className="px-6 py-3 bg-orange-500 border-4 border-black text-white font-bold hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-all disabled:opacity-50"
                         >
-                            {saving ? "Saving..." : "Save Address"}
+                            {saving ? "SAVING..." : "SAVE ADDRESS"}
                         </button>
                     </div>
                 </form>

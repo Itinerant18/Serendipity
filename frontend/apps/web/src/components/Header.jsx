@@ -40,14 +40,14 @@ export default function Header() {
     };
 
     const navLinks = [
-        { name: "Shop", href: "/search" },
+        { name: "Shop", href: "/products" },
         { name: "Orders", href: "/orders" },
     ];
 
     return (
         <header
-            className={`sticky top-0 z-50 transition-transform duration-100 ${isScrolled
-                ? "bg-black border-4 border-b-4 border-white shadow-[8px_8px_0_#ffffff]"
+            className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
+                ? "bg-black border-4 border-b-4 border-white shadow-[8px_8px_0_#ffffff] animate-brutalist-fadeIn"
                 : "bg-black border-4 border-b-4 border-white"
                 }`}
         >
@@ -56,7 +56,7 @@ export default function Header() {
                     {/* Logo */}
                     <Link
                         to="/"
-                        className="flex items-center gap-2 text-white font-bold text-xl hover:bg-orange-500 px-2 py-1 -translate-x-1 -translate-y-1 border-2 border-white shadow-[4px_4px_0_#000000] transition-transform"
+                        className="flex items-center gap-2 text-white font-bold text-xl hover:bg-orange-500 px-2 py-1 -translate-x-1 -translate-y-1 border-2 border-white shadow-[4px_4px_0_#000000] hover-brutalist animate-float"
                     >
                         <i className="fa-solid fa-store text-3xl bg-orange-500 p-1 border-2 border-white"></i>
                         <span className="font-brutalist hidden sm:block">Serendipity</span>
@@ -77,7 +77,7 @@ export default function Header() {
                             />
                             <button
                                 type="submit"
-                                className="absolute right-0 top-0 h-full px-4 bg-orange-500 hover:bg-pink-500 text-black font-bold border-l-2 border-white transition-colors -translate-y-1 shadow-[4px_4px_0_#000000]"
+                                className="absolute right-0 top-0 h-full px-4 bg-orange-500 hover:bg-pink-500 text-black font-bold border-l-2 border-white transition-all duration-300 -translate-y-1 shadow-[4px_4px_0_#000000] hover-brutalist-sm animate-brutalist-jitter"
                             >
                                 <i className="fa-solid fa-magnifying-glass text-xl text-stone-900"></i>
                             </button>
@@ -92,9 +92,9 @@ export default function Header() {
                                 <Link
                                     key={link.name}
                                     to={link.href}
-                                    className={`text-sm font-medium transition-colors ${location.pathname === link.href
-                                        ? "text-amber-400"
-                                        : "text-stone-300 hover:text-white"
+                                    className={`text-sm font-bold px-3 py-1 border-4 border-black transition-colors ${location.pathname === link.href
+                                        ? "bg-yellow-400 text-black"
+                                        : "bg-white text-black hover:bg-orange-500 hover:text-white"
                                         }`}
                                 >
                                     {link.name}
@@ -105,7 +105,7 @@ export default function Header() {
                         {/* Cart */}
                         <Link
                             to="/cart"
-                            className="relative p-2 text-white hover:bg-pink-500 border-2 border-white -translate-x-1 -translate-y-1 shadow-[4px_4px_0_#000000] transition-transform"
+                            className="relative p-2 text-white hover:bg-pink-500 border-2 border-white -translate-x-1 -translate-y-1 shadow-[4px_4px_0_#000000] hover-brutalist-sm animate-brutalist-pulse"
                         >
                             <i className="fa-solid fa-cart-shopping text-2xl"></i>
                             <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold border-2 border-black w-5 h-5 flex items-center justify-center">
@@ -118,7 +118,7 @@ export default function Header() {
                             <div className="relative">
                                 <button
                                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center gap-2 p-2 text-white hover:bg-orange-500 border-2 border-white -translate-x-1 -translate-y-1 shadow-[4px_4px_0_#000000] transition-transform"
+                                    className="flex items-center gap-2 p-2 text-white hover:bg-orange-500 border-2 border-white -translate-x-1 -translate-y-1 shadow-[4px_4px_0_#000000] hover-brutalist-sm"
                                 >
                                     <i className="fa-solid fa-user text-2xl"></i>
                                     <span className="hidden sm:block text-sm font-medium">
@@ -185,10 +185,10 @@ export default function Header() {
                                         )}
 
                                         <div className="border-t border-gray-100 mt-2 pt-2">
-                            <button
-                                onClick={handleSignOut}
-                                className="flex items-center gap-3 w-full px-4 py-2 text-sm font-bold border-2 border-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-white transition-transform duration-100"
-                            >
+                                            <button
+                                                onClick={handleSignOut}
+                                                className="flex items-center gap-3 w-full px-4 py-2 text-sm font-bold border-2 border-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-white transition-transform duration-100"
+                                            >
                                                 <i className="fa-solid fa-right-from-bracket text-base"></i>
                                                 Sign Out
                                             </button>
@@ -199,7 +199,7 @@ export default function Header() {
                         ) : (
                             <Link
                                 to="/account/signin"
-                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-stone-900 font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-amber-500/25 text-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-stone-900 font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-amber-500/25 text-sm btn-brutalist"
                             >
                                 <i className="fa-solid fa-user text-base"></i>
                                 <span className="hidden sm:block">Sign In</span>
@@ -261,9 +261,9 @@ export default function Header() {
                             <Link
                                 to="/seller/signup"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="block px-4 py-3 rounded-lg text-sm font-medium text-[#febd69] hover:bg-gray-600 transition-colors"
+                                className="block px-4 py-3 bg-yellow-400 border-4 border-black text-black font-bold hover:bg-orange-500 hover:text-white transition-colors"
                             >
-                                Become a Seller
+                                BECOME A SELLER
                             </Link>
                         )}
                     </nav>

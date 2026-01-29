@@ -2,13 +2,8 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-// FontAwesome icons loaded globally
 import { formatCurrency } from "@/utils/format";
 
-/**
- * RecentOrdersCard Component
- * Displays recent orders in a compact card format for dashboards
- */
 export default function RecentOrdersCard({
     orders = [],
     title = "Recent Orders",
@@ -20,20 +15,15 @@ export default function RecentOrdersCard({
 }) {
     if (loading) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-4 border-b border-gray-100">
-                    <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse" />
-                </div>
-                <div className="divide-y divide-gray-100">
+            <div className="bg-white border-4 border-black p-4">
+                <div className="h-8 bg-gray-200 border-4 border-black w-1/3 mb-4 animate-pulse"></div>
+                <div className="space-y-3">
                     {[1, 2, 3].map((i) => (
-                        <div key={i} className="p-4 animate-pulse">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-gray-200 rounded-lg" />
-                                <div className="flex-1">
-                                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-                                    <div className="h-3 bg-gray-200 rounded w-1/3" />
-                                </div>
-                                <div className="h-6 bg-gray-200 rounded w-16" />
+                        <div key={i} className="flex items-center gap-4 p-3 border-2 border-gray-200">
+                            <div className="w-10 h-10 bg-gray-200 border-2 border-black"></div>
+                            <div className="flex-1">
+                                <div className="h-4 bg-gray-200 border-4 border-black w-1/2 mb-2"></div>
+                                <div className="h-3 bg-gray-200 border-4 border-black w-1/3"></div>
                             </div>
                         </div>
                     ))}
@@ -43,22 +33,22 @@ export default function RecentOrdersCard({
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white border-4 border-black overflow-hidden">
             {/* Header */}
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 border-b-4 border-black flex items-center justify-between bg-yellow-200">
                 <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">{title}</h3>
+                    <h3 className="font-brutalist text-lg text-black">{title}</h3>
                     {isRealTime && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                            Live
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500 text-white text-xs font-bold border-2 border-black">
+                            <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                            LIVE
                         </span>
                     )}
                 </div>
                 {showViewAll && (
                     <Link
                         to={viewAllLink}
-                        className="text-sm text-[#D97534] hover:text-[#C86429] font-medium flex items-center gap-1"
+                        className="text-sm font-bold text-black hover:text-orange-500 flex items-center gap-1"
                     >
                         View All
                         <i className="fa-solid fa-chevron-right text-base"></i>
@@ -67,11 +57,11 @@ export default function RecentOrdersCard({
             </div>
 
             {/* Orders List */}
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y-4 divide-black">
                 {orders.length === 0 ? (
                     <div className="p-8 text-center">
-                        <i className="fa-solid fa-box text-5xl text-gray-300 mx-auto mb-3"></i>
-                        <p className="text-gray-500 text-sm">No recent orders</p>
+                        <i className="fa-solid fa-box text-5xl text-gray-300 mx-auto mb-4"></i>
+                        <p className="font-bold text-black">No recent orders</p>
                     </div>
                 ) : (
                     orders.slice(0, maxOrders).map((order, index) => (
@@ -87,9 +77,6 @@ export default function RecentOrdersCard({
     );
 }
 
-/**
- * Single Order Row
- */
 function OrderRow({ order, isNew = false }) {
     const {
         id,
@@ -115,16 +102,16 @@ function OrderRow({ order, isNew = false }) {
         switch (statusLower) {
             case "delivered":
             case "completed":
-                return "bg-green-100 text-green-700";
+                return "bg-green-200 border-green-500 text-green-800";
             case "shipped":
             case "processing":
-                return "bg-blue-100 text-blue-700";
+                return "bg-blue-200 border-blue-500 text-blue-800";
             case "pending":
-                return "bg-yellow-100 text-yellow-700";
+                return "bg-yellow-200 border-yellow-500 text-yellow-800";
             case "cancelled":
-                return "bg-red-100 text-red-700";
+                return "bg-red-200 border-red-500 text-red-800";
             default:
-                return "bg-gray-100 text-gray-700";
+                return "bg-gray-200 border-gray-500 text-gray-800";
         }
     };
 
@@ -147,30 +134,28 @@ function OrderRow({ order, isNew = false }) {
     return (
         <Link
             to={`/seller/orders?id=${orderId}`}
-            className={`block p-4 hover:bg-gray-50 transition-colors ${isNew ? "bg-orange-50/50 animate-pulse-subtle" : ""
-                }`}
+            className={`block p-4 border-2 border-black hover:bg-orange-50 transition-all duration-100 ${isNew ? "bg-orange-50 animate-pulse" : ""}`}
         >
             <div className="flex items-center gap-4">
                 {/* Icon */}
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isNew ? "bg-orange-100" : "bg-gray-100"
-                    }`}>
-                    <i className={`fa-solid fa-box text-xl ${isNew ? "text-orange-600" : "text-gray-600"}`}></i>
+                <div className={`w-10 h-10 flex items-center justify-center border-4 border-black ${isNew ? "bg-orange-500" : "bg-gray-100"}`}>
+                    <i className={`fa-solid fa-box text-xl ${isNew ? "text-white" : "text-black"}`}></i>
                 </div>
 
                 {/* Order Info */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900 text-sm truncate">
+                        <p className="font-brutalist text-black truncate">
                             {displayOrderNumber}
                         </p>
                         {isNew && (
-                            <span className="px-1.5 py-0.5 bg-orange-500 text-white text-xs font-bold rounded">
+                            <span className="px-1.5 py-0.5 bg-black text-white text-xs font-bold">
                                 NEW
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <i className="fa-solid fa-clock text-xs"></i>
+                    <div className="flex items-center gap-2 text-sm font-bold text-black mt-1">
+                        <i className="fa-solid fa-clock text-xs text-gray-500"></i>
                         <span>{formatTimeAgo(orderDate)}</span>
                         {itemCount > 0 && (
                             <>
@@ -183,24 +168,21 @@ function OrderRow({ order, isNew = false }) {
 
                 {/* Amount & Status */}
                 <div className="text-right">
-                    <p className="font-semibold text-gray-900 text-sm">
+                    <p className="font-brutalist text-black text-lg">
                         {formatCurrency(amount)}
                     </p>
-                    <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
+                    <span className={`inline-block px-2 py-0.5 text-xs font-bold border-2 border-black ${getStatusColor(status)}`}>
                         {status || "Pending"}
                     </span>
                 </div>
 
                 {/* Arrow */}
-                <i className="fa-solid fa-eye text-base text-gray-400"></i>
+                <i className="fa-solid fa-eye text-xl text-black"></i>
             </div>
         </Link>
     );
 }
 
-/**
- * Compact variant for smaller spaces
- */
 export function RecentOrdersCompact({ orders = [], maxOrders = 3 }) {
     return (
         <div className="space-y-2">
@@ -211,10 +193,10 @@ export function RecentOrdersCompact({ orders = [], maxOrders = 3 }) {
                 return (
                     <div
                         key={order.id || order._id || index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-white border-4 border-black hover:translate(-2px,-2px) hover:shadow-[4px_4px_0_#000000] transition-all duration-100"
                     >
-                        <span className="text-sm font-medium text-gray-700">{displayNumber}</span>
-                        <span className="text-sm font-semibold text-[#067D62]">{formatCurrency(amount)}</span>
+                        <span className="font-brutalist text-sm text-black">{displayNumber}</span>
+                        <span className="font-brutalist text-green-600">{formatCurrency(amount)}</span>
                     </div>
                 );
             })}

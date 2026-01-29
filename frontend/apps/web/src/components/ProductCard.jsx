@@ -148,10 +148,10 @@ export default function ProductCard({
 
     return (
         <GlassCard
-            className={cn("group flex flex-col w-full h-full", className)}
+            className={cn("group flex flex-col w-full h-full animate-brutalist-fadeIn", className)}
             hoverEffect={true}
         >
-            <Link to={`/product/${productId}`} className="relative aspect-[4/5] overflow-hidden bg-white border-4 border-black block">
+            <Link to={`/product/${productId}`} className="relative aspect-[4/5] overflow-hidden bg-white border-4 border-black block hover-brutalist transition-all duration-300">
                 {/* Background skeleton loader - only visible while loading */}
                 {!imgLoaded && (
                     <div className="absolute inset-0 flex items-center justify-center animate-brutalist-jitter">
@@ -163,10 +163,9 @@ export default function ProductCard({
                     src={imgSrc}
                     alt={name}
                     loading="lazy"
-                    className={cn(
-                        "absolute inset-0 w-full h-full object-cover transition-transform duration-100 group-hover:scale-110 group-hover:translate(-2px,-2px) group-hover:shadow-[8px_8px_0_#000000]",
-                        imgLoaded ? "opacity-100" : "opacity-0"
-                    )}
+                            className={cn(
+                                "aspect-square bg-gray-100 relative overflow-hidden bg-white border-4 border-black block cursor-pointer group"
+                            )}
                     onLoad={() => setImgLoaded(true)}
                     onError={() => {
                         if (!imgError) {
@@ -179,19 +178,19 @@ export default function ProductCard({
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                     {hasDiscount && (
-                        <div className="border-4 border-black bg-red-500 text-white text-[10px] font-bold px-2.5 py-0.5 shadow-[6px_6px_0_#000000]">
+                        <div className="border-4 border-black bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-2.5 py-0.5 shadow-[6px_6px_0_#000000] animate-brutalist-pulse">
                             -{discountPercentage}%
                         </div>
                     )}
                     {isOutOfStock && (
-                        <div className="border-4 border-black bg-black text-white text-[10px] font-bold px-2.5 py-0.5 shadow-[6px_6px_0_#ffffff]">
+                        <div className="border-4 border-black bg-gray-800 text-white text-[10px] font-bold px-2.5 py-0.5 shadow-[6px_6px_0_#ffffff] animate-brutalist-shake">
                             No Stock
                         </div>
                     )}
                 </div>
 
                 {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-all duration-500" />
             </Link>
 
             {/* Content Layer */}
@@ -246,12 +245,12 @@ export default function ProductCard({
                                     toggleWishlist(product);
                                 }}
                                 className={cn(
-                                    "border-4 border-black bg-white hover:bg-red-500 hover:text-white transition-transform duration-100 hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#000000]",
-                                    isInWishlist(productId) ? "text-red-500" : "text-gray-400"
+                                    "border-4 border-black bg-white hover:bg-gradient-to-r hover:from-pink-500 hover:to-red-500 hover:border-white transition-all duration-300 hover-brutalist-sm",
+                                    isInWishlist(productId) && "bg-gradient-to-r from-pink-500 to-red-500 text-white border-white"
                                 )}
                                 title={isInWishlist(productId) ? "Remove from Wishlist" : "Add to Wishlist"}
                             >
-                                <i className={cn("fa-heart text-sm", isInWishlist(productId) ? "fa-solid" : "fa-regular")}></i>
+                                <i className={cn("fa-heart text-sm", isInWishlist(productId) ? "fa-solid text-white" : "fa-regular text-black")}></i>
                             </Button>
                         </div>
 
@@ -272,8 +271,8 @@ export default function ProductCard({
                                 }}
                                 disabled={isOutOfStock}
                                 className={cn(
-                                    "border-4 border-black bg-white shadow-[8px_8px_0_#000000] transition-transform duration-100 active:scale-95 hover:translate(-1px,-1px) hover:shadow-[10px_10px_0_#000000]",
-                                    isOutOfStock && "opacity-50 cursor-not-allowed"
+                                    "w-10 h-10 flex items-center justify-center border-4 border-black transition-all duration-300 btn-brutalist",
+                                    isOutOfStock ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                                 )}
                                 title={isOutOfStock ? "Out of Stock" : "Add to Cart"}
                             >

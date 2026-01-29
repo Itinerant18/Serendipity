@@ -214,7 +214,7 @@ router.delete('/product-media', protect, protectSeller, async (req, res) => {
 router.post('/profile-image', protect, upload.single('file'), async (req, res) => {
     try {
         console.log('📸 Profile image upload request from user:', req.user?.id);
-        
+
         if (!req.file) {
             console.log('❌ No file in request');
             return res.status(400).json({ message: 'No file uploaded' });
@@ -222,7 +222,7 @@ router.post('/profile-image', protect, upload.single('file'), async (req, res) =
 
         const file = req.file;
         const userId = req.user.id;
-        
+
         console.log('📁 File details:', {
             originalname: file.originalname,
             mimetype: file.mimetype,
@@ -244,7 +244,7 @@ router.post('/profile-image', protect, upload.single('file'), async (req, res) =
         const timestamp = Date.now();
         const ext = file.originalname.split('.').pop();
         const filename = `profiles/${userId}-${timestamp}.${ext}`;
-        
+
         console.log('📝 Uploading to:', filename);
 
         // Upload to Supabase Storage
@@ -285,6 +285,75 @@ router.post('/profile-image', protect, upload.single('file'), async (req, res) =
 
     } catch (error) {
         console.error('❌ Upload error:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Upload review media (image or video)
+// @route   POST /api/upload/review-media
+// @access  Private (Authenticated Users)
+router.post('/review-media', protect, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const file = req.file;
+        const userId = req.user.id;
+        const productId = req.body.productId; // Optional: organize by product?
+
+        // Check file size limits based on type
+        // Plan says: Photos 500KB, Videos 5MB
+        const isVideo = file.mimetype.startsWith('video/');
+        const maxSize = isVideo ? 5 * 1024 * 1024 : 500 * 1024;
+
+        if (file.size > maxSize) {
+            return res.status(400).json({
+                message: `File too large. Maximum size: ${isVideo ? '5MB' : '500KB'}`
+            });
+        }
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(7);
+        const ext = file.originalname.split('.').pop();
+        // Path: review-media/{userId}/{timestamp}-{random}.{ext}
+        const filename = `review-media/${userId}/${timestamp}-${randomStr}.${ext}`;
+
+        // Upload to Supabase Storage
+        // Using 'product-media' bucket for now as shared bucket, or should we create new?
+        // Plan mentioned 'review-media' bucket but we might need to stick to existing if permissions logic is same.
+        // Let's try 'product-media' bucket first since we know it exists, but use a folder.
+
+        const { data, error } = await supabaseAdmin.storage
+            .from('product-media')
+            .upload(filename, file.buffer, {
+                contentType: file.mimetype,
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) {
+            console.error('Supabase upload error:', error);
+            return res.status(500).json({ message: 'Upload failed', error: error.message });
+        }
+
+        // Get public URL
+        const { data: urlData } = supabaseAdmin.storage
+            .from('product-media')
+            .getPublicUrl(filename);
+
+        res.json({
+            success: true,
+            url: urlData.publicUrl,
+            filename: filename,
+            type: isVideo ? 'video' : 'image',
+            size: file.size,
+            mimeType: file.mimetype
+        });
+
+    } catch (error) {
+        console.error('Upload error:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });

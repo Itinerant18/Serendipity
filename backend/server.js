@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 // const mongoose = require('mongoose');
 const cors = require('cors');
 const compression = require('compression');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -15,12 +17,40 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: ["http://localhost:4000", "http://localhost:5173"],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
-app.use(cors());
+// Security Middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://*.unsplash.com", "https://img.freepik.com", "https://harvardindependent.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com"],
+            connectSrc: ["'self'", "ws://localhost:5000", "http://localhost:5000", "http://localhost:4000"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            fontSrc: ["'self'", "data:", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"]
+        },
+    },
+    crossOriginEmbedderPolicy: false,
+}));
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+app.use(limiter);
+
+app.use(cors({
+    origin: ["http://localhost:4000", "http://localhost:5173"],
+    credentials: true
+}));
 app.use(compression());
 app.use(express.json());
 
@@ -50,7 +80,9 @@ app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use('/api/seller', require('./routes/sellerRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/user', require('./routes/userRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
+app.use('/api/addresses', require('./routes/addressRoutes'));
 
 // Profile Routes
 app.use('/api/profile', require('./routes/profileRoutes'));

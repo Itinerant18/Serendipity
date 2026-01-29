@@ -1,19 +1,20 @@
 import { motion } from "framer-motion";
+import GlassCard from "@/components/ui/GlassCard";
 
 export const WishlistSkeleton = () => {
     return (
-        <div className="relative w-[280px] h-[360px] rounded-[24px] overflow-hidden bg-white border border-slate-100 shadow-sm">
+        <GlassCard className="relative w-[280px] h-[360px] animate-brutalist-jitter">
             {/* Image Placeholder */}
-            <div className="h-[240px] bg-slate-100 animate-pulse" />
+            <div className="aspect-square bg-gray-200 border-4 border-black animate-pulse" />
 
             {/* Content Placeholder */}
-            <div className="p-5 flex flex-col gap-4">
+            <div className="p-4 flex flex-col gap-3">
                 <div className="space-y-2">
-                    <div className="h-3 w-20 bg-slate-100 rounded-full animate-pulse" />
-                    <div className="h-5 w-3/4 bg-slate-100 rounded animate-pulse" />
+                    <div className="h-3 w-20 bg-gray-200 border-4 border-black animate-pulse" />
+                    <div className="h-5 w-3/4 bg-gray-200 border-4 border-black animate-pulse" />
                 </div>
-                <div className="h-8 w-1/3 bg-slate-100 rounded animate-pulse" />
+                <div className="h-8 w-1/3 bg-gray-200 border-4 border-black animate-pulse" />
             </div>
-        </div>
+        </GlassCard>
     );
 };

@@ -16,7 +16,7 @@ export default function GlassCard({
     const brutalistVariants = {
         default: "bg-white border-4 border-black shadow-[8px_8px_0_#000000]",
         elevated: "bg-white border-4 border-black shadow-[12px_12px_0_#000000]",
-        accent: "bg-blue-500 border-4 border-white shadow-[8px_8px_0_#000000]",
+        accent: "bg-blue-500 text-white border-4 border-white shadow-[8px_8px_0_#000000]",
         warning: "bg-orange-500 border-4 border-black shadow-[8px_8px_0_#000000]"
     };
 

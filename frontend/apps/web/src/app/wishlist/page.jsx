@@ -72,7 +72,7 @@ export default function WishlistPage() {
     if (!isAuthenticated) return null;
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-blue-50 border-8 border-black">
+        <div className="min-h-screen relative overflow-hidden bg-white border-8 border-black">
             <Toaster
                 position="top-right"
                 toastOptions={{
@@ -94,17 +94,17 @@ export default function WishlistPage() {
                     className="mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
                 >
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center">
-                            <i className="fa-solid fa-heart text-2xl text-red-500" />
+                        <div className="w-16 h-16 bg-red-500 border-4 border-black shadow-[8px_8px_0_#000000] flex items-center justify-center animate-brutalist-jitter">
+                            <i className="fa-solid fa-heart text-3xl text-white" />
                         </div>
                         <div>
-                            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2 font-playfair">
-                                My Wishlist
+                            <h1 className="text-4xl sm:text-5xl font-brutalist font-bold text-black mb-2 bg-black text-white px-4 py-2 border-4 border-white">
+                                MY WISHLIST
                             </h1>
-                            <p className="text-gray-500 text-lg">
+                            <p className="text-black font-bold bg-yellow-200 px-4 py-2 border-4 border-black inline-block text-lg">
                                 {isLoading
-                                    ? "Loading..."
-                                    : `${wishlistItems.length} ${wishlistItems.length === 1 ? "item" : "items"} saved`
+                                    ? "LOADING..."
+                                    : `${wishlistItems.length} ${wishlistItems.length === 1 ? "ITEM" : "ITEMS"} SAVED`
                                 }
                             </p>
                         </div>
@@ -112,17 +112,17 @@ export default function WishlistPage() {
 
                     <div className="flex flex-wrap items-center gap-3">
                         {/* View Toggle */}
-                        <div className="bg-white border border-gray-100 rounded-xl p-1 flex shadow-sm">
+                        <div className="bg-white border-4 border-black flex">
                             <button
                                 onClick={() => setViewMode("grid")}
-                                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-gray-100 text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
+                                className={`px-4 py-2 font-bold transition-all ${viewMode === "grid" ? "bg-yellow-400 text-black" : "bg-white text-black hover:bg-orange-500 hover:text-white"}`}
                                 title="Grid View"
                             >
                                 <i className="fa-solid fa-table-cells text-lg" />
                             </button>
                             <button
                                 onClick={() => setViewMode("carousel")}
-                                className={`p-2 rounded-lg transition-all ${viewMode === "carousel" ? "bg-gray-100 text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
+                                className={`px-4 py-2 font-bold transition-all ${viewMode === "carousel" ? "bg-yellow-400 text-black" : "bg-white text-black hover:bg-orange-500 hover:text-white"}`}
                                 title="Carousel View"
                             >
                                 <i className="fa-solid fa-list-ul text-lg" />
@@ -134,10 +134,10 @@ export default function WishlistPage() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleClearAll}
-                                className="px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 font-semibold flex items-center gap-2 transition-all duration-300"
+                                className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold border-4 border-black hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] flex items-center gap-2 transition-all duration-100"
                             >
                                 <i className="fa-solid fa-trash-can text-lg" />
-                                <span className="hidden sm:inline">Clear</span>
+                                <span className="hidden sm:inline">CLEAR</span>
                             </motion.button>
                         )}
 
@@ -145,10 +145,10 @@ export default function WishlistPage() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleShare}
-                            className="px-6 py-3 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 font-semibold flex items-center gap-2 transition-all duration-300 shadow-sm hover:shadow-md"
+                            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold border-4 border-black hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] flex items-center gap-2 transition-all duration-100"
                         >
                             <i className="fa-solid fa-share-nodes text-lg" />
-                            <span className="hidden sm:inline">Share</span>
+                            <span className="hidden sm:inline">SHARE</span>
                         </motion.button>
                     </div>
                 </motion.div>
@@ -182,29 +182,30 @@ export default function WishlistPage() {
                             />
                         )
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <div className="w-24 h-24 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center mb-6">
-                                <i className="fa-regular fa-heart text-5xl text-gray-300" />
+                         <div className="flex flex-col items-center justify-center py-20">
+                            <div className="w-32 h-32 bg-yellow-400 border-4 border-black flex items-center justify-center mb-6 animate-brutalist-jitter">
+                                <i className="fa-regular fa-heart text-6xl text-black" />
                             </div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2 font-playfair">Your wishlist is empty</h3>
-                            <p className="text-gray-500 mb-8 max-w-md text-center">
-                                Looks like you haven't added anything yet. Explore our collection and find something special!
+                            <h3 className="text-3xl font-brutalist font-bold text-black mb-4 bg-black text-white px-6 py-2 border-4 border-white">YOUR WISHLIST IS EMPTY</h3>
+                            <p className="text-black mb-8 max-w-md text-center font-bold text-lg bg-yellow-200 px-4 py-2 border-4 border-black">
+                                LOOKS LIKE YOU HAVEN'T ADDED ANYTHING YET. EXPLORE OUR COLLECTION AND FIND SOMETHING SPECIAL!
                             </p>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate('/products')}
-                                className="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20"
+                                className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold border-4 border-black hover:border-white hover:translate(-2px,-2px) hover:shadow-[8px_8px_0_#000000] transition-all duration-100"
                             >
-                                Start Shopping
+                                <i className="fa-solid fa-shopping-bag mr-2"></i>
+                                START SHOPPING
                             </motion.button>
                         </div>
                     )}
                 </motion.div>
 
-                {/* Decorative Elements (Subtle for Light Mode) */}
-                <div className="fixed top-20 left-10 w-72 h-72 bg-purple-200/30 rounded-full blur-3xl pointer-events-none mix-blend-multiply" />
-                <div className="fixed bottom-20 right-10 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl pointer-events-none mix-blend-multiply" />
+                {/* Decorative Elements (Brutalist Style) */}
+                <div className="fixed top-20 left-10 w-32 h-32 bg-yellow-400 border-4 border-black shadow-[8px_8px_0_#000000] pointer-events-none animate-brutalist-jitter" />
+                <div className="fixed bottom-20 right-10 w-40 h-40 bg-pink-400 border-4 border-black shadow-[8px_8px_0_#000000] pointer-events-none animate-brutalist-jitter" style={{animationDelay: '0.5s'}} />
             </div>
 
             {/* Share Modal */}

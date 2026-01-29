@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
-// FontAwesome icons loaded globally
 
 export default function SellerLayout({ children }) {
     const { user, isAuthenticated, signOut } = useAuth();
@@ -15,9 +14,7 @@ export default function SellerLayout({ children }) {
     const pathname = location.pathname;
     const isAuthPage = pathname.startsWith("/seller/login") || pathname.startsWith("/seller/signup");
 
-    // Wait for client-side hydration
     useEffect(() => {
-        // Small delay to allow Zustand to hydrate from localStorage
         const timer = setTimeout(() => {
             setIsHydrated(true);
         }, 100);
@@ -25,50 +22,36 @@ export default function SellerLayout({ children }) {
     }, []);
 
     useEffect(() => {
-        // Don't redirect until hydrated
         if (!isHydrated) return;
-
-        // Public seller auth pages should NOT be guarded or redirected
         if (isAuthPage) return;
 
         if (!isAuthenticated) {
-            // For protected seller area, require login
             navigate("/seller/login");
         } else if (user && !user.isSeller && !pathname.includes("/seller/signup")) {
-            console.log("SellerLayout: Redirecting to signup. User:", {
-                id: user.id,
-                email: user.email,
-                isSeller: user.isSeller,
-                hasProfileId: !!user.sellerProfileId
-            });
-            // Logged-in customer but not yet a seller → send to seller registration flow
             navigate("/seller/signup");
         }
     }, [isAuthenticated, user, navigate, pathname, isAuthPage, isHydrated]);
 
-    // Completely bypass sidebar + guards on public seller auth routes
     if (isAuthPage) {
         return <>{children}</>;
     }
 
-    // Seller registration page has its own layout & requires login but no sidebar
     if (pathname.includes("/seller/signup")) {
         return <>{children}</>;
     }
 
-    // Show loading while hydrating
     if (!isHydrated) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
+            <div className="min-h-screen flex items-center justify-center bg-white border-8 border-black">
+                <i className="fa-solid fa-spinner fa-spin text-4xl text-orange-500 animate-brutalist-jitter"></i>
             </div>
         );
     }
 
     if (!isAuthenticated || (user && !user.isSeller && !pathname.includes("/seller/signup"))) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <i className="fa-solid fa-spinner fa-spin text-3xl text-[#D97534]"></i>
+            <div className="min-h-screen flex items-center justify-center bg-white border-8 border-black">
+                <i className="fa-solid fa-spinner fa-spin text-4xl text-orange-500 animate-brutalist-jitter"></i>
             </div>
         );
     }
@@ -80,62 +63,109 @@ export default function SellerLayout({ children }) {
         { name: "Profile Settings", href: "/seller/settings", icon: "fa-user" },
     ];
 
-    // If on registration page, don't show sidebar
     if (location.pathname.includes("/seller/signup")) {
         return <>{children}</>;
     }
 
     return (
-        <div className="h-screen bg-gray-100 flex font-inter overflow-hidden">
-            {/* Sidebar */}
-            <div className={`bg-[#232f3e] text-white w-64 flex-shrink-0 flex flex-col transition-all duration-300 ${sidebarOpen ? "" : "-ml-64 md:ml-0"}`}>
-                <div className="p-4 flex items-center justify-center border-b border-gray-700">
-                    <span className="font-playfair text-xl font-bold flex items-center gap-2">
-                        <i className="fa-solid fa-store text-2xl text-[#febd69]"></i> Seller Central
-                    </span>
-                </div>
-                <nav className="flex-1 mt-6 px-4 space-y-2 overflow-y-auto">
-                    {navigation.map((item) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                            <Link // Changed from <a> to <Link>
-                                key={item.name}
-                                to={item.href} // Changed from href to to
-                                className={`flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors ${isActive
-                                    ? "bg-[#febd69] text-black"
-                                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                                    }`}
-                            >
-                                <i className={`fa-solid ${item.icon} text-xl mr-3`}></i>
-                                {item.name}
-                            </Link>
-                        );
-                    })}
-                </nav>
-                <div className="p-4 border-t border-gray-700">
-                    <button
-                        onClick={() => {
-                            signOut();
-                            navigate('/seller/login');
-                        }}
-                        className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-300 hover:bg-red-900 hover:text-white rounded-md transition-colors"
-                    >
-                        <i className="fa-solid fa-right-from-bracket text-xl mr-3"></i>
-                        Sign Out
-                    </button>
-                    <Link to="/" className="mt-2 block text-center text-xs text-blue-400 hover:text-blue-300">Back to Marketplace</Link>
-                </div>
-            </div>
+        <div className="min-h-screen bg-white border-8 border-black">
+            {/* Top Header */}
+            <header className="bg-black border-b-4 border-white sticky top-0 z-50">
+                <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        {/* Logo */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-orange-500 border-4 border-white flex items-center justify-center">
+                                <i className="fa-solid fa-store text-xl text-white"></i>
+                            </div>
+                            <span className="font-brutalist text-xl text-white">SELLER CENTRAL</span>
+                        </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white shadow px-6 py-4 flex justify-between items-center sm:hidden">
-                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-500">
-                        <i className="fa-solid fa-table-columns"></i>
-                    </button>
-                    <span className="font-bold">Seller Central</span>
-                </header>
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                        {/* Right Section */}
+                        <div className="flex items-center gap-4">
+                            {/* Mobile menu toggle */}
+                            <button 
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="lg:hidden p-2 text-white hover:bg-orange-500 border-2 border-white"
+                            >
+                                <i className="fa-solid fa-bars text-xl"></i>
+                            </button>
+
+                            {/* User Info */}
+                            <div className="hidden lg:flex items-center gap-3">
+                                <div className="text-right">
+                                    <p className="text-white font-bold text-sm">{user?.name || "Seller"}</p>
+                                    <p className="text-orange-400 text-xs">{user?.email}</p>
+                                </div>
+                                <div className="w-10 h-10 bg-white border-4 border-black flex items-center justify-center">
+                                    <i className="fa-solid fa-user text-black"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div className="flex">
+                {/* Sidebar - Hidden on mobile unless toggled */}
+                <aside className={`
+                    fixed lg:sticky top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-black border-r-4 border-white z-40 transform transition-transform duration-300
+                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'}
+                `}>
+                    <nav className="p-4 space-y-2">
+                        {navigation.map((item) => {
+                            const isActive = location.pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.name}
+                                    to={item.href}
+                                    className={`
+                                        flex items-center gap-3 px-4 py-3 font-bold transition-all duration-100 border-4 border-black
+                                        ${isActive 
+                                            ? "bg-orange-500 text-white translate(-2px,-2px) shadow-[4px_4px_0_#ffffff]" 
+                                            : "bg-white text-black hover:bg-pink-500 hover:text-white hover:translate(-2px,-2px)"
+                                        }
+                                    `}
+                                >
+                                    <i className={`fa-solid ${item.icon} text-xl w-6`}></i>
+                                    <span className={sidebarOpen ? "block" : "lg:hidden"}>{item.name}</span>
+                                </Link>
+                            );
+                        })}
+                    </nav>
+
+                    {/* Bottom Actions */}
+                    <div className="absolute bottom-4 left-4 right-4 space-y-2">
+                        <button
+                            onClick={() => {
+                                signOut();
+                                navigate('/seller/login');
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 bg-red-500 text-white font-bold border-4 border-black hover:bg-red-600 hover:translate(-2px,-2px) hover:shadow-[4px_4px_0_#000000] transition-all duration-100"
+                        >
+                            <i className="fa-solid fa-right-from-bracket text-xl w-6"></i>
+                            <span className={sidebarOpen ? "block" : "lg:hidden"}>Sign Out</span>
+                        </button>
+                        <Link
+                            to="/"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-400 text-black font-bold border-4 border-black hover:bg-orange-500 hover:text-white transition-all duration-100"
+                        >
+                            <i className="fa-solid fa-arrow-left"></i>
+                            <span className={sidebarOpen ? "block" : "lg:hidden"}>Back to Market</span>
+                        </Link>
+                    </div>
+                </aside>
+
+                {/* Mobile overlay */}
+                {sidebarOpen && (
+                    <div 
+                        className="fixed inset-0 bg-black/50 z-30 lg:hidden" 
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+
+                {/* Main Content */}
+                <main className="flex-1 p-6 min-h-[calc(100vh-4rem)]">
                     {children}
                 </main>
             </div>

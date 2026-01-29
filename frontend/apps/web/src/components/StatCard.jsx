@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import GlassCard from "@/components/ui/GlassCard";
 // FontAwesome icons loaded globally
 
 /**
@@ -30,48 +31,48 @@ export default function StatCard({
 
     if (loading) {
         return (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 animate-pulse">
-                <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 bg-gray-200 rounded-full"></div>
+            <GlassCard className="p-6 animate-brutalist-jitter">
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gray-200 border-4 border-black rounded-none"></div>
                     <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                        <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 border-4 border-black w-1/2 mb-2"></div>
+                        <div className="h-8 bg-gray-200 border-4 border-black w-3/4"></div>
                     </div>
                 </div>
-            </div>
+            </GlassCard>
         );
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-lg hover:border-orange-200 transition-all duration-300 group">
-            <div className="flex items-center space-x-4">
+        <GlassCard className="p-6 hover:translate(-2px,-2px) hover:shadow-[12px_12px_0_#000000] transition-all duration-100">
+            <div className="flex items-center gap-6">
                 {/* Icon Container */}
-                <div className={`p-4 rounded-full ${iconBgColor} group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-16 h-16 ${iconBgColor} border-4 border-black flex items-center justify-center group-hover:bg-yellow-300 transition-colors`}>
                     {icon && <i className={`fa-solid ${icon} text-2xl ${iconColor}`}></i>}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 font-inter">{title}</p>
-                    <div className="flex items-baseline gap-2">
-                        <h3 className="text-2xl font-bold font-inter text-gray-900">
+                    <p className="text-sm font-bold text-black bg-yellow-200 px-3 py-1 border-2 border-black inline-block mb-3">{title.toUpperCase()}</p>
+                    <div className="flex items-baseline gap-3">
+                        <h3 className="text-3xl font-brutalist font-bold text-black border-4 border-r-8 border-l-8 border-t-0 border-b-8 bg-yellow-200 px-3 py-2">
                             {value}
                         </h3>
 
                         {/* Trend Indicator */}
                         {hasTrend && (
-                            <div className={`flex items-center text-xs font-semibold ${isPositive ? "text-green-600" : "text-red-600"
+                            <div className={`flex items-center px-3 py-1 border-4 border-black font-bold text-xs ${isPositive ? "bg-green-500 text-white" : "bg-red-500 text-white"
                                 }`}>
-                                <i className={`fa-solid ${TrendIcon} text-xs mr-0.5`}></i>
+                                <i className={`fa-solid ${TrendIcon} mr-1`}></i>
                                 <span>{Math.abs(trend)}%</span>
                                 {trendLabel && (
-                                    <span className="text-gray-400 ml-1">{trendLabel}</span>
+                                    <span className="ml-1">{trendLabel}</span>
                                 )}
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-        </div>
+        </GlassCard>
     );
 }

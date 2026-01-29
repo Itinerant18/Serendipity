@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Dithering = lazy(() =>
   import("@paper-design/shaders-react").then((mod) => ({ default: mod.Dithering }))
-);
+) as any;
 
 export function BecomeSellerSection() {
   const [isHovered, setIsHovered] = useState(false);

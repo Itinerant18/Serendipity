@@ -1,185 +1,177 @@
 const express = require('express');
 const router = express.Router();
-const asyncHandler = require('express-async-handler');
 const { supabaseAdmin } = require('../config/supabase');
 const { protect } = require('../middleware/authMiddleware');
 
-// @desc    Get all addresses for user
-// @route   GET /api/profile/addresses
+// @desc    Get all addresses for logged in user
+// @route   GET /api/addresses
 // @access  Private
-router.get('/', protect, asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+router.get('/', protect, async (req, res) => {
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('addresses')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .order('is_default', { ascending: false })
+            .order('created_at', { ascending: false });
 
-    const { data: addresses, error } = await supabaseAdmin
-        .from('addresses')
-        .select('*')
-        .eq('user_id', userId)
-        .order('is_default', { ascending: false })
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        res.status(400);
-        throw new Error('Failed to fetch addresses');
+        if (error) throw error;
+        res.json(data || []);
+    } catch (error) {
+        console.error('Error fetching addresses:', error);
+        res.status(500).json({ message: 'Failed to fetch addresses' });
     }
-
-    res.json({ addresses });
-}));
+});
 
 // @desc    Add new address
-// @route   POST /api/profile/addresses
+// @route   POST /api/addresses
 // @access  Private
-router.post('/', protect, asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    const {
-        address_type,
-        full_name,
-        phone,
-        address_line1,
-        address_line2,
-        city,
-        state,
-        postal_code,
-        country,
-        is_default
-    } = req.body;
-
-    // If setting as default, unset other defaults first
-    if (is_default) {
-        await supabaseAdmin
-            .from('addresses')
-            .update({ is_default: false })
-            .eq('user_id', userId);
-    }
-
-    const { data, error } = await supabaseAdmin
-        .from('addresses')
-        .insert({
-            user_id: userId,
-            address_type: address_type || 'shipping',
+router.post('/', protect, async (req, res) => {
+    try {
+        const {
             full_name,
-            phone,
-            address_line1,
-            address_line2,
-            city,
-            state,
-            postal_code,
-            country: country || 'India',
-            is_default: is_default || false,
-        })
-        .select()
-        .single();
-
-    if (error) {
-        res.status(400);
-        throw new Error('Failed to add address');
-    }
-
-    res.status(201).json({ success: true, address: data });
-}));
-
-// @desc    Update address
-// @route   PUT /api/profile/addresses/:id
-// @access  Private
-router.put('/:id', protect, asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    const addressId = req.params.id;
-    const {
-        address_type,
-        full_name,
-        phone,
-        address_line1,
-        address_line2,
-        city,
-        state,
-        postal_code,
-        country,
-        is_default
-    } = req.body;
-
-    // If setting as default, unset other defaults first
-    if (is_default) {
-        await supabaseAdmin
-            .from('addresses')
-            .update({ is_default: false })
-            .eq('user_id', userId);
-    }
-
-    const { data, error } = await supabaseAdmin
-        .from('addresses')
-        .update({
-            address_type,
-            full_name,
-            phone,
             address_line1,
             address_line2,
             city,
             state,
             postal_code,
             country,
-            is_default,
-        })
-        .eq('id', addressId)
-        .eq('user_id', userId)
-        .select()
-        .single();
+            phone,
+            is_default
+        } = req.body;
 
-    if (error) {
-        res.status(400);
-        throw new Error('Failed to update address');
+        // If this is set as default, unset other defaults first
+        if (is_default) {
+            await supabaseAdmin
+                .from('addresses')
+                .update({ is_default: false })
+                .eq('user_id', req.user.id);
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('addresses')
+            .insert({
+                user_id: req.user.id,
+                full_name,
+                address_line1,
+                address_line2,
+                city,
+                state,
+                postal_code,
+                country,
+                phone,
+                is_default: is_default || false
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error adding address:', error);
+            throw error;
+        }
+        res.status(201).json(data);
+    } catch (error) {
+        console.error('Error adding address:', error);
+        res.status(500).json({ message: 'Failed to add address' });
     }
+});
 
-    res.json({ success: true, address: data });
-}));
+// @desc    Update address
+// @route   PUT /api/addresses/:id
+// @access  Private
+router.put('/:id', protect, async (req, res) => {
+    try {
+        const {
+            full_name,
+            address_line1,
+            address_line2,
+            city,
+            state,
+            postal_code,
+            country,
+            phone,
+            is_default
+        } = req.body;
+
+        // If this is set as default, unset other defaults first
+        if (is_default) {
+            await supabaseAdmin
+                .from('addresses')
+                .update({ is_default: false })
+                .eq('user_id', req.user.id);
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('addresses')
+            .update({
+                full_name,
+                address_line1,
+                address_line2,
+                city,
+                state,
+                postal_code,
+                country,
+                phone,
+                is_default
+            })
+            .eq('id', req.params.id)
+            .eq('user_id', req.user.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        console.error('Error updating address:', error);
+        res.status(500).json({ message: 'Failed to update address' });
+    }
+});
 
 // @desc    Delete address
-// @route   DELETE /api/profile/addresses/:id
+// @route   DELETE /api/addresses/:id
 // @access  Private
-router.delete('/:id', protect, asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    const addressId = req.params.id;
+router.delete('/:id', protect, async (req, res) => {
+    try {
+        const { error } = await supabaseAdmin
+            .from('addresses')
+            .delete()
+            .eq('id', req.params.id)
+            .eq('user_id', req.user.id);
 
-    const { error } = await supabaseAdmin
-        .from('addresses')
-        .delete()
-        .eq('id', addressId)
-        .eq('user_id', userId);
-
-    if (error) {
-        res.status(400);
-        throw new Error('Failed to delete address');
+        if (error) throw error;
+        res.json({ message: 'Address deleted' });
+    } catch (error) {
+        console.error('Error deleting address:', error);
+        res.status(500).json({ message: 'Failed to delete address' });
     }
-
-    res.json({ success: true });
-}));
+});
 
 // @desc    Set address as default
-// @route   POST /api/profile/addresses/:id/set-default
+// @route   POST /api/addresses/:id/set-default
 // @access  Private
-router.post('/:id/set-default', protect, asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    const addressId = req.params.id;
+router.post('/:id/set-default', protect, async (req, res) => {
+    try {
+        // First, unset all defaults
+        await supabaseAdmin
+            .from('addresses')
+            .update({ is_default: false })
+            .eq('user_id', req.user.id);
 
-    // Unset all defaults
-    await supabaseAdmin
-        .from('addresses')
-        .update({ is_default: false })
-        .eq('user_id', userId);
+        // Set this address as default
+        const { data, error } = await supabaseAdmin
+            .from('addresses')
+            .update({ is_default: true })
+            .eq('id', req.params.id)
+            .eq('user_id', req.user.id)
+            .select()
+            .single();
 
-    // Set new default
-    const { data, error } = await supabaseAdmin
-        .from('addresses')
-        .update({ is_default: true })
-        .eq('id', addressId)
-        .eq('user_id', userId)
-        .select()
-        .single();
-
-    if (error) {
-        res.status(400);
-        throw new Error('Failed to set default address');
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        console.error('Error setting default address:', error);
+        res.status(500).json({ message: 'Failed to set default address' });
     }
-
-    res.json({ success: true, address: data });
-}));
+});
 
 module.exports = router;
