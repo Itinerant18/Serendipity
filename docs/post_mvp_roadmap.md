@@ -3,7 +3,7 @@
 ## 🎯 Current Status: MVP Complete ✅
 
 You've built:
-- ✅ User authentication (Buyer/Seller/Admin)
+- ✅ User authentication (Buyer/Seller)
 - ✅ Product browsing and management
 - ✅ Shopping cart functionality
 - ✅ Checkout process (with mock payment)
