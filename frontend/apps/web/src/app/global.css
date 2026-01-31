@@ -179,3 +179,106 @@
         backdrop-filter: none;
     }
 }
+
+/* Brutalist Animations */
+@layer utilities {
+    /* Jitter Animation for Neo-Brutalist Effects */
+    .animate-jitter {
+        animation: jitter 0.3s infinite;
+    }
+    
+    @keyframes jitter {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        25% { transform: translate(-2px, 1px) rotate(-1deg); }
+        50% { transform: translate(1px, -1px) rotate(1deg); }
+        75% { transform: translate(-1px, 2px) rotate(0deg); }
+    }
+
+    /* Fade In Animation */
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scale In Animation */
+    .animate-scale-in {
+        animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    
+    @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.8) rotate(-2deg); }
+        to { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    /* Bounce Animation */
+    .animate-brutalist-bounce {
+        animation: brutalistBounce 0.8s infinite;
+    }
+    
+    @keyframes brutalistBounce {
+        0%, 100% { transform: translateY(0) scaleY(1); }
+        10% { transform: translateY(0) scaleY(1.1) scaleX(0.9); }
+        30% { transform: translateY(-15px) scaleY(0.9) scaleX(1.1); }
+        50% { transform: translateY(0) scaleY(1.05) scaleX(0.95); }
+        60% { transform: translateY(-7px) scaleY(0.95) scaleX(1.05); }
+        80% { transform: translateY(0) scaleY(1.02) scaleX(0.98); }
+    }
+
+    /* Pulse Animation */
+    .animate-brutalist-pulse {
+        animation: brutalistPulse 2s infinite;
+    }
+    
+    @keyframes brutalistPulse {
+        0%, 100% { 
+            transform: scale(1); 
+            box-shadow: 8px 8px 0 0 #000;
+        }
+        50% { 
+            transform: scale(1.05); 
+            box-shadow: 12px 12px 0 0 #000;
+        }
+    }
+
+    /* Float Animation */
+    .animate-brutalist-float {
+        animation: brutalistFloat 3s ease-in-out infinite;
+    }
+    
+    @keyframes brutalistFloat {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        25% { transform: translateY(-10px) rotate(-1deg); }
+        50% { transform: translateY(-5px) rotate(0deg); }
+        75% { transform: translateY(-15px) rotate(1deg); }
+    }
+
+    /* Gradient Shift Animation */
+    .animate-gradient-shift {
+        background-size: 200% 200%;
+        animation: gradientShift 3s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Hover Animations */
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 12px 12px 0 0 #000;
+    }
+
+    .hover-tilt:hover {
+        transform: rotate(-2deg) scale(1.02);
+    }
+
+    .hover-jitter:hover {
+        animation: jitter 0.3s infinite;
+    }
+}

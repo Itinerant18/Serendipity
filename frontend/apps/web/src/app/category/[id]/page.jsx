@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,8 +6,9 @@ import { MAIN_CATEGORIES } from "@/utils/categories";
 import ProductCard from "@/components/ProductCard";
 import GlassCard from "@/components/ui/GlassCard";
 import useCartStore from "@/utils/cartStore";
-
-// --- Components ---
+import FilterPanel from "@/components/filters/FilterPanel";
+import MobileFilterModal from "@/components/filters/MobileFilterModal";
+import { useProductFilters } from "@/hooks/useProductFilters";
 
 const CategoryHero = ({ category, totalProducts }) => {
     // Media handling
@@ -90,38 +90,6 @@ const CategoryHero = ({ category, totalProducts }) => {
     );
 };
 
-const FilterSection = ({ title, children, isOpen, onToggle }) => (
-    <div className="border-b-4 border-black py-5 last:border-0">
-        <button
-            onClick={onToggle}
-            className="flex items-center justify-between w-full group py-2"
-        >
-            <h3 className="font-brutalist text-black text-base bg-white px-2 py-1 border-2 border-black group-hover:bg-orange-500 group-hover:text-white group-hover:border-white transition-transform duration-100">
-                {title}
-            </h3>
-            <span className={`w-6 h-6 border-2 border-black bg-white flex items-center justify-center transition-transform duration-100 ${isOpen ? 'bg-orange-500 text-white rotate-180' : 'text-black'}`}>
-                <i className="fa-solid fa-chevron-down text-xs"></i>
-            </span>
-        </button>
-
-        <AnimatePresence initial={false}>
-            {isOpen && (
-                <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "circOut" }}
-                    className="overflow-hidden"
-                >
-                    <div className="space-y-3 pt-3 pb-1">
-                        {children}
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    </div>
-);
-
 export default function CategoryPage() {
     const { id: categoryNameEncoded } = useParams();
     const categoryName = decodeURIComponent(categoryNameEncoded || "");
@@ -135,23 +103,18 @@ export default function CategoryPage() {
         addToCart(product);
     };
 
-    // Filter States
-    const [selectedSubcategories, setSelectedSubcategories] = useState([]);
-    const [priceRange, setPriceRange] = useState([0, 500000]);
-    const [selectedBrands, setSelectedBrands] = useState([]);
-    const [minRating, setMinRating] = useState(0);
-    const [sortBy, setSortBy] = useState("popular");
+    // Use Shared Hook for Filters & URL Persistence
+    const {
+        selectedSubcategories, setSelectedSubcategories,
+        selectedBrands, setSelectedBrands,
+        priceRange, setPriceRange,
+        minRating, setMinRating,
+        sortBy, setSortBy,
+        clearFilters
+    } = useProductFilters();
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
-
-    // Filter Accordion States
-    const [openSections, setOpenSections] = useState({
-        subcategories: true,
-        price: true,
-        brands: true,
-        rating: true
-    });
 
     const currentCategory = MAIN_CATEGORIES.find(c => c.name === categoryName);
 
@@ -219,34 +182,6 @@ export default function CategoryPage() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Subcategory Icon Lookup
-    const subcategoryIconMap = useMemo(() => {
-        return currentCategory?.subcategoryIcons || {};
-    }, [currentCategory]);
-
-    const toggleSubcategory = (sub) => {
-        setSelectedSubcategories(prev =>
-            prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]
-        );
-    };
-
-    const toggleBrand = (brand) => {
-        setSelectedBrands(prev =>
-            prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-        );
-    };
-
-    const toggleSection = (section) => {
-        setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
-    };
-
-    const clearFilters = () => {
-        setSelectedSubcategories([]);
-        setPriceRange([0, 500000]);
-        setSelectedBrands([]);
-        setMinRating(0);
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen pt-20 pb-12 px-4 flex justify-center items-center bg-[#FDFDFE]">
@@ -279,124 +214,6 @@ export default function CategoryPage() {
             </div>
         );
     }
-
-    const FilterContent = () => (
-        <>
-            <FilterSection title="Subcategories" isOpen={openSections.subcategories} onToggle={() => toggleSection('subcategories')}>
-                {currentCategory.subcategories.map((sub) => {
-                    const iconClass = subcategoryIconMap[sub] || 'fa-solid fa-circle-small';
-                    return (
-                        <label key={sub} className="flex items-center cursor-pointer group p-3 hover:bg-yellow-400 hover:text-white border-2 border-black rounded-none transition-transform duration-100 hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#000000]">
-                            <div className="relative flex items-center justify-center w-5 h-5">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedSubcategories.includes(sub)}
-                                    onChange={() => toggleSubcategory(sub)}
-                                    className="peer appearance-none w-5 h-5 border-2 border-slate-300 rounded-md checked:bg-sky-500 checked:border-sky-500 transition-all"
-                                />
-                                <i className="fa-solid fa-check text-white text-[10px] absolute opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
-                            </div>
-                            <span className="ml-3 text-sm flex items-center gap-3 flex-1">
-                                <span className={`w-8 h-8 border-2 border-black bg-white flex items-center justify-center transition-transform duration-100 ${selectedSubcategories.includes(sub) ? 'bg-orange-500 text-white' : 'text-black group-hover:bg-yellow-400 group-hover:text-white group-hover:border-white'}`}>
-                                    <i className={`${iconClass} text-xs`}></i>
-                                </span>
-                                <span className={`font-medium transition-colors ${selectedSubcategories.includes(sub) ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'}`}>
-                                    {sub}
-                                </span>
-                            </span>
-                        </label>
-                    );
-                })}
-            </FilterSection>
-
-            <FilterSection title="Price Range" isOpen={openSections.price} onToggle={() => toggleSection('price')}>
-                <div className="px-1 py-2">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="relative flex-1 group">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
-                            <input
-                                type="number"
-                                value={priceRange[0]}
-                                onChange={(e) => setPriceRange([+e.target.value, priceRange[1]])}
-                                className="w-full pl-7 pr-3 py-2.5 bg-white border-4 border-black text-sm font-bold focus:outline-none focus:ring-0 focus:border-orange-500 focus:bg-yellow-200 transition-transform duration-100 hover:bg-yellow-400 hover:text-black hover:border-white"
-                                placeholder="Min"
-                            />
-                        </div>
-                        <span className="text-slate-300 font-medium">-</span>
-                        <div className="relative flex-1 group">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
-                            <input
-                                type="number"
-                                value={priceRange[1]}
-                                onChange={(e) => setPriceRange([priceRange[0], +e.target.value])}
-                                className="w-full pl-7 pr-3 py-2.5 bg-white border-4 border-black text-sm font-bold focus:outline-none focus:ring-0 focus:border-orange-500 focus:bg-yellow-200 transition-transform duration-100 hover:bg-yellow-400 hover:text-black hover:border-white"
-                                placeholder="Max"
-                            />
-                        </div>
-                    </div>
-                    {/* Visual Range Indicator (Simulated) */}
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-sky-500/30 w-full" />
-                    </div>
-                </div>
-            </FilterSection>
-
-            {availableBrands.length > 0 && (
-                <FilterSection title="Brands" isOpen={openSections.brands} onToggle={() => toggleSection('brands')}>
-                    <div className="max-h-60 overflow-y-auto custom-scrollbar pr-2 -mr-1">
-                        {availableBrands.map((brand) => (
-                            <label key={brand} className="flex items-center cursor-pointer group p-2.5 hover:bg-slate-50/80 rounded-xl transition-all">
-                                <div className="relative flex items-center justify-center w-5 h-5">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedBrands.includes(brand)}
-                                        onChange={() => toggleBrand(brand)}
-className="peer appearance-none w-5 h-5 border-2 border-black bg-white checked:bg-orange-500 checked:border-black transition-transform duration-100"
-                                    />
-                                    <i className="fa-solid fa-check text-white text-[10px] absolute opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
-                                </div>
-                                <span className={`ml-3 text-sm font-medium transition-colors ${selectedBrands.includes(brand) ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'}`}>
-                                    {brand}
-                                </span>
-                            </label>
-                        ))}
-                    </div>
-                </FilterSection>
-            )}
-
-            <FilterSection title="Rating" isOpen={openSections.rating} onToggle={() => toggleSection('rating')}>
-                {[4, 3, 2, 1].map((rating) => (
-                    <button
-                        key={rating}
-                        onClick={() => setMinRating(rating === minRating ? 0 : rating)}
-                        className={`flex items-center w-full p-2.5 rounded-xl transition-all mb-1 ${minRating === rating ? 'bg-amber-50 ring-1 ring-amber-200 shadow-sm' : 'hover:bg-slate-50'}`}
-                    >
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 transition-colors ${minRating === rating ? 'border-amber-500 bg-amber-500' : 'border-slate-300'}`}>
-                            <div className={`w-2 h-2 bg-white rounded-full transition-transform ${minRating === rating ? 'scale-100' : 'scale-0'}`} />
-                        </div>
-                        <div className="flex items-center flex-1">
-                            <div className="flex gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                    <i
-                                        key={i}
-                                        className={`fa-solid fa-star text-xs ${i < rating ? 'text-amber-400' : 'text-slate-200'}`}
-                                    ></i>
-                                ))}
-                            </div>
-                            <span className={`ml-2 text-xs font-semibold uppercase tracking-wide ${minRating === rating ? 'text-amber-700' : 'text-slate-400'}`}>& Up</span>
-                        </div>
-                    </button>
-                ))}
-            </FilterSection>
-
-            <button
-                onClick={clearFilters}
-                className="w-full mt-8 py-3.5 bg-slate-900 hover:bg-black text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center justify-center gap-2"
-            >
-                <i className="fa-solid fa-rotate-right"></i> Reset All Filters
-            </button>
-        </>
-    );
 
     return (
         <div className="min-h-screen bg-[#FDFDFE]">
@@ -439,11 +256,23 @@ className="peer appearance-none w-5 h-5 border-2 border-black bg-white checked:b
                 </div>
 
                 <div className="flex gap-10">
-                    {/* Sidebar - Desktop Glass Panel */}
-                    <div className="hidden md:block w-[280px] shrink-0">
-                        <div className="sticky top-28 bg-white border-4 border-black p-6 shadow-[12px_12px_0_#000000] overflow-y-auto custom-scrollbar">
-                            <FilterContent />
-                        </div>
+                    {/* Sidebar - Desktop (Now using new FilterPanel but keeping layout) */}
+                    <div className="hidden md:block w-[280px] shrink-0 sticky top-28 h-fit">
+                        <FilterPanel
+                            subcategories={currentCategory.subcategories}
+                            brands={availableBrands}
+                            priceRange={priceRange}
+                            selectedSubcategories={selectedSubcategories}
+                            selectedBrands={selectedBrands}
+                            minRating={minRating}
+                            onSubcategoryChange={setSelectedSubcategories}
+                            onBrandChange={setSelectedBrands}
+                            onPriceRangeChange={setPriceRange}
+                            onRatingChange={setMinRating}
+                            onClearAll={clearFilters}
+                            // We don't need categories in category page
+                            categories={[]}
+                        />
                     </div>
 
                     {/* Product Grid */}
@@ -551,41 +380,22 @@ className="peer appearance-none w-5 h-5 border-2 border-black bg-white checked:b
                 </div>
             </div>
 
-            {/* Mobile Filters Overlay - Glassmorphism */}
-            <AnimatePresence>
-                {isMobileFiltersOpen && (
-                    <div className="fixed inset-0 z-50 md:hidden font-sans">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/40 backdrop-blur-md"
-                            onClick={() => setIsMobileFiltersOpen(false)}
-                        />
-                        <motion.div
-                            initial={{ x: "100%" }}
-                            animate={{ x: 0 }}
-                            exit={{ x: "100%" }}
-                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="absolute inset-y-0 right-0 w-full max-w-sm bg-white/90 backdrop-blur-2xl shadow-2xl flex flex-col h-full border-l border-white/50"
-                        >
-                            <div className="flex items-center justify-between p-6 border-b border-gray-100/50">
-                                <h2 className="text-2xl font-bold font-playfair text-slate-900">Filter & Sort</h2>
-                                <button
-                                    onClick={() => setIsMobileFiltersOpen(false)}
-                                    className="w-12 h-12 flex items-center justify-center border-4 border-black bg-white hover:bg-red-500 hover:text-white hover:border-white hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-transform duration-100 font-bold"
-                                >
-                                    <i className="fa-solid fa-xmark text-lg"></i>
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-8">
-                                <FilterContent />
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* Mobile Filters Overlay - Now using standard Brutalist one */}
+            <MobileFilterModal
+                isOpen={isMobileFiltersOpen}
+                onClose={() => setIsMobileFiltersOpen(false)}
+                subcategories={currentCategory.subcategories}
+                brands={availableBrands}
+                priceRange={priceRange}
+                selectedSubcategories={selectedSubcategories}
+                selectedBrands={selectedBrands}
+                minRating={minRating}
+                onSubcategoryChange={setSelectedSubcategories}
+                onBrandChange={setSelectedBrands}
+                onPriceRangeChange={setPriceRange}
+                onRatingChange={setMinRating}
+                onClearAll={clearFilters}
+            />
         </div>
     );
 }

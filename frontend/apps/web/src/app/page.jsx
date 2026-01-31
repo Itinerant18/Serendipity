@@ -14,6 +14,7 @@ const ProductCard = lazy(() => import("@/components/ProductCard"));
 const MonochromaticCategories = lazy(() => import("@/components/monochromatic-categories").then(module => ({ default: module.MonochromaticCategories })));
 const FeaturedProducts = lazy(() => import("@/components/FeaturedProducts"));
 const BecomeSellerSection = lazy(() => import("@/components/ui/hero-dithering-card").then(module => ({ default: module.BecomeSellerSection })));
+const ShopWithUsSection = lazy(() => import("@/components/sections/ShopWithUsSection"));
 
 export default function HomePage() {
     const addToCart = useCartStore((state) => state.addToCart);
@@ -100,38 +101,10 @@ export default function HomePage() {
                     />
                 </Suspense>
 
-                {/* Why Shop With Us Section */}
-                <section className="mb-16 bg-slate-50 rounded-2xl p-8 md:p-12 border border-slate-100">
-                    <h2 className="text-2xl font-bold text-gray-900 font-playfair text-center mb-10">
-                        Why Shop With Us
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                                <i className="fa-solid fa-truck text-2xl text-green-600"></i>
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">Free Shipping</h3>
-                            <p className="text-gray-500 text-sm">Free shipping on orders over ₹499</p>
-                        </div>
-
-                        <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                                <i className="fa-solid fa-lock text-2xl text-blue-600"></i>
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">Secure Payment</h3>
-                            <p className="text-gray-500 text-sm">100% secure payment processing</p>
-                        </div>
-
-                        <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
-                                <i className="fa-solid fa-rotate-left text-2xl text-orange-600"></i>
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">Easy Returns</h3>
-                            <p className="text-gray-500 text-sm">30-day hassle-free returns</p>
-                        </div>
-                    </div>
-                </section>
+                {/* Enhanced Shop With Us Section */}
+                <Suspense fallback={<div className="h-[500px] bg-stone-900/50 rounded-[48px] animate-pulse" />}>
+                    <ShopWithUsSection />
+                </Suspense>
 
                 {/* Become a Seller CTA */}
                 <Suspense fallback={<div className="h-[500px] bg-stone-900/50 rounded-[48px] animate-pulse" />}>

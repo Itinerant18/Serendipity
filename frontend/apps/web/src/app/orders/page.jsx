@@ -80,7 +80,7 @@ export default function OrdersPage() {
                                 Track and manage your orders
                             </p>
                         </div>
-                        <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 border-4 border-black text-white font-bold hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-all">
+                        <a href="/products" className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 border-4 border-black text-white font-bold hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[6px_6px_0_#000000] transition-all">
                             <i className="fa-solid fa-shopping-bag"></i>
                             CONTINUE SHOPPING
                         </a>
@@ -117,7 +117,7 @@ export default function OrdersPage() {
                                 ? "You haven't placed any orders yet. Start shopping now!"
                                 : `You don't have any ${filter} orders.`}
                         </p>
-                        <a href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 border-4 border-black text-white font-bold hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[8px_8px_0_#000000] transition-all">
+                        <a href="/products" className="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 border-4 border-black text-white font-bold hover:bg-pink-500 hover:translate(-2px,-2px) hover:shadow-[8px_8px_0_#000000] transition-all">
                             <i className="fa-solid fa-shopping-bag"></i>
                             START SHOPPING
                         </a>
