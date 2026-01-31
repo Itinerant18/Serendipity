@@ -1,7 +1,4 @@
 # Serendipity (Finding something good unintentionaly)
-## 🎥 Project Demo (Loom)
-
-[![Serendipity Demo](https://www.loom.com/share/35cb2082bb504f5c94a78231d08e96a5)
 
 A full-stack e-commerce application built with the MERN stack (MongoDB, Express, React, Node.js) and Supabase.
 ## Project Structure
