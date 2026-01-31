@@ -1,8 +1,8 @@
 // Shop With Us Section Policies API
 // Provides policy data for the enhanced Shop With Us section
 
-import express from 'express';
-import asyncHandler from 'express-async-handler';
+const express = require('express');
+const asyncHandler = require('express-async-handler');
 
 const router = express.Router();
 
@@ -139,4 +139,4 @@ router.get('/:section', asyncHandler(async (req, res) => {
     }
 }));
 
-export default router;
+module.exports = router;

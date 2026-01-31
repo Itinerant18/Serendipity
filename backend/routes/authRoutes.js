@@ -1,13 +1,23 @@
 const express = require('express');
 const asyncHandler = require('express-async-handler');
+const rateLimit = require('express-rate-limit');
 const { supabase, supabaseAdmin } = require('../config/supabase');
 
 const router = express.Router();
 
+// Rate limiting for auth endpoints - prevents brute force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window per IP
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // @route   POST /api/auth/login
 // @desc    Login user
 // @access  Public
-router.post('/login', asyncHandler(async (req, res) => {
+router.post('/login', authLimiter, asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -49,7 +59,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 // @route   POST /api/auth/register
 // @desc    Register new user
 // @access  Public
-router.post('/register', asyncHandler(async (req, res) => {
+router.post('/register', authLimiter, asyncHandler(async (req, res) => {
   let { name, email, password, mobile } = req.body;
 
   // Validation
@@ -142,7 +152,7 @@ router.post('/register', asyncHandler(async (req, res) => {
 // @route   POST /api/auth/seller-login
 // @desc    Login seller (same as login but validates seller status)
 // @access  Public
-router.post('/seller-login', asyncHandler(async (req, res) => {
+router.post('/seller-login', authLimiter, asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {

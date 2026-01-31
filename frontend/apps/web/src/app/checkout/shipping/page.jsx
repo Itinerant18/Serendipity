@@ -5,6 +5,7 @@ import useAuth from "@/utils/useAuth";
 import useCartStore from "@/utils/cartStore";
 import { formatCurrency } from "@/utils/format";
 import AddressSelection from "@/components/checkout/AddressSelection";
+import CheckoutStepper from "@/components/checkout/CheckoutStepper";
 import toast from "react-hot-toast";
 import { API_URL } from "@/lib/api";
 
@@ -151,6 +152,9 @@ export default function ShippingPage() {
 
     return (
         <div className="min-h-screen bg-pink-50 border-8 border-black py-12 px-4 sm:px-6 lg:px-8">
+            {/* Checkout Progress Stepper */}
+            <CheckoutStepper currentStep={2} />
+
             <div className="max-w-3xl mx-auto">
                 <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-[#8B4513] mb-8 text-center">
                     Shipping Address

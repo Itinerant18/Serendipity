@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import apiClient from '@/lib/apiClient';
 import useAuthStore from '@/utils/authStore';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -20,6 +21,8 @@ const queryClient = new QueryClient({
 export default function RootLayout({ children }) {
   const login = useAuthStore(state => state.login);
   const logout = useAuthStore(state => state.logout);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const currentUser = useAuthStore(state => state.user);
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -29,9 +32,8 @@ export default function RootLayout({ children }) {
   useEffect(() => {
     const fetchProfileAndLogin = async (session) => {
       try {
-        const profileRes = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/profile`, {
-          headers: { Authorization: `Bearer ${session.access_token}` }
-        });
+        // Use centralized apiClient instead of raw fetch
+        const profileRes = await apiClient.get('/api/profile');
 
         let isSeller = false;
         let isAdmin = false;
@@ -60,7 +62,7 @@ export default function RootLayout({ children }) {
         login(user, session.access_token);
       } catch (err) {
         console.error("Failed to fetch profile:", err);
-        // Fallback to basic user
+        // Fallback to basic user from session
         const user = {
           id: session.user.id,
           email: session.user.email,
@@ -82,6 +84,11 @@ export default function RootLayout({ children }) {
         return;
       }
 
+      // Skip if already authenticated with same user (avoid redundant fetch)
+      if (isAuthenticated && currentUser?.id === session?.user?.id) {
+        return;
+      }
+
       if (session?.user) {
         fetchProfileAndLogin(session);
       }
@@ -90,13 +97,16 @@ export default function RootLayout({ children }) {
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Skip profile fetch in RootLayout if we are on the auth callback page
-      // to avoid race conditions with the page's own fetch logic.
       if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
         console.log("RootLayout: Skipping profile fetch on /auth/callback route");
         return;
       }
 
       if (event === 'SIGNED_IN' && session?.user) {
+        // Skip if already authenticated with same user
+        if (isAuthenticated && currentUser?.id === session.user.id) {
+          return;
+        }
         fetchProfileAndLogin(session);
       } else if (event === 'SIGNED_OUT') {
         logout();
@@ -104,7 +114,7 @@ export default function RootLayout({ children }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [login, logout]);
+  }, [login, logout, isAuthenticated, currentUser?.id]);
 
   return (
     <QueryClientProvider client={queryClient}>

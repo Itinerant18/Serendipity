@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WishlistCard } from "./WishlistCard";
-import { cn } from "@/lib/utils";
 
 export const WishlistCarousel = ({
     products,
     onRemove,
     onAddToCart,
     onReorder,
+    removingItemId = null,
 }) => {
     const [emblaRef, emblaApi] = useEmblaCarousel({
         align: "start",
@@ -80,6 +80,7 @@ export const WishlistCarousel = ({
                                     onRemove={onRemove}
                                     onAddToCart={onAddToCart}
                                     isDragging={isDragging}
+                                    isRemoving={removingItemId === product.id}
                                 />
                             </motion.div>
                         ))}
@@ -87,22 +88,14 @@ export const WishlistCarousel = ({
                 </div>
             </div>
 
-            {/* Navigation Arrows */}
+            {/* Navigation Arrows - Neo-Brutalism Style */}
             {canScrollPrev && (
                 <motion.button
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 10 }}
                     onClick={scrollPrev}
-                    className={cn(
-                        "absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4",
-                        "w-12 h-12 rounded-full",
-                        "bg-white border border-gray-100",
-                        "flex items-center justify-center",
-                        "text-gray-900 hover:bg-gray-50 transition-all duration-300",
-                        "shadow-lg hover:shadow-xl",
-                        "z-40"
-                    )}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-12 h-12 bg-yellow-400 border-4 border-black shadow-[4px_4px_0_#000000] flex items-center justify-center text-black font-bold hover:bg-yellow-500 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#000000] transition-all duration-100 z-40"
                 >
                     <i className="fa-solid fa-chevron-left text-lg" />
                 </motion.button>
@@ -114,15 +107,7 @@ export const WishlistCarousel = ({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     onClick={scrollNext}
-                    className={cn(
-                        "absolute right-0 top-1/2 -translate-y-1/2 translate-x-4",
-                        "w-12 h-12 rounded-full",
-                        "bg-white border border-gray-100",
-                        "flex items-center justify-center",
-                        "text-gray-900 hover:bg-gray-50 transition-all duration-300",
-                        "shadow-lg hover:shadow-xl",
-                        "z-40"
-                    )}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-12 h-12 bg-yellow-400 border-4 border-black shadow-[4px_4px_0_#000000] flex items-center justify-center text-black font-bold hover:bg-yellow-500 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#000000] transition-all duration-100 z-40"
                 >
                     <i className="fa-solid fa-chevron-right text-lg" />
                 </motion.button>

@@ -138,6 +138,25 @@ router.get('/myorders', protect, asyncHandler(async (req, res) => {
   res.json({ page, limit, total: count || 0, orders: orders || [] });
 }));
 
+// @desc    Get logged in user order history with items
+// @route   GET /api/orders/history
+// @access  Private
+router.get('/history', protect, asyncHandler(async (req, res) => {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('*, items:order_items(*)')
+    .eq('user_id', req.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    res.status(500);
+    throw new Error(error.message);
+  }
+
+  res.json({ orders: orders || [] });
+}));
+
+
 router.get('/:id', protect, asyncHandler(async (req, res) => {
   // Fetch order with user details and partial order items logic if needed
   // Supabase join syntax: user:users(...)

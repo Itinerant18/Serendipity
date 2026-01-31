@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import useCartStore from "@/utils/cartStore";
+import useWishlistStore from "@/utils/wishlistStore";
 import useAuth from "@/utils/useAuth";
 import GlassCard from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -38,8 +39,33 @@ export default function ProductPage() {
     const [isPlaying, setIsPlaying] = useState(true);
     const [quantity, setQuantity] = useState(1);
     const [addedToCart, setAddedToCart] = useState(false);
-    const [isWishlisted, setIsWishlisted] = useState(false);
     const [activeTab, setActiveTab] = useState("description"); // description, specs, reviews
+
+    // Wishlist integration - use global store
+    const { isInWishlist, addToWishlist, removeFromWishlist, fetchWishlist } = useWishlistStore();
+    const isWishlisted = product ? isInWishlist(product?.id || params.id) : false;
+
+    const toggleWishlist = () => {
+        if (!isAuthenticated) {
+            navigate('/account/signin');
+            return;
+        }
+        if (!product) return;
+        const productId = product.id || params.id;
+        if (isInWishlist(productId)) {
+            removeFromWishlist(productId);
+        } else {
+            // Add full product data to wishlist
+            addToWishlist({
+                id: productId,
+                name: product.name,
+                price: product.offer?.price || product.price,
+                image: product.image,
+                category: product.category,
+                brand: product.brand
+            });
+        }
+    };
 
     // Simplified scroll effect
     const targetRef = useRef(null);
@@ -49,7 +75,11 @@ export default function ProductPage() {
     useEffect(() => {
         fetchProduct();
         window.scrollTo(0, 0);
-    }, [params.id]);
+        // Fetch wishlist to sync heart icon state
+        if (isAuthenticated) {
+            fetchWishlist();
+        }
+    }, [params.id, isAuthenticated, fetchWishlist]);
 
     const fetchProduct = async () => {
         try {
@@ -288,7 +318,7 @@ export default function ProductPage() {
                         <ProductDetails
                             product={product}
                             isWishlisted={isWishlisted}
-                            toggleWishlist={() => setIsWishlisted(!isWishlisted)}
+                            toggleWishlist={toggleWishlist}
                             quantity={quantity}
                             setQuantity={setQuantity}
                             handleAddToCart={handleAddToCart}

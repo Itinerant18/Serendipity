@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/utils/authStore";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function AuthCallbackPage() {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
@@ -26,7 +28,7 @@ export default function AuthCallbackPage() {
             if (session?.user) {
                 // Fetch full profile from backend to get isSeller, isAdmin, avatar, etc.
                 try {
-                    const profileRes = await fetch("http://localhost:5000/api/profile", {
+                    const profileRes = await fetch(`${API_URL}/api/profile`, {
                         headers: { Authorization: `Bearer ${session.access_token}` }
                     });
 
