@@ -83,6 +83,7 @@ app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/addresses', require('./routes/addressRoutes'));
+app.use('/api/policies', require('./routes/policiesRoutes'));
 
 // Profile Routes
 app.use('/api/profile', require('./routes/profileRoutes'));
