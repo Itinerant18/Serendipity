@@ -66,6 +66,24 @@ export default function AuthCallbackPage() {
                         sellerProfileId
                     };
 
+                    // Update user in database to set auth provider to Google (if not already set)
+                    try {
+                        await fetch(`${API_URL}/api/profile`, {
+                            method: 'PUT',
+                            headers: { 
+                                'Authorization': `Bearer ${session.access_token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                                auth_provider: 'google',
+                                // Update with Google avatar if not already set in DB
+                                avatar_url: dbAvatar || session.user.user_metadata?.avatar_url 
+                            })
+                        });
+                    } catch (err) {
+                        console.error('Failed to update user auth provider:', err);
+                    }
+
                     console.log("Profile fetched for user:", user.email, "isSeller:", isSeller, "ID:", user.id);
                     console.log("Avatar source:", dbAvatar ? "database" : "google", "URL:", user.avatar?.substring(0, 50));
                     login(user, session.access_token);

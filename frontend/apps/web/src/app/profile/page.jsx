@@ -7,6 +7,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ActivityDashboard from "@/components/profile/ActivityDashboard";
+import ProfilePicture from "@/components/ProfilePicture";
 
 export default function ProfilePage() {
     const { user, token, isAuthenticated, updateUser, signOut } = useAuth();
@@ -28,7 +29,7 @@ export default function ProfilePage() {
     const [showGoogleWarning, setShowGoogleWarning] = useState(false);
     const fileInputRef = React.useRef(null);
 
-    const isGoogleUser = user?.authProvider === 'google';
+    const isGoogleUser = user?.authProvider === 'google' || user?.auth_provider === 'google';
 
     useEffect(() => {
         if (user) {
@@ -111,7 +112,11 @@ export default function ProfilePage() {
             setMessage({ type: "success", text: "Profile picture updated!" });
             setIsEditing(false);
         } catch (error) {
-            setMessage({ type: "error", text: error.message || "Failed to upload avatar" });
+            console.error('Avatar upload error:', error);
+            setMessage({ 
+                type: "error", 
+                text: error.message || "Failed to upload avatar. Please try again." 
+            });
         } finally {
             setUploadingAvatar(false);
         }
@@ -192,27 +197,13 @@ export default function ProfilePage() {
                     <div className="flex flex-col md:flex-row items-start gap-8">
                         {/* Avatar */}
                         <div className="flex flex-col items-center gap-3">
-                            <div className="relative">
-                                <div className="w-28 h-28 bg-orange-500 border-4 border-black p-1">
-                                    <img
-                                        src={avatarPreview || "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop"}
-                                        alt={formData.name}
-                                        className="w-full h-full object-cover border-2 border-black"
-                                    />
-                                </div>
-                                {isEditing && (
-                                    <button
-                                        onClick={() => {
-                                            if (isGoogleUser) setShowGoogleWarning(true);
-                                            else fileInputRef.current?.click();
-                                        }}
-                                        type="button"
-                                        className="absolute bottom-0 right-0 w-10 h-10 bg-black border-4 border-white flex items-center justify-center text-white hover:bg-orange-500 transition-colors cursor-pointer"
-                                    >
-                                        <i className="fa-solid fa-camera text-sm"></i>
-                                    </button>
-                                )}
-                            </div>
+                            <ProfilePicture
+                                src={avatarPreview}
+                                alt={formData.name}
+                                isGoogleUser={isGoogleUser}
+                                isEditing={isEditing}
+                                onUploadClick={() => fileInputRef.current?.click()}
+                            />
 
                             <input
                                 ref={fileInputRef}

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import GlassCard from "@/components/ui/GlassCard";
 
 export default function SignInPage() {
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -14,7 +16,33 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { signInWithCredentials, signInWithGoogle } = useAuth();
+  const { isAuthenticated, hasHydrated, signInWithCredentials, signInWithGoogle } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated) {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect') || '/';
+      navigate(redirect, { replace: true });
+    }
+  }, [hasHydrated, isAuthenticated, navigate]);
+
+  // Show loading while checking auth state
+  if (!hasHydrated) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <i className="fa-solid fa-spinner fa-spin text-4xl text-orange-500"></i>
+          <span className="font-bold text-black">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated, show nothing (redirect will happen)
+  if (isAuthenticated) {
+    return null;
+  }
 
   const onSubmit = async (e) => {
     e.preventDefault();

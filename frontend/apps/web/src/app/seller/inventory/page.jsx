@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,11 +33,16 @@ import {
     AlertTriangle,
     Minus,
     Check,
-    RefreshCw
+    RefreshCw,
+    CheckCircle2,
+    XCircle,
+    Filter
 } from "lucide-react";
 import useAuth from "@/utils/useAuth";
 import { formatCurrency } from "@/utils/format";
 import { useNavigate } from "react-router-dom";
+import UploadProgress from "@/components/UploadProgress";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SellerInventoryPage() {
     const { token } = useAuth();
@@ -51,9 +56,14 @@ export default function SellerInventoryPage() {
     const [productToDelete, setProductToDelete] = useState(null);
     const [csvFile, setCsvFile] = useState(null);
     const [parsedData, setParsedData] = useState([]);
+    const [validatedData, setValidatedData] = useState([]);
+    const [selectedRows, setSelectedRows] = useState(new Set());
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
+    const [uploadStep, setUploadStep] = useState('idle'); // 'idle' | 'validating' | 'preview' | 'uploading' | 'complete'
+    const [uploadProgress, setUploadProgress] = useState({ total: 0, processed: 0, succeeded: 0, failed: 0, skipped: 0, currentChunk: 0, totalChunks: 0, errors: [] });
     const fileInputRef = useRef(null);
+    const CHUNK_SIZE = 50; // Products per chunk
 
     // Stock Management State
     const [editingStockId, setEditingStockId] = useState(null);
@@ -141,21 +151,29 @@ export default function SellerInventoryPage() {
         if (file) {
             setCsvFile(file);
             setUploadError(null);
+            setUploadStep('validating');
+            setValidatedData([]);
+            setSelectedRows(new Set());
+            
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
-                complete: (results) => {
+                complete: async (results) => {
                     if (results.errors.length > 0) {
                         setUploadError(`Error parsing CSV: ${results.errors[0].message}`);
+                        setUploadStep('idle');
                     } else if (results.data.length === 0) {
                         setUploadError("CSV file is empty");
+                        setUploadStep('idle');
                     } else {
                         setParsedData(results.data);
+                        await validateCSVData(results.data);
                         setIsUploadModalOpen(true);
                     }
                 },
                 error: (error) => {
                     setUploadError(`Error reading file: ${error.message}`);
+                    setUploadStep('idle');
                 }
             });
             if (fileInputRef.current) {
@@ -164,99 +182,150 @@ export default function SellerInventoryPage() {
         }
     };
 
+    // Validate CSV data and check for duplicates
+    const validateCSVData = async (data) => {
+        const validated = [];
+        const names = [];
+
+        data.forEach((row, index) => {
+            const name = row.name || row.Name || row.NAME || '';
+            const price = parseFloat(row.price || row.Price || row.PRICE || row.cost || row.Cost || 0);
+            const category = row.category || row.Category || row.CATEGORY || '';
+            const stock = parseInt(row.stock || row.Stock || row.STOCK || row.count_in_stock || row.countInStock || 0);
+
+            let status = 'valid';
+            let message = '';
+
+            if (!name.trim()) {
+                status = 'error';
+                message = 'Missing product name';
+            } else if (!category.trim()) {
+                status = 'error';
+                message = 'Missing category';
+            } else if (isNaN(price) || price < 0) {
+                status = 'error';
+                message = 'Invalid price';
+            } else if (isNaN(stock) || stock < 0) {
+                status = 'error';
+                message = 'Invalid stock';
+            }
+
+            if (status === 'valid' && names.includes(name.toLowerCase().trim())) {
+                status = 'warning';
+                message = 'Duplicate in CSV';
+            }
+
+            if (name.trim()) names.push(name.toLowerCase().trim());
+
+            let images = [];
+            if (row.images || row.Images || row.IMAGES) {
+                images = (row.images || row.Images || row.IMAGES).split(/[|,]/).map(s => s.trim()).filter(Boolean);
+            }
+            const mainImage = row.image_url || row.imageUrl || row.image || row.Image || row.IMAGE;
+            if (mainImage && !images.includes(mainImage)) images.unshift(mainImage);
+
+            validated.push({
+                name: name.trim(),
+                price,
+                category: category.trim(),
+                subcategory: row.subcategory || row.Subcategory || null,
+                brand: row.brand || row.Brand || 'Generic',
+                stock,
+                description: row.description || row.Description || '',
+                image_url: images[0] || '',
+                images,
+                _rowIndex: index,
+                _validation: { status, message }
+            });
+        });
+
+        // Check database duplicates
+        const validNames = validated.filter(v => v._validation.status === 'valid').map(v => v.name);
+        if (validNames.length > 0) {
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/products/check-duplicates`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ names: validNames })
+                });
+                if (res.ok) {
+                    const { duplicates } = await res.json();
+                    const dupSet = new Set(duplicates.map(d => d.toLowerCase()));
+                    validated.forEach(v => {
+                        if (v._validation.status === 'valid' && dupSet.has(v.name.toLowerCase())) {
+                            v._validation.status = 'warning';
+                            v._validation.message = 'Already exists (skip)';
+                        }
+                    });
+                }
+            } catch (err) { console.warn('Duplicate check failed:', err); }
+        }
+
+        setValidatedData(validated);
+        setSelectedRows(new Set(validated.map((v, i) => v._validation.status === 'valid' ? i : null).filter(i => i !== null)));
+        setUploadStep('preview');
+    };
+
+    // Chunked upload with progress
     const handleBulkUpload = async () => {
-        if (!parsedData.length) return;
+        const toUpload = validatedData.filter((_, i) => selectedRows.has(i));
+        if (toUpload.length === 0) { setUploadError('No products selected'); return; }
+
         setUploading(true);
+        setUploadStep('uploading');
         setUploadError(null);
 
-        try {
-            // Map CSV columns to backend expected format
-            const mappedData = parsedData.map((row) => {
-                // Handle multiple images: supports 'images' column (comma separated) or image1, image2, etc.
-                let images = [];
+        const products = toUpload.map(p => ({
+            name: p.name, price: p.price, category: p.category, subcategory: p.subcategory,
+            brand: p.brand, stock: p.stock, description: p.description, image_url: p.image_url, images: p.images
+        }));
 
-                // Method 1: 'images' column with comma/pipe separation
-                if (row.images || row.Images || row.IMAGES) {
-                    const rawStr = row.images || row.Images || row.IMAGES;
-                    images = rawStr.split(/[|,]/).map((s) => s.trim()).filter(Boolean);
-                }
+        const totalChunks = Math.ceil(products.length / CHUNK_SIZE);
+        const skippedCount = validatedData.filter(v => v._validation.status === 'warning').length;
+        setUploadProgress({ total: products.length, processed: 0, succeeded: 0, failed: 0, skipped: skippedCount, currentChunk: 0, totalChunks, errors: [] });
 
-                // Method 2: 'image_url' or 'image' column
-                const mainImage = row.image_url || row.imageUrl || row.image || row.Image || row.IMAGE || row['image url'];
-                if (mainImage && !images.includes(mainImage)) {
-                    images.unshift(mainImage);
-                }
+        let totalSucceeded = 0, totalFailed = 0;
+        const allErrors = [];
 
-                // Method 3: image1, image2, etc.
-                Object.keys(row).forEach(key => {
-                    if (key.match(/^image\d+$/i)) {
-                        const val = row[key];
-                        if (val && !images.includes(val)) {
-                            images.push(val);
-                        }
-                    }
+        for (let i = 0; i < totalChunks; i++) {
+            const chunk = products.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/products/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(chunk)
                 });
+                const data = await res.json();
+                if (res.ok) totalSucceeded += data.count || chunk.length;
+                else { totalFailed += chunk.length; allErrors.push({ row: i * CHUNK_SIZE + 1, message: data.message || 'Failed' }); }
+            } catch (err) { totalFailed += chunk.length; allErrors.push({ row: i * CHUNK_SIZE + 1, message: err.message }); }
 
-                return {
-                    name: row.name || row.Name || row.NAME || '',
-                    price: row.price || row.Price || row.PRICE || row.cost || row.Cost || 0,
-                    category: row.category || row.Category || row.CATEGORY || '',
-                    subcategory: row.subcategory || row.Subcategory || row.SUBCATEGORY || null,
-                    brand: row.brand || row.Brand || row.BRAND || 'Generic',
-                    stock: row.stock || row.Stock || row.STOCK || row.count_in_stock || row.countInStock || 0,
-                    description: row.description || row.Description || row.DESCRIPTION || '',
-                    image_url: images[0] || '',
-                    images: images
-                };
-            });
-
-            // Validate required fields
-            const invalidRows = mappedData.filter((p) => !p.name || !p.category);
-            if (invalidRows.length > 0) {
-                setUploadError(`${invalidRows.length} rows missing required fields (name or category). Please check your CSV.`);
-                setUploading(false);
-                return;
-            }
-
-            console.log('Uploading products:', mappedData);
-
-            const res = await fetch("http://localhost:5000/api/products/bulk", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(mappedData)
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                const count = data.count || data.length || mappedData.length;
-                alert(`Successfully uploaded ${count} products!`);
-                setIsUploadModalOpen(false);
-                setCsvFile(null);
-                setParsedData([]);
-                await fetchInventory();
-            } else {
-                const errorMsg = data.message || data.error || "Upload failed";
-                console.error('Upload error response:', data);
-                setUploadError(errorMsg);
-            }
-        } catch (error) {
-            console.error('Upload error:', error);
-            setUploadError(`Network error: ${error.message || 'Failed to upload products'}`);
-        } finally {
-            setUploading(false);
+            setUploadProgress(prev => ({ ...prev, processed: Math.min((i + 1) * CHUNK_SIZE, products.length), succeeded: totalSucceeded, failed: totalFailed, currentChunk: i + 1, errors: allErrors }));
+            if (i < totalChunks - 1) await new Promise(r => setTimeout(r, 100));
         }
+
+        setUploadStep('complete');
+        setUploading(false);
+        if (totalSucceeded > 0) await fetchInventory();
     };
 
     const closeUploadModal = () => {
         setIsUploadModalOpen(false);
         setCsvFile(null);
         setParsedData([]);
+        setValidatedData([]);
+        setSelectedRows(new Set());
         setUploadError(null);
+        setUploadStep('idle');
+        setUploadProgress({ total: 0, processed: 0, succeeded: 0, failed: 0, skipped: 0, currentChunk: 0, totalChunks: 0, errors: [] });
     };
+
+    const validationStats = useMemo(() => {
+        const valid = validatedData.filter(v => v._validation?.status === 'valid').length;
+        const warning = validatedData.filter(v => v._validation?.status === 'warning').length;
+        const error = validatedData.filter(v => v._validation?.status === 'error').length;
+        return { valid, warning, error, total: validatedData.length };
+    }, [validatedData]);
 
     const filteredProducts = products.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -787,15 +856,24 @@ export default function SellerInventoryPage() {
 
             {/* Upload Modal */}
             <Dialog open={isUploadModalOpen} onOpenChange={(open) => !open && closeUploadModal()}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Upload className="h-5 w-5" />
                             Import Products from CSV
+                            {uploadStep !== 'idle' && (
+                                <Badge variant={uploadStep === 'complete' ? 'default' : 'secondary'} className="ml-2">
+                                    {uploadStep === 'validating' && 'Validating...'}
+                                    {uploadStep === 'preview' && 'Review'}
+                                    {uploadStep === 'uploading' && 'Uploading'}
+                                    {uploadStep === 'complete' && 'Complete'}
+                                </Badge>
+                            )}
                         </DialogTitle>
                     </DialogHeader>
 
                     <div className="flex-1 overflow-hidden flex flex-col gap-4">
+                        {/* Info banner */}
                         <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-900">
                             <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                             <div className="text-sm text-blue-700 dark:text-blue-300">
@@ -803,6 +881,9 @@ export default function SellerInventoryPage() {
                                 <code className="text-xs bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded">
                                     name, price, category, stock
                                 </code>
+                                {validatedData.length > 0 && (
+                                    <span className="ml-2">• Duplicates will be skipped automatically</span>
+                                )}
                             </div>
                         </div>
 
@@ -813,46 +894,154 @@ export default function SellerInventoryPage() {
                             </div>
                         )}
 
-                        {parsedData.length > 0 && (
+                        {/* Uploading/Complete: Show Progress */}
+                        {(uploadStep === 'uploading' || uploadStep === 'complete') && (
+                            <div className="border rounded-lg p-4">
+                                <UploadProgress
+                                    total={uploadProgress.total}
+                                    processed={uploadProgress.processed}
+                                    succeeded={uploadProgress.succeeded}
+                                    failed={uploadProgress.failed}
+                                    skipped={uploadProgress.skipped}
+                                    currentChunk={uploadProgress.currentChunk}
+                                    totalChunks={uploadProgress.totalChunks}
+                                    isUploading={uploading}
+                                    errors={uploadProgress.errors}
+                                />
+                            </div>
+                        )}
+
+                        {/* Preview: Show Validation Table */}
+                        {uploadStep === 'preview' && validatedData.length > 0 && (
                             <div className="flex-1 overflow-hidden flex flex-col gap-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="font-medium text-sm">
-                                        Preview ({parsedData.length} items)
-                                    </span>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={closeUploadModal}
-                                        className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    >
-                                        <X className="h-4 w-4 mr-1" />
-                                        Clear
-                                    </Button>
+                                {/* Stats Bar */}
+                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                    <div className="flex items-center gap-2">
+                                        <Filter className="h-4 w-4 text-muted-foreground" />
+                                        <div className="flex gap-1 text-sm">
+                                            <Badge variant="outline" className="gap-1">
+                                                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                                {validationStats.valid} valid
+                                            </Badge>
+                                            {validationStats.warning > 0 && (
+                                                <Badge variant="outline" className="gap-1 border-yellow-300 text-yellow-600">
+                                                    <AlertTriangle className="h-3 w-3" />
+                                                    {validationStats.warning} skip
+                                                </Badge>
+                                            )}
+                                            {validationStats.error > 0 && (
+                                                <Badge variant="outline" className="gap-1 border-red-300 text-red-600">
+                                                    <XCircle className="h-3 w-3" />
+                                                    {validationStats.error} errors
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-7 text-xs"
+                                            onClick={() => setSelectedRows(new Set(validatedData.map((v, i) => v._validation.status === 'valid' ? i : null).filter(i => i !== null)))}
+                                        >
+                                            Select Valid
+                                        </Button>
+                                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedRows(new Set())}>
+                                            Deselect All
+                                        </Button>
+                                        <Button variant="ghost" size="sm" onClick={closeUploadModal} className="h-7 text-xs text-destructive">
+                                            <X className="h-3 w-3 mr-1" />
+                                            Clear
+                                        </Button>
+                                    </div>
                                 </div>
-                                <ScrollArea className="flex-1 border rounded-lg max-h-[300px]">
+
+                                {/* Summary */}
+                                <div className="text-sm text-muted-foreground">
+                                    <strong>{selectedRows.size}</strong> products selected for upload
+                                </div>
+
+                                {/* Validation Table */}
+                                <ScrollArea className="flex-1 border rounded-lg max-h-[350px]">
                                     <Table>
                                         <TableHeader className="bg-muted/50 sticky top-0">
                                             <TableRow>
-                                                {Object.keys(parsedData[0] || {}).map(header => (
-                                                    <TableHead key={header} className="text-xs uppercase font-semibold">
-                                                        {header}
-                                                    </TableHead>
-                                                ))}
+                                                <TableHead className="w-10"></TableHead>
+                                                <TableHead className="w-10">Status</TableHead>
+                                                <TableHead className="w-10">#</TableHead>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Price</TableHead>
+                                                <TableHead>Category</TableHead>
+                                                <TableHead>Stock</TableHead>
+                                                <TableHead className="min-w-[120px]">Message</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {parsedData.slice(0, 10).map((row, i) => (
-                                                <TableRow key={i}>
-                                                    {Object.values(row).map((val, j) => (
-                                                        <TableCell key={j} className="text-xs max-w-[200px] truncate">
-                                                            {val}
+                                            {validatedData.map((row, i) => {
+                                                const status = row._validation?.status || 'valid';
+                                                const message = row._validation?.message || '';
+                                                const isSelected = selectedRows.has(i);
+                                                const isError = status === 'error';
+                                                const bgClass = status === 'valid' ? 'bg-green-50/50 dark:bg-green-950/20' :
+                                                    status === 'warning' ? 'bg-yellow-50/50 dark:bg-yellow-950/20' :
+                                                    'bg-red-50/50 dark:bg-red-950/20';
+
+                                                return (
+                                                    <TableRow
+                                                        key={i}
+                                                        className={`${bgClass} ${isError ? 'opacity-60' : ''} cursor-pointer transition-colors hover:opacity-80`}
+                                                        onClick={() => {
+                                                            if (isError) return;
+                                                            const newSet = new Set(selectedRows);
+                                                            if (newSet.has(i)) newSet.delete(i);
+                                                            else newSet.add(i);
+                                                            setSelectedRows(newSet);
+                                                        }}
+                                                    >
+                                                        <TableCell className="p-2">
+                                                            <Checkbox
+                                                                checked={isSelected}
+                                                                disabled={isError}
+                                                                onCheckedChange={() => {
+                                                                    const newSet = new Set(selectedRows);
+                                                                    if (newSet.has(i)) newSet.delete(i);
+                                                                    else newSet.add(i);
+                                                                    setSelectedRows(newSet);
+                                                                }}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
                                                         </TableCell>
-                                                    ))}
-                                                </TableRow>
-                                            ))}
+                                                        <TableCell className="p-2">
+                                                            {status === 'valid' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                                                            {status === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-500" />}
+                                                            {status === 'error' && <XCircle className="h-4 w-4 text-red-500" />}
+                                                        </TableCell>
+                                                        <TableCell className="p-2 text-xs text-muted-foreground">{i + 1}</TableCell>
+                                                        <TableCell className="text-xs max-w-[150px] truncate p-2">{row.name || '-'}</TableCell>
+                                                        <TableCell className="text-xs p-2">{formatCurrency(row.price)}</TableCell>
+                                                        <TableCell className="text-xs max-w-[100px] truncate p-2">{row.category || '-'}</TableCell>
+                                                        <TableCell className="text-xs p-2">{row.stock}</TableCell>
+                                                        <TableCell className="text-xs p-2">
+                                                            {message && (
+                                                                <span className={status === 'error' ? 'text-red-600' : status === 'warning' ? 'text-yellow-600' : 'text-gray-500'}>
+                                                                    {message}
+                                                                </span>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
                                         </TableBody>
                                     </Table>
                                 </ScrollArea>
+                            </div>
+                        )}
+
+                        {/* Validating State */}
+                        {uploadStep === 'validating' && (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                                <span className="ml-3 text-muted-foreground">Validating CSV data...</span>
                             </div>
                         )}
                     </div>
@@ -861,28 +1050,30 @@ export default function SellerInventoryPage() {
 
                     <div className="flex justify-end gap-2">
                         <Button variant="outline" onClick={closeUploadModal}>
-                            Cancel
+                            {uploadStep === 'complete' ? 'Close' : 'Cancel'}
                         </Button>
-                        <Button onClick={handleBulkUpload} disabled={uploading || !parsedData.length}>
-                            {uploading ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Uploading...
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Upload Products
-                                </>
-                            )}
-                        </Button>
+                        {uploadStep === 'preview' && (
+                            <Button onClick={handleBulkUpload} disabled={uploading || selectedRows.size === 0}>
+                                {uploading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Uploading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Upload {selectedRows.size} Products
+                                    </>
+                                )}
+                            </Button>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>
 
             {/* CSV Guide Modal */}
             <Dialog open={isGuideOpen} onOpenChange={setIsGuideOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <HelpCircle className="h-5 w-5" />
@@ -890,8 +1081,9 @@ export default function SellerInventoryPage() {
                         </DialogTitle>
                     </DialogHeader>
 
-                    <ScrollArea className="flex-1 pr-4 max-h-[60vh]">
+                    <ScrollArea className="flex-1 pr-4 max-h-[65vh]">
                         <div className="space-y-6">
+                            {/* Download Sample */}
                             <div className="space-y-3">
                                 <p className="text-sm text-muted-foreground">
                                     Use this guide to format your CSV file correctly. The <strong>header row is required</strong>.
@@ -909,6 +1101,28 @@ export default function SellerInventoryPage() {
 
                             <Separator />
 
+                            {/* Example CSV Preview */}
+                            <div className="space-y-3">
+                                <h3 className="font-semibold text-sm flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                    Example CSV Format
+                                </h3>
+                                <div className="bg-muted/50 rounded-lg p-3 overflow-x-auto border">
+                                    <pre className="text-xs font-mono whitespace-pre">
+{`name,price,category,stock,subcategory,brand,description,image_url
+Wireless Bluetooth Headphones,79.99,Electronics,50,Audio & Headphones,SoundMax,"Premium noise-cancelling headphones",https://example.com/headphones.jpg
+Cotton Crew Neck T-Shirt,24.99,Fashion,100,Men's Clothing,UrbanWear,"Comfortable everyday t-shirt",https://example.com/tshirt.jpg
+Stainless Steel Water Bottle,19.99,Home & Living,200,Kitchen & Dining,EcoLife,"1L insulated bottle, keeps drinks cold 24hrs",https://example.com/bottle.jpg`}
+                                    </pre>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    💡 Use commas to separate values. Wrap text in quotes if it contains commas.
+                                </p>
+                            </div>
+
+                            <Separator />
+
+                            {/* Required Columns */}
                             <div className="space-y-3">
                                 <h3 className="font-semibold text-sm flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-red-500"></span>
@@ -918,32 +1132,38 @@ export default function SellerInventoryPage() {
                                     <Table>
                                         <TableHeader className="bg-muted/30">
                                             <TableRow>
-                                                <TableHead className="w-[140px]">Column Header</TableHead>
-                                                <TableHead>Description</TableHead>
+                                                <TableHead className="w-[120px]">Column</TableHead>
+                                                <TableHead className="w-[120px]">Type</TableHead>
+                                                <TableHead>Example</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody className="text-sm">
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">name</TableCell>
-                                                <TableCell>Product title</TableCell>
+                                                <TableCell className="text-muted-foreground">Text</TableCell>
+                                                <TableCell>Wireless Bluetooth Headphones</TableCell>
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">price</TableCell>
-                                                <TableCell>Numeric value (e.g., 99.99)</TableCell>
+                                                <TableCell className="text-muted-foreground">Number</TableCell>
+                                                <TableCell>79.99 (no currency symbol)</TableCell>
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">category</TableCell>
-                                                <TableCell>Main category (e.g., Electronics)</TableCell>
+                                                <TableCell className="text-muted-foreground">Text</TableCell>
+                                                <TableCell>Electronics (see valid list below)</TableCell>
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">stock</TableCell>
-                                                <TableCell>Quantity available (number)</TableCell>
+                                                <TableCell className="text-muted-foreground">Number</TableCell>
+                                                <TableCell>50 (whole number only)</TableCell>
                                             </TableRow>
                                         </TableBody>
                                     </Table>
                                 </div>
                             </div>
 
+                            {/* Optional Columns */}
                             <div className="space-y-3">
                                 <h3 className="font-semibold text-sm flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-blue-500"></span>
@@ -953,14 +1173,14 @@ export default function SellerInventoryPage() {
                                     <Table>
                                         <TableHeader className="bg-muted/30">
                                             <TableRow>
-                                                <TableHead className="w-[140px]">Column Header</TableHead>
+                                                <TableHead className="w-[120px]">Column</TableHead>
                                                 <TableHead>Description</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody className="text-sm">
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">subcategory</TableCell>
-                                                <TableCell>Specific sub-category (e.g., Headphones)</TableCell>
+                                                <TableCell>Specific sub-category (e.g., Audio & Headphones)</TableCell>
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">brand</TableCell>
@@ -972,22 +1192,155 @@ export default function SellerInventoryPage() {
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">image_url</TableCell>
-                                                <TableCell>Main image URL</TableCell>
+                                                <TableCell>Main image URL (https://...)</TableCell>
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell className="font-mono font-medium">images</TableCell>
-                                                <TableCell>Comma-separated list of additional image URLs</TableCell>
+                                                <TableCell>Additional images, comma or pipe separated</TableCell>
                                             </TableRow>
                                         </TableBody>
                                     </Table>
                                 </div>
                             </div>
 
-                            <div className="bg-yellow-50 dark:bg-yellow-950/30 p-4 rounded-lg border border-yellow-200 dark:border-yellow-900">
+                            <Separator />
+
+                            {/* Common Mistakes */}
+                            <div className="space-y-3">
+                                <h3 className="font-semibold text-sm flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                    Common Mistakes
+                                </h3>
+                                <div className="space-y-2">
+                                    <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1 text-sm">
+                                            <div className="font-medium text-red-700 dark:text-red-400">Price with currency symbol</div>
+                                            <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
+                                                ❌ $79.99 → ✅ 79.99
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1 text-sm">
+                                            <div className="font-medium text-red-700 dark:text-red-400">Stock as decimal</div>
+                                            <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
+                                                ❌ 50.5 → ✅ 50
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1 text-sm">
+                                            <div className="font-medium text-red-700 dark:text-red-400">Invalid category name</div>
+                                            <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
+                                                ❌ "Clothes" → ✅ "Fashion"
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1 text-sm">
+                                            <div className="font-medium text-red-700 dark:text-red-400">Unquoted text with commas</div>
+                                            <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
+                                                ❌ Red, Blue, Green → ✅ "Red, Blue, Green"
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            {/* Valid Categories */}
+                            <div className="space-y-3">
+                                <h3 className="font-semibold text-sm flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                                    Valid Categories & Subcategories
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="border rounded-lg p-3 space-y-2">
+                                        <div className="font-medium text-sm flex items-center gap-2">
+                                            <span>📱</span> Electronics
+                                        </div>
+                                        <div className="text-xs text-muted-foreground space-y-0.5">
+                                            <div>• Smartphones & Accessories</div>
+                                            <div>• Laptops & Computers</div>
+                                            <div>• Audio & Headphones</div>
+                                            <div>• Cameras & Photography</div>
+                                            <div>• Gaming & Consoles</div>
+                                        </div>
+                                    </div>
+                                    <div className="border rounded-lg p-3 space-y-2">
+                                        <div className="font-medium text-sm flex items-center gap-2">
+                                            <span>👕</span> Fashion
+                                        </div>
+                                        <div className="text-xs text-muted-foreground space-y-0.5">
+                                            <div>• Men's Clothing</div>
+                                            <div>• Women's Clothing</div>
+                                            <div>• Kids' Clothing</div>
+                                            <div>• Footwear</div>
+                                            <div>• Bags & Luggage</div>
+                                        </div>
+                                    </div>
+                                    <div className="border rounded-lg p-3 space-y-2">
+                                        <div className="font-medium text-sm flex items-center gap-2">
+                                            <span>🏠</span> Home & Living
+                                        </div>
+                                        <div className="text-xs text-muted-foreground space-y-0.5">
+                                            <div>• Furniture</div>
+                                            <div>• Kitchen & Dining</div>
+                                            <div>• Bedding & Bath</div>
+                                            <div>• Home Decor</div>
+                                            <div>• Home Appliances</div>
+                                        </div>
+                                    </div>
+                                    <div className="border rounded-lg p-3 space-y-2">
+                                        <div className="font-medium text-sm flex items-center gap-2">
+                                            <span>💄</span> Beauty
+                                        </div>
+                                        <div className="text-xs text-muted-foreground space-y-0.5">
+                                            <div>• Skincare</div>
+                                            <div>• Makeup & Cosmetics</div>
+                                            <div>• Haircare</div>
+                                            <div>• Fragrances</div>
+                                            <div>• Personal Care</div>
+                                        </div>
+                                    </div>
+                                    <div className="border rounded-lg p-3 space-y-2">
+                                        <div className="font-medium text-sm flex items-center gap-2">
+                                            <span>⚽</span> Sports
+                                        </div>
+                                        <div className="text-xs text-muted-foreground space-y-0.5">
+                                            <div>• Fitness Equipment</div>
+                                            <div>• Sportswear & Activewear</div>
+                                            <div>• Outdoor & Camping</div>
+                                            <div>• Cycling</div>
+                                            <div>• Team Sports</div>
+                                        </div>
+                                    </div>
+                                    <div className="border rounded-lg p-3 space-y-2">
+                                        <div className="font-medium text-sm flex items-center gap-2">
+                                            <span>📚</span> Books
+                                        </div>
+                                        <div className="text-xs text-muted-foreground space-y-0.5">
+                                            <div>• Fiction</div>
+                                            <div>• Non-Fiction</div>
+                                            <div>• Children's Books</div>
+                                            <div>• Educational & Textbooks</div>
+                                            <div>• Self-Help & Business</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* SKU Note */}
+                            <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-900">
                                 <div className="flex items-start gap-2">
-                                    <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-                                    <div className="text-xs text-yellow-800 dark:text-yellow-200">
-                                        <strong>Note:</strong> SKU is auto-generated by the system and does not need to be included.
+                                    <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                    <div className="text-xs text-blue-800 dark:text-blue-200">
+                                        <strong>Note:</strong> SKU is auto-generated by the system and does not need to be included. Duplicate product names (for your account) will be automatically skipped during upload.
                                     </div>
                                 </div>
                             </div>

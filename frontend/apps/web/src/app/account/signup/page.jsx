@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 // FontAwesome icons loaded globally
 import useAuth from "@/utils/useAuth";
 
 export default function SignUpPage() {
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +22,31 @@ export default function SignUpPage() {
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: "", color: "" });
   const [touched, setTouched] = useState({});
 
-  const { signUpWithCredentials } = useAuth();
+  const { isAuthenticated, hasHydrated, signUpWithCredentials } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [hasHydrated, isAuthenticated, navigate]);
+
+  // Show loading while checking auth state
+  if (!hasHydrated) {
+    return (
+      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <i className="fa-solid fa-spinner fa-spin text-4xl text-orange-500"></i>
+          <span className="font-bold text-black">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated, show nothing (redirect will happen)
+  if (isAuthenticated) {
+    return null;
+  }
 
   // Password strength calculator
   useEffect(() => {

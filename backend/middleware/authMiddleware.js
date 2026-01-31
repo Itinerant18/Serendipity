@@ -41,7 +41,7 @@ const protect = asyncHandler(async (req, res, next) => {
       const { data: profile } = await supabase
         .from('users')
         // Avoid pulling large/unused fields on every request
-        .select('id, name, email, mobile, is_admin, is_seller, seller_profile_id, avatar_url')
+        .select('id, name, email, mobile, is_admin, is_seller, seller_profile_id, avatar_url, auth_provider')
         .eq('id', user.id)
         .single();
 
@@ -88,12 +88,13 @@ const protect = asyncHandler(async (req, res, next) => {
         }
       }
 
-      // Normalize role flags & seller profile id to camelCase while preserving originals
+       // Normalize role flags & seller profile id to camelCase while preserving originals
       const userPayload = {
         ...merged,
         isAdmin: merged.isAdmin ?? merged.is_admin ?? false,
         isSeller: isSeller,
         sellerProfileId: sellerProfileId,
+        authProvider: merged.auth_provider, // Include auth provider in user payload
       };
 
       // Cache the validated user payload

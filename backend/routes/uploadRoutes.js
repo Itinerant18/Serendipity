@@ -215,6 +215,25 @@ router.post('/profile-image', protect, upload.single('file'), async (req, res) =
     try {
         console.log('📸 Profile image upload request from user:', req.user?.id);
 
+        // Check if user is Google authenticated
+        const { data: userData, error: userError } = await supabaseAdmin
+            .from('users')
+            .select('auth_provider')
+            .eq('id', req.user.id)
+            .single();
+
+        if (userError) {
+            console.error('❌ Failed to fetch user data:', userError);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (userData.auth_provider === 'google') {
+            console.log('❌ Google user attempted to upload profile image');
+            return res.status(403).json({ 
+                message: 'Google users cannot upload custom profile images. Please update your profile picture in Google settings.' 
+            });
+        }
+
         if (!req.file) {
             console.log('❌ No file in request');
             return res.status(400).json({ message: 'No file uploaded' });

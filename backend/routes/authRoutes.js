@@ -125,13 +125,40 @@ router.post('/register', authLimiter, asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 
-  // Update the users table with mobile number (if trigger doesn't handle it)
-  if (data.user && mobile) {
-    await supabaseAdmin
-      .from('users')
-      .update({ mobile: mobile, name: name })
-      .eq('id', data.user.id);
-  }
+   // Ensure user profile is created or updated in users table
+   if (data.user) {
+     // Check if user profile already exists
+     const { data: existingProfile, error: profileError } = await supabaseAdmin
+       .from('users')
+       .select('id')
+       .eq('id', data.user.id)
+       .single();
+
+     if (profileError || !existingProfile) {
+       // Create user profile if it doesn't exist
+       await supabaseAdmin
+         .from('users')
+         .insert({
+           id: data.user.id,
+           email: email,
+           name: name,
+           mobile: mobile,
+           is_admin: false,
+           is_seller: false,
+           auth_provider: 'email' // Default to email provider for registered users
+         });
+     } else {
+       // Update existing profile
+       await supabaseAdmin
+         .from('users')
+         .update({
+           name: name,
+           mobile: mobile,
+           auth_provider: 'email'
+         })
+         .eq('id', data.user.id);
+     }
+   }
 
   if (data.user) {
     res.status(201).json({

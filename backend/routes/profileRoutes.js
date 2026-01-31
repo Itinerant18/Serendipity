@@ -94,6 +94,7 @@ router.get('/', protect, asyncHandler(async (req, res) => {
             isAdmin: user.is_admin || false,
             isSeller: isSeller,
             sellerProfileId: sellerProfileId,
+            authProvider: user.auth_provider, // Include auth provider in profile response
         },
         stats: {
             orders: ordersResult.count || 0,
@@ -108,18 +109,57 @@ router.get('/', protect, asyncHandler(async (req, res) => {
 // @route   PUT /api/profile
 // @access  Private
 router.put('/', protect, asyncHandler(async (req, res) => {
+    console.log('=== Profile Update Request ===');
+    console.log('User from middleware:', req.user);
+    
     const userId = req.user.id;
-    const { name, mobile, date_of_birth, gender, avatar_url } = req.body;
+    
+    // Get user's auth provider first
+    const { data: userData, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('*') // Get all fields for debugging
+        .eq('id', userId)
+        .single();
+
+    console.log('User from database:', userData);
+    console.log('Database error:', userError);
+
+    if (userError) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    const isGoogleUser = userData.auth_provider === 'google';
+    
+    // For Google users, restrict updating certain fields
+    let updateData = {};
+    
+    // Allow updating auth provider regardless of current status (for initial setup)
+    if (req.body.auth_provider !== undefined) {
+        updateData.auth_provider = req.body.auth_provider;
+    }
+    
+    if (isGoogleUser) {
+        // Only allow updating these fields for Google users
+        if (req.body.mobile !== undefined) updateData.mobile = req.body.mobile;
+        if (req.body.date_of_birth !== undefined) updateData.date_of_birth = req.body.date_of_birth;
+        if (req.body.gender !== undefined) updateData.gender = req.body.gender;
+        // Google users can update avatar_url if it's a Google avatar
+        if (req.body.avatar_url !== undefined && req.body.avatar_url.includes('googleusercontent.com')) {
+            updateData.avatar_url = req.body.avatar_url;
+        }
+    } else {
+        // Allow updating all fields for non-Google users
+        if (req.body.name !== undefined) updateData.name = req.body.name;
+        if (req.body.mobile !== undefined) updateData.mobile = req.body.mobile;
+        if (req.body.date_of_birth !== undefined) updateData.date_of_birth = req.body.date_of_birth;
+        if (req.body.gender !== undefined) updateData.gender = req.body.gender;
+        if (req.body.avatar_url !== undefined) updateData.avatar_url = req.body.avatar_url;
+    }
 
     const { data, error } = await supabaseAdmin
         .from('users')
-        .update({
-            name,
-            mobile,
-            date_of_birth,
-            gender,
-            avatar_url,
-        })
+        .update(updateData)
         .eq('id', userId)
         .select()
         .single();
@@ -129,7 +169,7 @@ router.put('/', protect, asyncHandler(async (req, res) => {
         throw new Error('Failed to update profile');
     }
 
-    res.json({ success: true, user: data });
+    res.json({ success: true, user: data, isGoogleUser: data.auth_provider === 'google' });
 }));
 
 // @desc    Get user preferences

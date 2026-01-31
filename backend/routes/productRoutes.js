@@ -8,7 +8,7 @@ const cache = require('../utils/cache');
 // Helper to check if user can manage product (checks seller database for seller products)
 const canManageProduct = async (user, productId) => {
   if (user.isAdmin) return true; // Admins can manage products in main DB
-  if (!user.is_seller) return false;
+  if (!user.isSeller) return false;
 
   // Check seller database for seller products
   const { data: product } = await supabaseSeller
@@ -99,6 +99,59 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(payload);
 }));
 
+// @desc    Check for duplicate product names for bulk upload
+// @route   POST /api/products/check-duplicates
+// @access  Private/Seller or Admin
+router.post('/check-duplicates', protect, asyncHandler(async (req, res) => {
+  const { names } = req.body;
+
+  if (!Array.isArray(names) || names.length === 0) {
+    res.status(400);
+    throw new Error('Please provide an array of product names');
+  }
+
+  // Permission Check
+  if (!req.user.isAdmin && !req.user.isSeller) {
+    res.status(403);
+    throw new Error('Not authorized');
+  }
+
+  // Normalize names for comparison
+  const normalizedNames = names.map(n => n?.toString().trim().toLowerCase()).filter(Boolean);
+
+  let existingProducts = [];
+
+  if (req.user.isSeller) {
+    // Get seller's existing products from seller database
+    const { data: sellerProducts } = await supabaseSellerAdmin
+      .from('products')
+      .select('name')
+      .eq('user_id', req.user.id);
+    
+    existingProducts = (sellerProducts || []).map(p => p.name?.toLowerCase());
+  } else {
+    // Admin checks main database
+    const { data: mainProducts } = await supabaseAdmin
+      .from('products')
+      .select('name');
+    
+    existingProducts = (mainProducts || []).map(p => p.name?.toLowerCase());
+  }
+
+  // Find duplicates
+  const duplicates = normalizedNames.filter(name => existingProducts.includes(name));
+  const newNames = normalizedNames.filter(name => !existingProducts.includes(name));
+
+  res.json({
+    success: true,
+    total: names.length,
+    duplicates: duplicates,
+    duplicateCount: duplicates.length,
+    newNames: newNames,
+    newCount: newNames.length
+  });
+}));
+
 // @desc    Bulk create products (for CSV upload)
 // @route   POST /api/products/bulk
 // @access  Private/Admin or Seller
@@ -111,13 +164,13 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
   }
 
   // Permission Check
-  if (!req.user.isAdmin && !req.user.is_seller) {
+  if (!req.user.isAdmin && !req.user.isSeller) {
     res.status(403);
     throw new Error('Not authorized to create products');
   }
 
   let sellerProfileId = null;
-  if (req.user.is_seller) {
+  if (req.user.isSeller) {
     const { data: u } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
     sellerProfileId = u?.seller_profile_id || null;
 
@@ -159,7 +212,7 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
 
   // Use seller database for seller products, main database for admin products
   let createdProducts, error;
-  if (req.user.is_seller) {
+  if (req.user.isSeller) {
     // Seller products go to seller database (even if sellerProfileId is null initially)
     console.log(`Bulk upload: Inserting ${productsToInsert.length} products into seller database for user ${req.user.id}`);
     console.log(`Seller profile ID: ${sellerProfileId || 'null (will be set later)'}`);
@@ -324,7 +377,7 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
   let authorized = false;
   if (req.user.isAdmin) {
     authorized = true;
-  } else if (req.user.is_seller) {
+  } else if (req.user.isSeller) {
     // Check ownership by seller_profile_id OR user_id
     const { data: userData } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
     if (
@@ -376,13 +429,13 @@ router.delete('/:id', protect, asyncHandler(async (req, res) => {
 // @access  Private/Admin or Seller
 router.post('/', protect, asyncHandler(async (req, res) => {
   // Check permission
-  if (!req.user.isAdmin && !req.user.is_seller) {
+  if (!req.user.isAdmin && !req.user.isSeller) {
     res.status(403);
     throw new Error('Not authorized to create products');
   }
 
   let sellerProfileId = null;
-  if (req.user.is_seller) {
+  if (req.user.isSeller) {
     const { data: u } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
     sellerProfileId = u?.seller_profile_id || null;
     // If missing, try seller DB
@@ -448,7 +501,7 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   console.log('Create product request:', {
     userId: req.user.id,
-    isSeller: req.user.is_seller,
+    isSeller: req.user.isSeller,
     sellerProfileId: sellerProfileId || 'null',
     productPreview: {
       name: product.name,
@@ -460,7 +513,7 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   // Use seller database for seller products, main database for admin products
   let createdProduct, error;
-  if (req.user.is_seller) {
+  if (req.user.isSeller) {
     const result = await supabaseSellerAdmin
       .from('products')
       .insert(product)
@@ -558,7 +611,7 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
   let authorized = false;
   if (req.user.isAdmin) {
     authorized = true;
-  } else if (req.user.is_seller) {
+  } else if (req.user.isSeller) {
     const { data: userData } = await supabase.from('users').select('seller_profile_id').eq('id', req.user.id).single();
     if (
       (product.seller_profile_id && product.seller_profile_id === userData?.seller_profile_id) ||
