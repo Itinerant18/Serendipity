@@ -41,7 +41,7 @@ export const ShareModal = ({ isOpen, onClose, productCount }) => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                        className="fixed inset-0 bg-black/80 z-40"
                     />
 
                     {/* Modal */}
@@ -53,78 +53,57 @@ export const ShareModal = ({ isOpen, onClose, productCount }) => {
                             transition={{ duration: 0.3, ease: [0.5, 1.5, 0.5, 1] }}
                             className="relative w-full max-w-md"
                         >
-                            {/* Glass Card Structure */}
-                            <div className="relative rounded-3xl overflow-hidden">
-                                {/* Bend Layer */}
-                                <div
-                                    className="absolute inset-0 backdrop-blur-2xl z-0"
-                                />
-
-                                {/* Face Layer */}
-                                <div
-                                    className="absolute inset-0 z-10"
-                                    style={{
-                                        boxShadow:
-                                            "0 4px 4px rgba(0, 0, 0, 0.15), 0 0 12px rgba(0, 0, 0, 0.08), 0 0 48px rgba(255, 255, 255, 0.25)",
-                                    }}
-                                />
-
-                                {/* Edge Layer */}
-                                <div
-                                    className="absolute inset-0 z-20 border border-white/20"
-                                    style={{
-                                        boxShadow:
-                                            "inset 6px 6px 6px 0 rgba(255, 255, 255, 0.55), inset -6px -6px 6px 0 rgba(255, 255, 255, 0.55)",
-                                    }}
-                                />
-
+                            {/* Neo-Brutalism Card */}
+                            <div className="relative bg-white border-4 border-black shadow-[12px_12px_0_#000000] overflow-hidden">
                                 {/* Content */}
-                                <div className="relative z-30 p-8 bg-white/5">
+                                <div className="p-8">
                                     {/* Header */}
                                     <div className="flex items-center justify-between mb-6">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                                                <i className="fa-solid fa-share-nodes text-white text-lg" />
+                                            <div className="w-12 h-12 bg-blue-500 border-4 border-black shadow-[4px_4px_0_#000000] flex items-center justify-center">
+                                                <i className="fa-solid fa-share-nodes text-white text-xl" />
                                             </div>
-                                            <h2 className="text-2xl font-bold text-white">Share Wishlist</h2>
+                                            <h2 className="text-2xl font-brutalist font-bold text-black">SHARE WISHLIST</h2>
                                         </div>
                                         <button
                                             onClick={onClose}
-                                            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-300"
+                                            className="w-10 h-10 bg-red-500 border-4 border-black shadow-[4px_4px_0_#000000] flex items-center justify-center text-white font-bold hover:bg-red-600 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#000000] transition-all duration-100"
                                         >
-                                            <i className="fa-solid fa-xmark text-sm" />
+                                            <i className="fa-solid fa-xmark text-lg" />
                                         </button>
                                     </div>
 
-                                    <p className="text-white/70 mb-6">
+                                    <p className="text-black font-bold mb-6 bg-yellow-100 border-2 border-black p-3">
                                         Share your wishlist with {productCount} {productCount === 1 ? "item" : "items"} with friends and family!
                                     </p>
 
                                     {/* URL Display and Copy */}
                                     <div className="mb-6">
-                                        <label className="block text-sm text-white/60 mb-2">Shareable Link</label>
+                                        <label className="block text-sm font-bold text-black uppercase mb-2 border-2 border-black inline-block px-2 py-1 bg-gray-100">
+                                            Shareable Link
+                                        </label>
                                         <div className="flex gap-2">
-                                            <div className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white/90 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+                                            <div className="flex-1 px-4 py-3 bg-gray-50 border-4 border-black text-black font-bold text-sm overflow-hidden text-ellipsis whitespace-nowrap">
                                                 {shareUrl}
                                             </div>
                                             <button
                                                 onClick={handleCopy}
                                                 className={cn(
-                                                    "px-4 py-3 rounded-xl font-medium flex items-center gap-2 transition-all duration-300",
+                                                    "px-4 py-3 border-4 border-black font-bold flex items-center gap-2 transition-all duration-100 uppercase tracking-wider hover:-translate-y-0.5",
                                                     isCopied
-                                                        ? "bg-green-500 text-white"
-                                                        : "bg-white/90 hover:bg-white text-black"
+                                                        ? "bg-green-500 text-white shadow-[4px_4px_0_#000000]"
+                                                        : "bg-white text-black shadow-[4px_4px_0_#000000] hover:bg-gray-100 hover:shadow-[6px_6px_0_#000000]"
                                                 )}
                                             >
                                                 {isCopied ? (
                                                     <>
                                                         <i className="fa-solid fa-check text-sm" />
-                                                        <span className="hidden sm:inline">Copied</span>
+                                                        <span className="hidden sm:inline">COPIED</span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <i className="fa-regular fa-copy text-sm" />
-                                                        <span className="hidden sm:inline">Copy</span>
+                                                        <span className="hidden sm:inline">COPY</span>
                                                     </>
                                                 )}
                                             </button>
@@ -133,25 +112,30 @@ export const ShareModal = ({ isOpen, onClose, productCount }) => {
 
                                     {/* Social Share Buttons */}
                                     <div className="space-y-2">
-                                        <label className="block text-sm text-white/60 mb-2">Share on Social</label>
+                                        <label className="block text-sm font-bold text-black uppercase mb-2 border-2 border-black inline-block px-2 py-1 bg-gray-100">
+                                            Share on Social
+                                        </label>
                                         <div className="grid grid-cols-3 gap-3">
                                             <button
                                                 onClick={() => handleShare("twitter")}
-                                                className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium transition-all duration-300"
+                                                className="px-4 py-3 bg-blue-400 border-4 border-black text-black font-bold uppercase tracking-wider transition-all duration-100 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#000000]"
                                             >
-                                                Twitter
+                                                <i className="fa-brands fa-twitter mb-1"></i>
+                                                <div className="text-xs">Twitter</div>
                                             </button>
                                             <button
                                                 onClick={() => handleShare("facebook")}
-                                                className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium transition-all duration-300"
+                                                className="px-4 py-3 bg-blue-600 border-4 border-black text-white font-bold uppercase tracking-wider transition-all duration-100 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#000000]"
                                             >
-                                                Facebook
+                                                <i className="fa-brands fa-facebook mb-1"></i>
+                                                <div className="text-xs">Facebook</div>
                                             </button>
                                             <button
                                                 onClick={() => handleShare("whatsapp")}
-                                                className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium transition-all duration-300"
+                                                className="px-4 py-3 bg-green-500 border-4 border-black text-black font-bold uppercase tracking-wider transition-all duration-100 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#000000]"
                                             >
-                                                WhatsApp
+                                                <i className="fa-brands fa-whatsapp mb-1"></i>
+                                                <div className="text-xs">WhatsApp</div>
                                             </button>
                                         </div>
                                     </div>

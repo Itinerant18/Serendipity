@@ -4,10 +4,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 // FontAwesome icons loaded globally
 
-
 import { formatCurrency } from "@/utils/format";
-
 import useCartStore from "@/utils/cartStore";
+import CheckoutStepper from "@/components/checkout/CheckoutStepper";
 
 export default function CartPage() {
     const items = useCartStore((state) => state.items);
@@ -36,6 +35,9 @@ export default function CartPage() {
     return (
         <div className="min-h-screen bg-white border-8 border-black">
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Checkout Progress Stepper */}
+                {items.length > 0 && <CheckoutStepper currentStep={1} />}
+
                 <h1 className="text-3xl font-bold font-playfair text-gray-900 mb-8">Shopping Cart</h1>
 
                 {items.length === 0 ? (

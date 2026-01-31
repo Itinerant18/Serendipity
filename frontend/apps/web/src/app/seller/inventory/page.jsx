@@ -29,7 +29,11 @@ import {
     Package,
     AlertCircle,
     Loader2,
-    X
+    X,
+    AlertTriangle,
+    Minus,
+    Check,
+    RefreshCw
 } from "lucide-react";
 import useAuth from "@/utils/useAuth";
 import { formatCurrency } from "@/utils/format";
@@ -50,6 +54,18 @@ export default function SellerInventoryPage() {
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
     const fileInputRef = useRef(null);
+
+    // Stock Management State
+    const [editingStockId, setEditingStockId] = useState(null);
+    const [editingStockValue, setEditingStockValue] = useState("");
+    const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+    const [stockModalProduct, setStockModalProduct] = useState(null);
+    const [stockAdjustment, setStockAdjustment] = useState(0);
+    const [stockAdjustReason, setStockAdjustReason] = useState("");
+    const [updatingStock, setUpdatingStock] = useState(false);
+
+    // Low stock threshold
+    const LOW_STOCK_THRESHOLD = 10;
 
     // Fetch Inventory
     const fetchInventory = async () => {
@@ -258,6 +274,107 @@ export default function SellerInventoryPage() {
         return "outline";
     };
 
+    // Get low stock products
+    const lowStockProducts = products.filter(
+        p => (p.count_in_stock || p.countInStock || 0) <= LOW_STOCK_THRESHOLD
+    );
+
+    // Inline stock update
+    const handleInlineStockEdit = (product) => {
+        setEditingStockId(product.id);
+        setEditingStockValue(String(product.count_in_stock || product.countInStock || 0));
+    };
+
+    const handleInlineStockSave = async (productId) => {
+        const newStock = parseInt(editingStockValue, 10);
+        if (isNaN(newStock) || newStock < 0) {
+            alert("Please enter a valid stock number");
+            return;
+        }
+
+        setUpdatingStock(true);
+        try {
+            const res = await fetch(`http://localhost:5000/api/products/${productId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ countInStock: newStock })
+            });
+
+            if (res.ok) {
+                setProducts(products.map(p =>
+                    p.id === productId
+                        ? { ...p, count_in_stock: newStock, countInStock: newStock }
+                        : p
+                ));
+                setEditingStockId(null);
+            } else {
+                const data = await res.json();
+                alert(data.message || "Failed to update stock");
+            }
+        } catch (error) {
+            console.error("Stock update error:", error);
+            alert("Network error updating stock");
+        } finally {
+            setUpdatingStock(false);
+        }
+    };
+
+    const handleInlineStockCancel = () => {
+        setEditingStockId(null);
+        setEditingStockValue("");
+    };
+
+    // Stock Adjust Modal
+    const openStockModal = (product) => {
+        setStockModalProduct(product);
+        setStockAdjustment(0);
+        setStockAdjustReason("");
+        setIsStockModalOpen(true);
+    };
+
+    const handleStockAdjust = async () => {
+        if (!stockModalProduct) return;
+
+        const currentStock = stockModalProduct.count_in_stock || stockModalProduct.countInStock || 0;
+        const newStock = Math.max(0, currentStock + stockAdjustment);
+
+        setUpdatingStock(true);
+        try {
+            const res = await fetch(`http://localhost:5000/api/products/${stockModalProduct.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    countInStock: newStock,
+                    // Could log reason in future
+                })
+            });
+
+            if (res.ok) {
+                setProducts(products.map(p =>
+                    p.id === stockModalProduct.id
+                        ? { ...p, count_in_stock: newStock, countInStock: newStock }
+                        : p
+                ));
+                setIsStockModalOpen(false);
+                setStockModalProduct(null);
+            } else {
+                const data = await res.json();
+                alert(data.message || "Failed to adjust stock");
+            }
+        } catch (error) {
+            console.error("Stock adjust error:", error);
+            alert("Network error adjusting stock");
+        } finally {
+            setUpdatingStock(false);
+        }
+    };
+
     return (
         <div className="w-full max-w-7xl mx-auto p-6 space-y-6 bg-background">
             <Card className="border-none shadow-lg">
@@ -305,6 +422,41 @@ export default function SellerInventoryPage() {
                         </div>
                     </div>
                 </CardHeader>
+
+                {/* Low Stock Alert */}
+                {lowStockProducts.length > 0 && (
+                    <div className="mx-6 mb-4 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                        <div className="flex items-center gap-2 mb-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500" />
+                            <h3 className="font-semibold text-amber-800 dark:text-amber-400">
+                                Low Stock Alert ({lowStockProducts.length} products)
+                            </h3>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {lowStockProducts.slice(0, 5).map(product => (
+                                <button
+                                    key={product.id}
+                                    onClick={() => openStockModal(product)}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 
+                                               border border-amber-300 dark:border-amber-700 rounded-md text-sm 
+                                               hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
+                                >
+                                    <span className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[150px]">
+                                        {product.name}
+                                    </span>
+                                    <Badge variant="destructive" className="text-xs">
+                                        {product.count_in_stock || product.countInStock || 0} left
+                                    </Badge>
+                                </button>
+                            ))}
+                            {lowStockProducts.length > 5 && (
+                                <span className="px-3 py-1.5 text-sm text-amber-700 dark:text-amber-400">
+                                    +{lowStockProducts.length - 5} more
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <CardContent className="space-y-6">
                     <div className="relative">
@@ -399,9 +551,62 @@ export default function SellerInventoryPage() {
                                                     <TableCell>{product.category}</TableCell>
                                                     <TableCell>{product.brand}</TableCell>
                                                     <TableCell>
-                                                        <Badge variant={getStockBadgeVariant(product.count_in_stock)}>
-                                                            {product.count_in_stock}
-                                                        </Badge>
+                                                        {editingStockId === product.id ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <Input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={editingStockValue}
+                                                                    onChange={(e) => setEditingStockValue(e.target.value)}
+                                                                    className="w-20 h-8 text-sm"
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter') handleInlineStockSave(product.id);
+                                                                        if (e.key === 'Escape') handleInlineStockCancel();
+                                                                    }}
+                                                                    autoFocus
+                                                                />
+                                                                <Button
+                                                                    size="icon"
+                                                                    variant="ghost"
+                                                                    className="h-7 w-7"
+                                                                    onClick={() => handleInlineStockSave(product.id)}
+                                                                    disabled={updatingStock}
+                                                                >
+                                                                    {updatingStock ? (
+                                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                                    ) : (
+                                                                        <Check className="h-4 w-4 text-green-600" />
+                                                                    )}
+                                                                </Button>
+                                                                <Button
+                                                                    size="icon"
+                                                                    variant="ghost"
+                                                                    className="h-7 w-7"
+                                                                    onClick={handleInlineStockCancel}
+                                                                >
+                                                                    <X className="h-4 w-4 text-red-500" />
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge
+                                                                    variant={getStockBadgeVariant(product.count_in_stock || product.countInStock || 0)}
+                                                                    className="cursor-pointer hover:opacity-80"
+                                                                    onClick={() => handleInlineStockEdit(product)}
+                                                                >
+                                                                    {product.count_in_stock || product.countInStock || 0}
+                                                                </Badge>
+                                                                <Button
+                                                                    size="icon"
+                                                                    variant="ghost"
+                                                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    onClick={() => openStockModal(product)}
+                                                                    title="Adjust stock"
+                                                                >
+                                                                    <RefreshCw className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -467,7 +672,24 @@ export default function SellerInventoryPage() {
                                                     <TableCell className="text-muted-foreground text-sm font-mono">{product.sku || '-'}</TableCell>
                                                     <TableCell className="font-semibold">{formatCurrency(product.price)}</TableCell>
                                                     <TableCell>
-                                                        <Badge variant={getStockBadgeVariant(product.count_in_stock)}>{product.count_in_stock}</Badge>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge
+                                                                variant={getStockBadgeVariant(product.count_in_stock || product.countInStock || 0)}
+                                                                className="cursor-pointer hover:opacity-80"
+                                                                onClick={() => handleInlineStockEdit(product)}
+                                                            >
+                                                                {product.count_in_stock || product.countInStock || 0}
+                                                            </Badge>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                onClick={() => openStockModal(product)}
+                                                                title="Adjust stock"
+                                                            >
+                                                                <RefreshCw className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -523,7 +745,24 @@ export default function SellerInventoryPage() {
                                                     <TableCell className="text-muted-foreground text-sm font-mono">{product.sku || '-'}</TableCell>
                                                     <TableCell className="font-semibold">{formatCurrency(product.price)}</TableCell>
                                                     <TableCell>
-                                                        <Badge variant={getStockBadgeVariant(product.count_in_stock)}>{product.count_in_stock}</Badge>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge
+                                                                variant={getStockBadgeVariant(product.count_in_stock || product.countInStock || 0)}
+                                                                className="cursor-pointer hover:opacity-80"
+                                                                onClick={() => handleInlineStockEdit(product)}
+                                                            >
+                                                                {product.count_in_stock || product.countInStock || 0}
+                                                            </Badge>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                onClick={() => openStockModal(product)}
+                                                                title="Adjust stock"
+                                                            >
+                                                                <RefreshCw className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -787,6 +1026,128 @@ export default function SellerInventoryPage() {
                         <Button variant="destructive" onClick={confirmDelete}>
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Stock Adjust Modal */}
+            <Dialog open={isStockModalOpen} onOpenChange={setIsStockModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <RefreshCw className="h-5 w-5 text-primary" />
+                            Adjust Stock
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {stockModalProduct && (
+                        <div className="space-y-6 py-4">
+                            {/* Product Info */}
+                            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                                <img
+                                    src={stockModalProduct.image || "https://via.placeholder.com/60"}
+                                    alt={stockModalProduct.name}
+                                    className="w-12 h-12 rounded-md object-cover"
+                                />
+                                <div>
+                                    <div className="font-medium">{stockModalProduct.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                        Current stock: <span className="font-semibold">{stockModalProduct.count_in_stock || stockModalProduct.countInStock || 0}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Adjustment Controls */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-center gap-4">
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        className="h-12 w-12 rounded-full"
+                                        onClick={() => setStockAdjustment(prev => prev - 10)}
+                                    >
+                                        <span className="text-lg">-10</span>
+                                    </Button>
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        className="h-12 w-12 rounded-full"
+                                        onClick={() => setStockAdjustment(prev => prev - 1)}
+                                    >
+                                        <Minus className="h-5 w-5" />
+                                    </Button>
+
+                                    <div className="text-center min-w-[100px]">
+                                        <div className={`text-3xl font-bold ${stockAdjustment > 0 ? 'text-green-600' : stockAdjustment < 0 ? 'text-red-600' : ''}`}>
+                                            {stockAdjustment > 0 ? '+' : ''}{stockAdjustment}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">adjustment</div>
+                                    </div>
+
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        className="h-12 w-12 rounded-full"
+                                        onClick={() => setStockAdjustment(prev => prev + 1)}
+                                    >
+                                        <Plus className="h-5 w-5" />
+                                    </Button>
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        className="h-12 w-12 rounded-full"
+                                        onClick={() => setStockAdjustment(prev => prev + 10)}
+                                    >
+                                        <span className="text-lg">+10</span>
+                                    </Button>
+                                </div>
+
+                                {/* New Stock Preview */}
+                                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg border">
+                                    <span className="text-sm text-muted-foreground">New stock level:</span>
+                                    <Badge variant={
+                                        Math.max(0, (stockModalProduct.count_in_stock || stockModalProduct.countInStock || 0) + stockAdjustment) <= LOW_STOCK_THRESHOLD
+                                            ? "destructive"
+                                            : "default"
+                                    } className="text-base px-3 py-1">
+                                        {Math.max(0, (stockModalProduct.count_in_stock || stockModalProduct.countInStock || 0) + stockAdjustment)}
+                                    </Badge>
+                                </div>
+
+                                {/* Optional Reason */}
+                                <div className="space-y-2">
+                                    <label className="text-sm text-muted-foreground">Reason (optional)</label>
+                                    <Input
+                                        placeholder="e.g., Restocked, Damaged items removed..."
+                                        value={stockAdjustReason}
+                                        onChange={(e) => setStockAdjustReason(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <Separator />
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setIsStockModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleStockAdjust}
+                            disabled={stockAdjustment === 0 || updatingStock}
+                        >
+                            {updatingStock ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Updating...
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Apply Adjustment
+                                </>
+                            )}
                         </Button>
                     </div>
                 </DialogContent>

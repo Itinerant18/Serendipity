@@ -6,6 +6,7 @@ import useAuth from "../../utils/useAuth";
 import GlassCard from "@/components/ui/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import ActivityDashboard from "@/components/profile/ActivityDashboard";
 
 export default function ProfilePage() {
     const { user, token, isAuthenticated, updateUser, signOut } = useAuth();
@@ -26,7 +27,7 @@ export default function ProfilePage() {
     const [message, setMessage] = useState({ type: "", text: "" });
     const [showGoogleWarning, setShowGoogleWarning] = useState(false);
     const fileInputRef = React.useRef(null);
-    
+
     const isGoogleUser = user?.authProvider === 'google';
 
     useEffect(() => {
@@ -96,7 +97,7 @@ export default function ProfilePage() {
             setFormData(prev => ({ ...prev, avatar: newAvatarUrl }));
             setAvatarPreview(newAvatarUrl);
             setAvatarFile(null);
-            
+
             const saveResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/profile`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -320,7 +321,7 @@ export default function ProfilePage() {
                                         )}
                                     />
                                 </div>
-                                
+
                                 <div>
                                     <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
                                         <i className="fa-solid fa-cake-candles mr-2"></i> DATE OF BIRTH
@@ -338,7 +339,7 @@ export default function ProfilePage() {
                                         )}
                                     />
                                 </div>
-                                
+
                                 <div>
                                     <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
                                         <i className="fa-solid fa-venus-mars mr-2"></i> GENDER
@@ -389,6 +390,9 @@ export default function ProfilePage() {
                     </div>
                 </GlassCard>
 
+                {/* Activity Dashboard */}
+                <ActivityDashboard token={token} />
+
                 {/* Quick Links Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {links.map((link, idx) => (
@@ -419,7 +423,7 @@ export default function ProfilePage() {
                     <span className="text-lg">SIGN OUT</span>
                 </motion.button>
             </div>
-            
+
             {/* Google Auth Warning Modal */}
             {showGoogleWarning && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -437,19 +441,19 @@ export default function ProfilePage() {
                                     GOOGLE ACCOUNT LINKED
                                 </h3>
                                 <p className="font-bold text-black">
-                                    Your profile name, email, and picture are managed by Google. 
+                                    Your profile name, email, and picture are managed by Google.
                                     To update these, please visit your Google Account settings.
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div className="bg-blue-200 border-4 border-black p-4 mb-4">
                             <p className="font-bold text-sm text-black">
                                 <i className="fa-solid fa-info-circle mr-2"></i>
                                 You can still update your mobile number here.
                             </p>
                         </div>
-                        
+
                         <div className="flex gap-3">
                             <a
                                 href="https://myaccount.google.com/personal-info"

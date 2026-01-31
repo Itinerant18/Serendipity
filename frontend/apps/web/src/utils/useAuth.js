@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function useAuth() {
-  const { user, token, isAuthenticated, login, logout, updateUser, setUser, setToken, setIsAuthenticated } = useAuthStore();
+  const { user, token, isAuthenticated, hasHydrated, login, logout, updateUser, setUser, setToken, setIsAuthenticated } = useAuthStore();
 
   const signInWithCredentials = useCallback(async ({ email, password }) => {
     console.log("Attempting login via:", `${API_URL}/api/auth/login`);
@@ -166,6 +166,7 @@ function useAuth() {
     user,
     token,
     isAuthenticated,
+    hasHydrated,
     signInWithCredentials,
     signUpWithCredentials,
     signInAsSeller,

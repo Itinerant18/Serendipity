@@ -1,13 +1,13 @@
 import {
-   Links,
-   Meta,
-   Outlet,
-   Scripts,
-   ScrollRestoration,
-   useAsyncError,
-   useLocation,
-   useRouteError,
- } from 'react-router';
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useAsyncError,
+  useLocation,
+  useRouteError,
+} from 'react-router';
 
 
 import { useButton } from '@react-aria/button';
@@ -32,6 +32,10 @@ import { LoadFonts } from 'virtual:load-fonts.jsx';
 import globalStylesheet from './global.css?url';
 import { HotReloadIndicator } from '../__create/HotReload';
 import { useSandboxStore } from '../__create/hmr-sandbox-store';
+// @ts-ignore
+import useWishlistStore from '@/utils/wishlistStore';
+// @ts-ignore
+import useAuth from '@/utils/useAuth';
 import type { Route } from './+types/root';
 // import { useDevServerHeartbeat } from '../__create/useDevServerHeartbeat';
 
@@ -491,10 +495,25 @@ function SandboxHandler() {
   return null;
 }
 
+function WishlistSyncer() {
+  const { isAuthenticated, hasHydrated } = useAuth();
+  const { fetchWishlist } = useWishlistStore();
+
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated) {
+      // console.log('🔄 WishlistSyncer: Fetching wishlist...');
+      fetchWishlist();
+    }
+  }, [hasHydrated, isAuthenticated, fetchWishlist]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <>
       <ClientOnly loader={() => <SandboxHandler />} />
+      <ClientOnly loader={() => <WishlistSyncer />} />
       <Outlet />
     </>
   );

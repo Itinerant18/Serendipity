@@ -78,7 +78,7 @@ const ShopCard = ({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            if (onClick) onClick();
+                            if (onToggle) onToggle();
                         }}
                         className={`w-full px-6 py-3 border-2 border-black font-bold transition-all duration-150 ${
                             expanded 
@@ -117,17 +117,6 @@ const ShopWithUsSection = () => {
             setExpandedCard(expandedCard === cardType ? null : cardType);
             setIsAnimating(false);
         }, 300);
-    };
-
-    const handleCardClick = (action) => {
-        // Handle specific card actions
-        if (action === 'shipping') {
-            console.log('Navigate to shipping policy');
-        } else if (action === 'payment') {
-            console.log('Navigate to payment methods');
-        } else if (action === 'returns') {
-            console.log('Navigate to return policy');
-        }
     };
 
     const shopCards = [
@@ -236,7 +225,6 @@ const ShopWithUsSection = () => {
                         description={card.description}
                         bgColor={card.bgColor}
                         iconBgColor={card.iconBgColor}
-                        onClick={() => handleCardClick(card.id)}
                         expanded={expandedCard === card.id}
                         onToggle={() => handleCardToggle(card.id)}
                         details={card.details}

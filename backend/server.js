@@ -38,19 +38,31 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false,
 }));
 
+app.use(cors({
+    origin: ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Handle OPTIONS preflight requests immediately (bypass rate limiter)
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.sendStatus(200);
+});
+
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    max: 3000, // Increased limit for dev/single-page app usage
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    message: { error: 'Too many requests, please try again later.' }
 });
 app.use(limiter);
-
-app.use(cors({
-    origin: ["http://localhost:4000", "http://localhost:5173"],
-    credentials: true
-}));
 app.use(compression());
 app.use(express.json());
 

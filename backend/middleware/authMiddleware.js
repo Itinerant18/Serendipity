@@ -1,6 +1,18 @@
 const asyncHandler = require('express-async-handler');
+const { LRUCache } = require('lru-cache');
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const { supabaseSellerAdmin } = require('../config/supabaseSeller');
+
+// LRU Cache for validated tokens - 5 minute TTL, max 1000 entries
+const tokenCache = new LRUCache({
+  max: 1000,
+  ttl: 1000 * 60 * 5, // 5 minutes
+});
+
+// Invalidate cache for a specific token (call on logout)
+const invalidateToken = (token) => {
+  tokenCache.delete(token);
+};
 
 const protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -11,6 +23,13 @@ const protect = asyncHandler(async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
+
+      // Check cache first - skip all DB queries if cached
+      const cached = tokenCache.get(token);
+      if (cached) {
+        req.user = cached;
+        return next();
+      }
 
       const { data: { user }, error } = await supabase.auth.getUser(token);
 
@@ -28,7 +47,7 @@ const protect = asyncHandler(async (req, res, next) => {
 
       const merged = { ...user, ...profile };
 
-      // Check seller database if user doesn't have seller status set
+      // Check seller database ONLY if user doesn't have seller status set in main DB
       let isSeller = merged.isSeller ?? merged.is_seller ?? false;
       let sellerProfileId = merged.sellerProfileId ?? merged.seller_profile_id ?? null;
 
@@ -45,8 +64,7 @@ const protect = asyncHandler(async (req, res, next) => {
           isSeller = true;
           sellerProfileId = sellerProfile.id;
 
-          // Sync to main database - try to set seller_profile_id, but handle foreign key constraint error
-          // Since seller profiles are in a separate database, the foreign key may fail
+          // Sync to main database (only once, not on every request due to caching)
           const { error: updateError } = await supabaseAdmin
             .from('users')
             .update({
@@ -62,7 +80,6 @@ const protect = asyncHandler(async (req, res, next) => {
               .from('users')
               .update({
                 is_seller: true
-                // Don't set seller_profile_id - it exists in seller database, not main database
               })
               .eq('id', user.id);
           } else if (updateError) {
@@ -72,12 +89,16 @@ const protect = asyncHandler(async (req, res, next) => {
       }
 
       // Normalize role flags & seller profile id to camelCase while preserving originals
-      req.user = {
+      const userPayload = {
         ...merged,
         isAdmin: merged.isAdmin ?? merged.is_admin ?? false,
         isSeller: isSeller,
         sellerProfileId: sellerProfileId,
       };
+
+      // Cache the validated user payload
+      tokenCache.set(token, userPayload);
+      req.user = userPayload;
 
       next();
     } catch (error) {
@@ -102,4 +123,4 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+module.exports = { protect, admin, invalidateToken, tokenCache };

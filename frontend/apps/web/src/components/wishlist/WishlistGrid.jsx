@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { WishlistCard } from "./WishlistCard";
 
-export const WishlistGrid = ({ products, onRemove, onAddToCart }) => {
+export const WishlistGrid = ({ products, onRemove, onAddToCart, removingItemId = null }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 place-items-center sm:place-items-stretch">
             <AnimatePresence mode="popLayout">
@@ -19,6 +19,7 @@ export const WishlistGrid = ({ products, onRemove, onAddToCart }) => {
                             product={product}
                             onRemove={onRemove}
                             onAddToCart={onAddToCart}
+                            isRemoving={removingItemId === product.id}
                         />
                     </motion.div>
                 ))}
