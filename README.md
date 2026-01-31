@@ -1,7 +1,7 @@
 # Serendipity (Finding something good unintentionaly)
 
 A full-stack e-commerce application built with the MERN stack (MongoDB, Express, React, Node.js) and Supabase.
-
+<div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/35cb2082bb504f5c94a78231d08e96a5" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
 ## Project Structure
 
 - `backend/`: Node.js/Express backend server.
