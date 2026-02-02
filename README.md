@@ -175,6 +175,12 @@ npm run dev
 bun run dev
 ```
 
+## Deployment
+
+For detailed deployment instructions, please refer to [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+The project is pre-configured for deployment on **Railway**.
+
 ## Technologies Used
 
 - **Frontend**: React, Vite, TailwindCSS, React Router 7, Supabase Client.
