@@ -187,5 +187,8 @@ app.route(API_BASENAME, api);
 
 export default await createHonoServer({
   app,
-  defaultLogger: false,
+  defaultLogger: true,
+  listeningListener: (info) => {
+    console.log(`🚀 Server is running on http://localhost:${info.port}`);
+  },
 });
