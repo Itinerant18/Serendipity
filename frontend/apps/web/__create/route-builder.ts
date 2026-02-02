@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { readdir, stat, access } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -155,7 +156,7 @@ if (import.meta.env.DEV) {
     eager: true,
   });
   if (import.meta.hot) {
-    import.meta.hot.accept((newSelf) => {
+    import.meta.hot.accept((newSelf: unknown) => {
       registerRoutes().catch((err) => {
         console.error('Error reloading routes:', err);
       });
