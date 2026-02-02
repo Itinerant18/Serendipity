@@ -23,55 +23,64 @@ router.get('/', protect, asyncHandler(async (req, res) => {
         throw new Error('User not found');
     }
 
-    // Check seller database if user doesn't have seller status set
-    let isSeller = user.is_seller || false;
-    let sellerProfileId = user.seller_profile_id || null;
+    // STRICT SELLER VERIFICATION
+    // Always check the seller database (Source of Truth) to verify status
+    let isSeller = false;
+    let sellerProfileId = null;
 
-    if (!isSeller || !sellerProfileId) {
-        // Check if seller profile exists in seller database
+    try {
         const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
-            .from('seller_profiles')
+            ?.from('seller_profiles')
             .select('id')
             .eq('user_id', userId)
             .single();
 
-        if (sellerProfile && !sellerError) {
-            // Seller profile exists but user record is not updated - sync it
-            console.log(`Syncing seller status for user ${userId}: Found seller profile ${sellerProfile.id}`);
+        // Check if a valid seller profile exists
+        if (sellerProfile && (!sellerError || sellerError.code === 'PGRST116') && sellerProfile.id) {
             isSeller = true;
             sellerProfileId = sellerProfile.id;
-
-            // Update user record in main database - try to set seller_profile_id, but handle foreign key constraint error
-            const { error: updateError } = await supabaseAdmin
-                .from('users')
-                .update({
-                    is_seller: true,
-                    seller_profile_id: sellerProfile.id
-                })
-                .eq('id', userId);
-
-            // If foreign key constraint fails (23503), just set is_seller without seller_profile_id
-            if (updateError && updateError.code === '23503') {
-                console.log('Foreign key constraint detected - setting is_seller only (dual database setup)');
-                const { error: fallbackError } = await supabaseAdmin
-                    .from('users')
-                    .update({
-                        is_seller: true
-                        // Don't set seller_profile_id - it exists in seller database, not main database
-                    })
-                    .eq('id', userId);
-                
-                if (fallbackError) {
-                    console.error('Failed to sync seller status (fallback):', fallbackError);
-                } else {
-                    console.log('Successfully synced seller status (is_seller only)');
-                }
-            } else if (updateError) {
-                console.error('Failed to sync seller status:', updateError);
-            } else {
-                console.log('Successfully synced seller status to user record');
-            }
         }
+    } catch (err) {
+        console.error('Error verifying seller status:', err);
+        // Fallback: If seller DB is unreachable, trust the main DB but log it
+        isSeller = user.is_seller || false;
+        sellerProfileId = user.seller_profile_id || null;
+    }
+
+    // SYNC: Ensure main database matches the Source of Truth
+    // Case 1: Seller DB says YES, Main DB says NO (or mismatch ID) -> GRANT
+    if (isSeller && (!user.is_seller || user.seller_profile_id !== sellerProfileId)) {
+        console.log(`Syncing seller status: Profile found (${sellerProfileId}), updating user record...`);
+        const { error: updateError } = await supabaseAdmin
+            .from('users')
+            .update({
+                is_seller: true,
+                seller_profile_id: sellerProfileId
+            })
+            .eq('id', userId);
+
+        if (updateError) {
+             // Handle FK constraint error (23503) from dual DB setup
+             if (updateError.code === '23503') {
+                console.log('Foreign key constraint detected - setting is_seller only');
+                await supabaseAdmin.from('users').update({ is_seller: true }).eq('id', userId);
+             } else {
+                console.error('Failed to sync positive seller status:', updateError);
+             }
+        }
+    }
+    // Case 2: Seller DB says NO, Main DB says YES -> REVOKE
+    else if (!isSeller && user.is_seller) {
+        console.log(`Syncing seller status: Profile missing/revoked, updating user record...`);
+        const { error: revokeError } = await supabaseAdmin
+            .from('users')
+            .update({
+                is_seller: false,
+                seller_profile_id: null
+            })
+            .eq('id', userId);
+            
+        if (revokeError) console.error('Failed to revoke seller status:', revokeError);
     }
 
     // Fetch stats

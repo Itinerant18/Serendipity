@@ -198,7 +198,7 @@ router.post('/bulk', protect, asyncHandler(async (req, res) => {
     user_id: req.user.id,
     seller_profile_id: sellerProfileId, // Can be null - will be filtered by user_id
     seller_id: req.user.id,
-    image: p.image_url || p.image || 'https://via.placeholder.com/150', // Default image if missing
+    image: p.image_url || p.image || '/images/sample.jpg', // Default local image
     brand: p.brand || 'Generic',
     category: p.category || 'Uncategorized',
     subcategory: p.subcategory || null,
@@ -568,6 +568,7 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     price,
     description,
     image,
+    images,  // <-- This was missing! Caused ReferenceError
     brand,
     category,
     subcategory,
@@ -577,6 +578,14 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     shippingRequired, shippingWeight, shippingClass, freeShipping,
     metaTitle, metaDescription, slug, status, featured
   } = req.body;
+
+  // Safe extraction of image to prevent ReferenceError
+  const unsafeImage = req.body.image; 
+  const safeImage = unsafeImage === undefined ? undefined : unsafeImage;
+
+  console.log('DEBUG: Update Request ID:', req.params.id);
+  console.log('DEBUG: req.body keys:', Object.keys(req.body));
+  console.log('DEBUG: safeImage:', safeImage);
 
   // Check both databases for the product
   let product = null;
@@ -626,6 +635,13 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
     throw new Error('Not authorized to update this product');
   }
 
+  // Helper to sanitize numeric values (convert empty string to null)
+  const toNumber = (val) => {
+    if (val === '' || val === null || val === undefined) return null;
+    const num = Number(val);
+    return isNaN(num) ? null : num;
+  };
+
   // Update in appropriate database
   let updatedProduct, error;
   if (isSellerProduct) {
@@ -634,23 +650,23 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
       .from('products')
       .update({
         name,
-        price,
+        price: toNumber(price),
         description,
-        image,
+        image: safeImage,
         brand,
         category,
         subcategory,
-        count_in_stock: countInStock,
+        count_in_stock: toNumber(countInStock),
         images: Array.isArray(images) ? images : (typeof images === 'string' ? images.split(',').map(i => i.trim()).filter(i => i) : undefined),
         // sku, // Immutable
-        compare_at_price: compareAtPrice,
-        weight,
+        compare_at_price: toNumber(compareAtPrice),
+        weight: toNumber(weight),
         dimensions,
         tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : undefined,
         video_url,
         videos,
         shipping_required: shippingRequired,
-        shipping_weight: shippingWeight,
+        shipping_weight: toNumber(shippingWeight),
         shipping_class: shippingClass,
         free_shipping: freeShipping,
         meta_title: metaTitle,
@@ -670,23 +686,23 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
       .from('products')
       .update({
         name,
-        price,
+        price: toNumber(price),
         description,
-        image,
+        image: safeImage,
         brand,
         category,
         subcategory,
-        count_in_stock: countInStock,
+        count_in_stock: toNumber(countInStock),
         images: Array.isArray(images) ? images : (typeof images === 'string' ? images.split(',').map(i => i.trim()).filter(i => i) : undefined),
         // sku, // Immutable
-        compare_at_price: compareAtPrice,
-        weight,
+        compare_at_price: toNumber(compareAtPrice),
+        weight: toNumber(weight),
         dimensions,
         tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : undefined,
         video_url,
         videos,
         shipping_required: shippingRequired,
-        shipping_weight: shippingWeight,
+        shipping_weight: toNumber(shippingWeight),
         shipping_class: shippingClass,
         free_shipping: freeShipping,
         meta_title: metaTitle,
@@ -703,8 +719,9 @@ router.put('/:id', protect, asyncHandler(async (req, res) => {
   }
 
   if (error) {
+    console.error('Update product error:', error);
     res.status(500);
-    throw new Error(error.message);
+    throw new Error(`Failed to update product: ${error.message || JSON.stringify(error)}`);
   }
 
   res.json({ ...updatedProduct, _id: updatedProduct.id });

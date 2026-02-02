@@ -40,13 +40,22 @@ const protectSeller = async (req, res, next) => {
                 throw new Error('Not authorized, user not found');
             }
 
+            console.log(`🛡️ protectSeller: Checking for user ${req.user.id}`);
+
             // STRICT CHECK: Always verify against the actual seller database
             // The is_seller flag in the main DB is just a cache/claim, the source of truth is the seller DB.
+            console.log('🛡️ protectSeller: Querying seller_profiles...');
             const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
                 ?.from('seller_profiles')
                 .select('id')
                 .eq('user_id', req.user.id)
                 .single();
+            
+            console.log('🛡️ protectSeller: Query result:', { 
+                found: !!sellerProfile, 
+                id: sellerProfile?.id, 
+                error: sellerError?.code 
+            });
 
             const profileExists = sellerProfile && (!sellerError || sellerError.code === 'PGRST116') && sellerProfile.id;
 

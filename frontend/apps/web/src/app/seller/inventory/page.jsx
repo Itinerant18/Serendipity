@@ -127,8 +127,8 @@ export default function SellerInventoryPage() {
 
     const downloadSampleCSV = () => {
         const headers = ["name", "price", "category", "subcategory", "brand", "stock", "description", "image_url", "images"];
-        const row1 = ["Sample Product", "99.99", "Electronics", "Headphones", "BrandX", "50", "Great sound", "https://via.placeholder.com/150", "https://img1.jpg,https://img2.jpg"];
-        const row2 = ["Another Product", "49.50", "Clothing", "T-Shirts", "BrandY", "100", "Cotton t-shirt", "https://via.placeholder.com/150", ""];
+    const row1 = ["Sample Product", "99.99", "Electronics", "Headphones", "BrandX", "50", "Great sound", "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60", "https://img1.jpg,https://img2.jpg"];
+    const row2 = ["Another Product", "49.50", "Clothing", "T-Shirts", "BrandY", "100", "Cotton t-shirt", "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&auto=format&fit=crop&q=60", ""];
 
         const csvContent = [
             headers.join(","),
@@ -587,11 +587,11 @@ export default function SellerInventoryPage() {
                                                     <TableCell>
                                                         <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
                                                             <img
-                                                                src={product.image || "https://via.placeholder.com/100"}
+                                                                src={product.image || "/placeholder.jpg"}
                                                                 alt={product.name}
                                                                 className="w-full h-full object-cover"
                                                                 onError={(e) => {
-                                                                    e.target.src = "https://via.placeholder.com/100";
+                                                                    e.target.src = "/placeholder.jpg";
                                                                 }}
                                                             />
                                                         </div>
@@ -730,10 +730,10 @@ export default function SellerInventoryPage() {
                                                     <TableCell>
                                                         <div className="relative w-12 h-12 rounded-md overflow-hidden bg-muted">
                                                             <img
-                                                                src={product.image || "https://via.placeholder.com/100"}
+                                                                src={product.image || "/placeholder.jpg"}
                                                                 alt={product.name}
                                                                 className="w-full h-full object-cover"
-                                                                onError={(e) => { e.target.src = "https://via.placeholder.com/100"; }}
+                                                                onError={(e) => { e.target.src = "/placeholder.jpg"; }}
                                                             />
                                                         </div>
                                                     </TableCell>
@@ -875,7 +875,7 @@ export default function SellerInventoryPage() {
                     <div className="flex-1 overflow-hidden flex flex-col gap-4">
                         {/* Info banner */}
                         <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-900">
-                            <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                            <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                             <div className="text-sm text-blue-700 dark:text-blue-300">
                                 <strong>Required columns:</strong>{" "}
                                 <code className="text-xs bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded">
@@ -889,7 +889,7 @@ export default function SellerInventoryPage() {
 
                         {uploadError && (
                             <div className="flex items-start gap-2 bg-destructive/10 p-3 rounded-lg border border-destructive/20">
-                                <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                                <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
                                 <div className="text-sm text-destructive">{uploadError}</div>
                             </div>
                         )}
@@ -1213,7 +1213,7 @@ Stainless Steel Water Bottle,19.99,Home & Living,200,Kitchen & Dining,EcoLife,"1
                                 </h3>
                                 <div className="space-y-2">
                                     <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
-                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                                         <div className="flex-1 text-sm">
                                             <div className="font-medium text-red-700 dark:text-red-400">Price with currency symbol</div>
                                             <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
@@ -1222,7 +1222,7 @@ Stainless Steel Water Bottle,19.99,Home & Living,200,Kitchen & Dining,EcoLife,"1
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
-                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                                         <div className="flex-1 text-sm">
                                             <div className="font-medium text-red-700 dark:text-red-400">Stock as decimal</div>
                                             <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
@@ -1231,7 +1231,7 @@ Stainless Steel Water Bottle,19.99,Home & Living,200,Kitchen & Dining,EcoLife,"1
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
-                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                                         <div className="flex-1 text-sm">
                                             <div className="font-medium text-red-700 dark:text-red-400">Invalid category name</div>
                                             <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
@@ -1240,7 +1240,7 @@ Stainless Steel Water Bottle,19.99,Home & Living,200,Kitchen & Dining,EcoLife,"1
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
-                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                                         <div className="flex-1 text-sm">
                                             <div className="font-medium text-red-700 dark:text-red-400">Unquoted text with commas</div>
                                             <div className="text-red-600/80 dark:text-red-400/80 font-mono text-xs mt-1">
@@ -1338,7 +1338,7 @@ Stainless Steel Water Bottle,19.99,Home & Living,200,Kitchen & Dining,EcoLife,"1
                             {/* SKU Note */}
                             <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-900">
                                 <div className="flex items-start gap-2">
-                                    <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                    <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                                     <div className="text-xs text-blue-800 dark:text-blue-200">
                                         <strong>Note:</strong> SKU is auto-generated by the system and does not need to be included. Duplicate product names (for your account) will be automatically skipped during upload.
                                     </div>
