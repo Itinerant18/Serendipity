@@ -50,18 +50,54 @@ We recommend deploying to [Railway](https://railway.app/) because the project is
     -   Once variables are set, Railway will trigger a deployment.
     -   Monitor the deployment logs for any errors.
 
+## Hybrid Deployment (Railway Backend + Vercel Frontend)
+
+Yes, you can split your deployment, but there is a **critical caveat** for this project.
+
+### ⚠️ Important: Frontend Server Requirement
+
+The frontend (`frontend/apps/web`) is not just a static site. It uses a **custom Node.js server** (built with Hono and React Router) to handle:
+1.  **Authentication** (`/api/auth/*` routes).
+2.  **Integrations Proxying**.
+3.  **Server-Side Rendering (SSR)**.
+
+**Railway** supports this Node.js server out of the box.
+
+**Vercel**, by default, expects either a Static Site or a Serverless function structure.
+*   If you deploy to Vercel as a **Static Site** (Output: `build/client`), you will **lose Authentication and Integrations**.
+*   To get full functionality on Vercel, you would need to adapt the custom Hono server to Vercel Serverless Functions, which requires code changes (e.g., using a Vercel adapter for Hono).
+
+**Recommendation:**
+For the easiest setup without code changes, we **strongly recommend deploying the Frontend to Railway** as well.
+
+---
+
+### If you still want to try Vercel (Advanced)
+
+If you proceed with Vercel, you must ensure the server-side logic is handled. If you just want to test the UI (as a partial SPA):
+
+1.  **Deploy Backend on Railway:**
+    -   Follow the "Recommended: Railway" steps above.
+    -   Copy the **Public Domain** (URL) of your backend.
+
+2.  **Deploy Frontend on Vercel (Static/SPA Mode):**
+    -   **Warning:** Auth and SSR features may break.
+    -   Import `Serendipity` repository.
+    -   **Root Directory:** `frontend/apps/web`.
+    -   **Framework Preset:** `Vite`.
+    -   **Build Settings:**
+        -   Output Directory: `build/client`
+    -   **Environment Variables:**
+        -   `VITE_API_URL`: Your Railway Backend URL.
+        -   `VITE_SUPABASE_URL` & `VITE_SUPABASE_ANON_KEY`.
+
 ## Alternatives
 
 ### Frontend: Vercel / Netlify
 The frontend uses React Router 7 with Server-Side Rendering (SSR).
 
 *   **Vercel:**
-    -   Import the `frontend/apps/web` directory.
-    -   Framework Preset: Remix / React Router (if available) or "Other".
-    -   Build Command: `npm run build`
-    -   Install Command: `npm ci --legacy-peer-deps`
-    -   Output Directory: `build/client` (Usually Vercel detects Remix/RR7, but you might need to configure the output settings or use a Vercel adapter if one isn't built-in).
-    -   Environment Variables: Set `VITE_API_URL`, etc.
+    -   See the "Hybrid Deployment" section above for details.
 
 *   **Netlify:**
     -   Similar setup. You may need a `netlify.toml` or configure the build settings to run the server.
