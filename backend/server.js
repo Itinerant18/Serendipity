@@ -17,7 +17,9 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
     cors: {
-        origin: ["http://localhost:4000", "http://localhost:5173"],
+        origin: process.env.CORS_ORIGINS 
+            ? process.env.CORS_ORIGINS.split(',') 
+            : ["http://localhost:4000", "http://localhost:5173"],
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -39,7 +41,9 @@ app.use(helmet({
 }));
 
 app.use(cors({
-    origin: ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"],
+    origin: process.env.CORS_ORIGINS 
+        ? process.env.CORS_ORIGINS.split(',') 
+        : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
