@@ -1,6 +1,5 @@
 [build]
-builder = "NIXPACKS"
-watchPatterns = ["frontend/apps/web/**"]
+builder = "nixpacks"
 
 [deploy]
 startCommand = "npm run start"
@@ -8,3 +7,6 @@ healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
+
+[build.environment]
+NODE_ENV = "production"
