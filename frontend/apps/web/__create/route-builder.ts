@@ -1,4 +1,5 @@
-import { readdir, stat } from 'node:fs/promises';
+import { readdir, stat, access } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Hono } from 'hono';
@@ -18,6 +19,12 @@ if (globalThis.fetch) {
 
 // Recursively find all route.js files
 async function findRouteFiles(dir: string): Promise<string[]> {
+  // Check if directory exists before attempting to read
+  if (!existsSync(dir)) {
+    console.warn(`API routes directory not found: ${dir}. This is expected in production builds if using a separate backend.`);
+    return [];
+  }
+  
   const files = await readdir(dir);
   let routes: string[] = [];
 
