@@ -26,7 +26,8 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router', 'react-router-dom'],
           'ui-vendor': ['framer-motion', 'lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-slot'],
-          'three-vendor': ['three', '@paper-design/shaders-react'] // Heavy 3D libs
+          'three-vendor': ['three', '@paper-design/shaders-react'], // Heavy 3D libs
+          'fetch-utils': ['./src/__create/fetch.ts']
         }
       }
     }
