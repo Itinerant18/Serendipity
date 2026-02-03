@@ -1,22 +1,22 @@
-# Build stage
-FROM node:22-alpine AS builder
+# Use Node 23 (latest) which satisfies >=22.20.0 requirement
+FROM node:23-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (with legacy peer deps for compatibility)
+# Install dependencies
 RUN npm ci --legacy-peer-deps
 
-# Copy source files
+# Copy source code
 COPY . .
 
 # Build the application
 RUN npm run build
 
 # Production stage
-FROM node:22-alpine
+FROM node:23-alpine AS production
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# Copy built application from builder
+# Copy built assets from builder
 COPY --from=builder --chown=nodejs:nodejs /app/build ./build
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
@@ -32,14 +32,12 @@ COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 # Switch to non-root user
 USER nodejs
 
-# Cloud platforms use PORT environment variable
-ENV PORT=4000
-ENV NODE_ENV=production
-EXPOSE 4000
+# Expose the port Railway will use
+EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:4000/ || exit 1
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=8080
 
 # Start the server
 CMD ["npm", "run", "start"]

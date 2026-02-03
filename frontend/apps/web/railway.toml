@@ -1,6 +1,5 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npm run build"
+builder = "dockerfile"
 
 [build.nixpacksPlan]
 installCommand = "npm ci --legacy-peer-deps"
