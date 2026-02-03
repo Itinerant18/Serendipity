@@ -177,7 +177,7 @@ export default function ProfilePage() {
                     <div className="w-16 h-16 bg-orange-500 border-4 border-black flex items-center justify-center mx-auto mb-4">
                         <i className="fa-solid fa-lock text-3xl text-white"></i>
                     </div>
-                    <h2 className="font-brutalist text-2xl text-black mb-2 bg-black text-white px-4 py-2 inline-block">
+                    <h2 className="font-brutalist text-2xl mb-2 bg-black text-white px-4 py-2 inline-block">
                         AUTHENTICATION REQUIRED
                     </h2>
                     <p className="font-bold text-black mb-6">Please sign in to view your profile</p>
@@ -258,7 +258,7 @@ export default function ProfilePage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                    <label className="block font-bold text-black mb-2 border-2 border-black px-3 py-1">
                                         <i className="fa-solid fa-user mr-2"></i> NAME
                                     </label>
                                     <input
@@ -277,7 +277,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div>
-                                    <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                    <label className="block font-bold text-black mb-2 border-2 border-black px-3 py-1">
                                         <i className="fa-solid fa-envelope mr-2"></i> EMAIL
                                     </label>
                                     <input
@@ -296,7 +296,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                    <label className="block font-bold text-black mb-2 border-2 border-black px-3 py-1">
                                         <i className="fa-solid fa-phone mr-2"></i> MOBILE
                                     </label>
                                     <input
@@ -314,7 +314,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div>
-                                    <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                    <label className="block font-bold text-black mb-2 border-2 border-black px-3 py-1">
                                         <i className="fa-solid fa-cake-candles mr-2"></i> DATE OF BIRTH
                                     </label>
                                     <input
@@ -332,7 +332,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 <div>
-                                    <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+                                    <label className="block font-bold text-black mb-2 border-2 border-black px-3 py-1">
                                         <i className="fa-solid fa-venus-mars mr-2"></i> GENDER
                                     </label>
                                     <select
@@ -424,11 +424,11 @@ export default function ProfilePage() {
                         className="bg-white border-4 border-black shadow-[12px_12px_0_#000000] max-w-md w-full p-6"
                     >
                         <div className="flex items-start gap-4 mb-4">
-                            <div className="w-12 h-12 bg-blue-500 border-4 border-black flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 bg-blue-500 border-4 border-black flex items-center justify-center shrink-0">
                                 <i className="fab fa-google text-white text-xl"></i>
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-brutalist text-xl text-black mb-2 bg-black text-white px-3 py-1 inline-block">
+                                <h3 className="font-brutalist text-xl mb-2 bg-black text-white px-3 py-1 inline-block">
                                     GOOGLE ACCOUNT LINKED
                                 </h3>
                                 <p className="font-bold text-black">

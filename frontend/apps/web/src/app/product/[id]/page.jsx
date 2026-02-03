@@ -224,7 +224,7 @@ export default function ProductPage() {
                                     key={idx}
                                     onClick={() => { setActiveMediaIndex(idx); setIsPlaying(true); }}
                                     className={cn(
-                                        "relative flex-shrink-0 w-24 h-24 overflow-hidden border-4 border-black transition-transform duration-100 hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#000000]",
+                                        "relative shrink-0 w-24 h-24 overflow-hidden border-4 border-black transition-transform duration-100 hover:translate(-1px,-1px) hover:shadow-[4px_4px_0_#000000]",
                                         activeMediaIndex === idx ? "bg-yellow-400 border-black" : "bg-white border-black opacity-70 hover:opacity-100"
                                     )}
                                 >

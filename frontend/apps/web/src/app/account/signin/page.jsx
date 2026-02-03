@@ -113,7 +113,7 @@ export default function SignInPage() {
           <form onSubmit={onSubmit} className="space-y-5">
             {/* Email Field */}
             <div>
-              <label className="block font-bold text-black mb-2 border-2 border-black inline-block px-3 py-1">
+              <label className="block font-bold text-black mb-2 border-2 border-black px-3 py-1">
                 EMAIL ADDRESS
               </label>
               <div className="relative">
@@ -133,7 +133,7 @@ export default function SignInPage() {
             {/* Password Field */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block font-bold text-black border-2 border-black inline-block px-3 py-1">
+                <label className="block font-bold text-black border-2 border-black px-3 py-1">
                   PASSWORD
                 </label>
                 <a

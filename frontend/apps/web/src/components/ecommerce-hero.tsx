@@ -170,7 +170,7 @@ export function EcommerceHero({
 
                                 {/* Overlay */}
                                 {((slide.overlay) || (slide.title || slide.subtitle || slide.description)) && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+                                    <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-transparent" />
                                 )}
 
                                 {/* Content Overlay */}
@@ -187,7 +187,7 @@ export function EcommerceHero({
                                                 {slide.discount && (
                                                     <div className="inline-block">
                                                         <div className="inline-block animate-bounce delay-1000">
-                                                            <Badge className="text-xl px-6 py-2 bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] border-2 border-white/20 rotate-[-2deg]">
+                                                            <Badge className="text-xl px-6 py-2 bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] border-2 border-white/20 -rotate-2">
                                                                 {slide.discount}
                                                             </Badge>
                                                         </div>

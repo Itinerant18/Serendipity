@@ -78,7 +78,7 @@ function SharedErrorBoundary({
     >
       <div className="bg-[#18191B] text-[#F2F2F2] rounded-lg p-4 max-w-md w-full mx-4 shadow-lg">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <div className="w-8 h-8 bg-[#F2F2F2] rounded-full flex items-center justify-center">
               <span className="text-black text-[1.125rem] leading-none">!</span>
             </div>
@@ -169,7 +169,7 @@ function InternalErrorBoundary({ error: errorArg }: Route.ErrorBoundaryProps) {
         <div className="flex gap-2">
           {!!error && (
             <button
-              className="flex flex-row items-center justify-center gap-[4px] outline-none transition-colors rounded-[8px] border-[1px] bg-[#f9f9f9] hover:bg-[#dbdbdb] active:bg-[#c4c4c4] border-[#c4c4c4] text-[#18191B] text-sm px-[8px] py-[4px] cursor-pointer"
+              className="flex flex-row items-center justify-center gap-[4px] outline-none transition-colors rounded-[8px] border bg-[#f9f9f9] hover:bg-[#dbdbdb] active:bg-[#c4c4c4] border-[#c4c4c4] text-[#18191B] text-sm px-[8px] py-[4px] cursor-pointer"
               type="button"
               {...fixButtonProps}
             >
@@ -178,7 +178,7 @@ function InternalErrorBoundary({ error: errorArg }: Route.ErrorBoundaryProps) {
           )}
 
           <button
-            className="flex flex-row items-center justify-center gap-[4px] outline-none transition-colors rounded-[8px] border-[1px] bg-[#2C2D2F] hover:bg-[#414243] active:bg-[#555658] border-[#414243] text-white text-sm px-[8px] py-[4px]"
+            className="flex flex-row items-center justify-center gap-[4px] outline-none transition-colors rounded-[8px] border bg-[#2C2D2F] hover:bg-[#414243] active:bg-[#555658] border-[#414243] text-white text-sm px-[8px] py-[4px]"
             type="button"
             {...showLogsButtonProps}
           >
@@ -187,7 +187,7 @@ function InternalErrorBoundary({ error: errorArg }: Route.ErrorBoundaryProps) {
         </div>
       ) : (
         <button
-          className="flex flex-row items-center justify-center gap-[4px] outline-none transition-colors rounded-[8px] border-[1px] bg-[#2C2D2F] hover:bg-[#414243] active:bg-[#555658] border-[#414243] text-white text-sm px-[8px] py-[4px] w-fit"
+          className="flex flex-row items-center justify-center gap-[4px] outline-none transition-colors rounded-[8px] border bg-[#2C2D2F] hover:bg-[#414243] active:bg-[#555658] border-[#414243] text-white text-sm px-[8px] py-[4px] w-fit"
           type="button"
           {...copyButtonProps}
         >

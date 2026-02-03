@@ -88,6 +88,15 @@ app.use((req, res, next) => {
 // Mongoose connection removed
 console.log('Supabase Client Initialized');
 
+// Health Check Endpoint (for container orchestration & load balancers)
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'serendipity-backend'
+    });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);

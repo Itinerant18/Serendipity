@@ -71,7 +71,7 @@ export default function ProductDetails({
                         </span>
                         {product.offer.discount > 0 && (
                             <div className="flex flex-col mb-1">
-                                <span className="text-sm font-bold text-red-600 bg-red-500 text-white px-3 py-1 border-4 border-black self-start">
+                                <span className="text-sm font-bold bg-red-500 text-white px-3 py-1 border-4 border-black self-start">
                                     -{product.offer.discount}% OFF
                                 </span>
                                 <span className="text-sm text-black line-through font-bold">

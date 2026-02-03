@@ -65,7 +65,7 @@ export default function UploadProgress({
             <div className="relative">
                 <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border">
                     <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
+                        className="h-full bg-linear-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
                         style={{ width: `${percentage}%` }}
                     />
                 </div>
@@ -105,7 +105,7 @@ export default function UploadProgress({
                     </div>
                     {errors.slice(0, 10).map((err, i) => (
                         <div key={i} className="text-xs text-red-600/80 dark:text-red-400/80 flex items-start gap-1">
-                            <XCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                            <XCircle className="h-3 w-3 mt-0.5 shrink-0" />
                             <span>Row {err.row}: {err.message}</span>
                         </div>
                     ))}

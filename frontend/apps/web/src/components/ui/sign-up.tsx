@@ -138,7 +138,7 @@ export function AuthComponent({
                         </motion.div>
 
                         <motion.div variants={itemVariants} className="text-center mb-8">
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
+                            <h1 className="text-3xl font-bold bg-linear-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
                                 {mode === "login" ? "Welcome Back" : "Create Account"}
                             </h1>
                             <p className="text-gray-500 mt-2 font-medium">

@@ -16,7 +16,7 @@ export function BecomeSellerSection() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="relative overflow-hidden rounded-[32px] md:rounded-[48px] border border-amber-500/20 bg-gradient-to-br from-stone-900 via-stone-900 to-stone-800 shadow-2xl min-h-[500px] md:min-h-[550px] flex flex-col items-center justify-center duration-500">
+        <div className="relative overflow-hidden rounded-[32px] md:rounded-[48px] border border-amber-500/20 bg-linear-to-br from-stone-900 via-stone-900 to-stone-800 shadow-2xl min-h-[500px] md:min-h-[550px] flex flex-col items-center justify-center duration-500">
           <Suspense fallback={<div className="absolute inset-0 bg-amber-500/5" />}>
             <div className="absolute inset-0 z-0 pointer-events-none opacity-50 mix-blend-screen">
               <Dithering
@@ -32,8 +32,8 @@ export function BecomeSellerSection() {
           </Suspense>
 
           {/* Gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-transparent to-transparent z-[1]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-stone-900/40 via-transparent to-stone-900/40 z-[1]" />
+          <div className="absolute inset-0 bg-linear-to-t from-stone-900/80 via-transparent to-transparent z-1" />
+          <div className="absolute inset-0 bg-linear-to-r from-stone-900/40 via-transparent to-stone-900/40 z-1" />
 
           <div className="relative z-10 px-6 max-w-4xl mx-auto text-center flex flex-col items-center">
             {/* Badge */}
