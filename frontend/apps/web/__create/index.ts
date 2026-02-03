@@ -186,15 +186,18 @@ app.use('/api/auth/*', async (c, next) => {
 app.route(API_BASENAME, api);
 
 console.log('🔧 Starting server initialization...');
+const port = parseInt(process.env.PORT || '3000', 10);
 console.log(`🔧 PORT env: ${process.env.PORT || 'not set, will use 3000'}`);
+console.log(`🔧 Using port: ${port}`);
 
 let server;
 try {
   server = await createHonoServer({
     app,
+    port,
     defaultLogger: true,
     listeningListener: (info) => {
-      console.log(`🚀 Server is running on http://localhost:${info.port}`);
+      console.log(`🚀 Server is running on http://0.0.0.0:${info.port}`);
     },
   });
   console.log('✅ Server created successfully');
