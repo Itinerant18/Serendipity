@@ -63,6 +63,8 @@
             height: 0
         }
     }
+
+    --shadow-glass: 8px 8px 0 0 #000;
 }
 
 /* Base Variables */
@@ -154,11 +156,6 @@
 
 /* Brutalist Utilities */
 @layer components {
-
-    /* Redefine shadow-glass to just be brutalist-card for compatibility, or a solid shadow */
-    .shadow-glass {
-        box-shadow: 8px 8px 0 0 #000;
-    }
 
     .brutalist-card {
         @apply bg-white border-4 border-black;
