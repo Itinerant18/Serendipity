@@ -185,25 +185,36 @@ app.use('/api/auth/*', async (c, next) => {
 });
 app.route(API_BASENAME, api);
 
+import { registerRoutes } from './route-builder';
+
 console.log('🔧 Starting server initialization...');
 const port = parseInt(process.env.PORT || '3000', 10);
 console.log(`🔧 PORT env: ${process.env.PORT || 'not set, will use 3000'}`);
 console.log(`🔧 Using port: ${port}`);
 
-let server;
-try {
-  server = await createHonoServer({
-    app,
-    port,
-    defaultLogger: true,
-    listeningListener: (info) => {
-      console.log(`🚀 Server is running on http://0.0.0.0:${info.port}`);
-    },
-  });
-  console.log('✅ Server created successfully');
-} catch (error) {
-  console.error('❌ Failed to create server:', error);
-  process.exit(1);
+export async function start() {
+  await registerRoutes();
+
+  let server;
+  try {
+    server = await createHonoServer({
+      app,
+      port,
+      defaultLogger: true,
+      listeningListener: (info) => {
+        console.log(`🚀 Server is running on http://0.0.0.0:${info.port}`);
+      },
+    });
+    console.log('✅ Server created successfully');
+  } catch (error) {
+    console.error('❌ Failed to create server:', error);
+    process.exit(1);
+  }
+  return server;
 }
 
-export default server;
+if (import.meta.env.DEV) {
+  start();
+}
+
+export default app;

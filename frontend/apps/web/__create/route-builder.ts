@@ -25,7 +25,7 @@ async function findRouteFiles(dir: string): Promise<string[]> {
     console.warn(`API routes directory not found: ${dir}. This is expected in production builds if using a separate backend.`);
     return [];
   }
-  
+
   const files = await readdir(dir);
   let routes: string[] = [];
 
@@ -77,8 +77,8 @@ function getHonoPath(routeFile: string): { name: string; pattern: string }[] {
 // Type for Next.js-style route handlers
 type NextLikeHandler = (req: Request, ctx: { params: Record<string, string> }) => Promise<Response>;
 
-// Import and register all routes
-async function registerRoutes() {
+// Export registerRoutes for manual executions
+export async function registerRoutes() {
   const routeFiles = (
     await findRouteFiles(__dirname).catch((error) => {
       console.error('Error finding route files:', error);
@@ -147,11 +147,11 @@ async function registerRoutes() {
   }
 }
 
-// Initial route registration
-await registerRoutes();
-
 // Hot reload routes in development
 if (import.meta.env.DEV) {
+  // Initial registration for dev
+  registerRoutes();
+
   import.meta.glob('../src/app/api/**/route.js', {
     eager: true,
   });
