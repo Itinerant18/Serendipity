@@ -129,6 +129,10 @@
 		"vitest": "^3.2.4"
 	},
 	"overrides": {
-		"next-themes": "^0.3.0"
+		"next-themes": "^0.3.0",
+		"tailwindcss": "^4.1.18",
+		"lucide-react": "^0.563.0",
+		"@types/react": "^18.3.27",
+		"vite": "^6.4.1"
 	}
 }

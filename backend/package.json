@@ -6,7 +6,7 @@
   "scripts": {
     "start": "bun server.js",
     "server": "bun server.js",
-    "dev": "concurrently \"bun run dev\" \"cd ../frontensd/apps/web && npm run dev\"",
+    "dev": "concurrently \"bun run dev\" \"cd ../frontend/apps/web && npm run dev\"",
     "migrate:seller": "node migrations/migrateSellerData.js",
     "verify:databases": "node migrations/verifyDatabases.js",
     "setup:seller-db": "node migrations/setupSellerDatabase.js",
