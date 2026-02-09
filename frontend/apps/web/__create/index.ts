@@ -22,6 +22,7 @@ neonConfig.webSocketConstructor = ws;
 
 const als = new AsyncLocalStorage<{ requestId: string }>();
 
+// Override console methods to include request IDs
 for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
   const original = nodeConsole[method].bind(console);
 
@@ -42,192 +43,99 @@ const pool = new Pool({
 const adapter = NeonAdapter(pool);
 */
 
-const app = new Hono();
-
-// Middleware - must be registered before routes
-app.use('*', requestId());
-
-app.use('*', (c, next) => {
-  const requestId = c.get('requestId');
-  return als.run({ requestId }, () => next());
-});
-
-app.use(contextStorage());
-
-// Error handler
-app.onError((err, c) => {
-  if (c.req.method !== 'GET') {
-    return c.json(
-      {
-        error: 'An error occurred in your app',
-        details: serializeError(err),
-      },
-      500
-    );
-  }
-  return c.html(getHTMLForErrorPage(err), 200);
-});
-
-// CORS middleware
-if (process.env.CORS_ORIGINS) {
-  app.use(
-    '/*',
-    cors({
-      origin: process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()),
-    })
-  );
-}
-
-// Body limit for mutations
-for (const method of ['post', 'put', 'patch'] as const) {
-  app[method](
-    '*',
-    bodyLimit({
-      maxSize: 4.5 * 1024 * 1024, // 4.5mb to match vercel limit
-      onError: (c) => {
-        return c.json({ error: 'Body size limit exceeded' }, 413);
-      },
-    })
-  );
-}
-
-/*
-if (process.env.AUTH_SECRET) {
-  app.use(
-    '*',
-    initAuthConfig((c) => ({
-      secret: c.env.AUTH_SECRET,
-      pages: {
-        signIn: '/account/signin',
-        signOut: '/account/logout',
-      },
-      skipCSRFCheck,
-      session: {
-        strategy: 'jwt',
-      },
-      callbacks: {
-        session({ session, token }) {
-          if (token.sub) {
-            session.user.id = token.sub;
-          }
-          return session;
-        },
-      },
-      cookies: {
-        csrfToken: {
-          options: {
-            secure: true,
-            sameSite: 'none',
-          },
-        },
-        sessionToken: {
-          options: {
-            secure: true,
-            sameSite: 'none',
-          },
-        },
-        callbackUrl: {
-          options: {
-            secure: true,
-            sameSite: 'none',
-          },
-        },
-      },
-      providers: [
-        Credentials({
-          id: 'credentials-signin',
-          name: 'Credentials Sign in',
-          credentials: {
-            email: {
-              label: 'Email',
-              type: 'email',
-            },
-            password: {
-              label: 'Password',
-              type: 'password',
-            },
-          },
-          authorize: async (credentials) => {
-            return null;
-          },
-        }),
-      ],
-    }))
-  );
-}
-*/
-
-// Healthcheck endpoint for Railway
-app.get('/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() }, 200);
-});
-
-// Integrations proxy
-app.all('/integrations/:path{.+}', async (c, next) => {
-  const queryParams = c.req.query();
-  const url = `${process.env.NEXT_PUBLIC_CREATE_BASE_URL ?? 'https://www.create.xyz'}/integrations/${c.req.param('path')}${Object.keys(queryParams).length > 0 ? `?${new URLSearchParams(queryParams).toString()}` : ''}`;
-
-  return proxy(url, {
-    method: c.req.method,
-    body: c.req.raw.body ?? null,
-    // @ts-ignore - this key is accepted even if types not aware and is
-    // required for streaming integrations
-    duplex: 'half',
-    redirect: 'manual',
-    headers: {
-      ...c.req.header(),
-      'X-Forwarded-For': process.env.NEXT_PUBLIC_CREATE_HOST,
-      'x-createxyz-host': process.env.NEXT_PUBLIC_CREATE_HOST,
-      Host: process.env.NEXT_PUBLIC_CREATE_HOST,
-      'x-createxyz-project-group-id': process.env.NEXT_PUBLIC_PROJECT_GROUP_ID,
-    },
-  });
-});
-
-// Auth handler
-app.use('/api/auth/*', async (c, next) => {
-  if (isAuthAction(c.req.path)) {
-    return authHandler()(c, next);
-  }
-  return next();
-});
-
-// Register API routes
-app.route(API_BASENAME, api);
-
 console.log('🔧 Server module loaded');
 
-// Production server start function
-// In dev mode, the Vite plugin uses the exported app directly
-// This function is only called in production builds
-export async function start() {
-  const port = parseInt(process.env.PORT || '3000', 10);
-  console.log(`🔧 PORT env: ${process.env.PORT || 'not set, will use 3000'}`);
-  console.log(`🔧 Using port: ${port}`);
+// Export default createHonoServer with configure callback
+// This is the correct pattern for react-router-hono-server
+export default createHonoServer({
+  port: parseInt(process.env.PORT || '3000', 10),
+  defaultLogger: true,
+  configure: (app) => {
+    // Middleware
+    app.use('*', requestId());
 
-  let server;
-  try {
-    server = await createHonoServer({
-      app,
-      port,
-      host: '0.0.0.0',
-      defaultLogger: true,
-      listeningListener: (info) => {
-        console.log(`🚀 Server is running on port ${info.port}`);
-      },
+    app.use('*', (c, next) => {
+      const reqId = c.get('requestId');
+      return als.run({ requestId: reqId }, () => next());
     });
-    console.log('✅ Server created successfully');
-  } catch (error) {
-    console.error('❌ Failed to create server:', error);
-    process.exit(1);
-  }
-  return server;
-}
 
-// Only start production server when NOT in dev mode
-// In dev mode, Vite plugin handles everything via the exported app
-if (!import.meta.env.DEV) {
-  start();
-}
+    app.use(contextStorage());
 
-export default app;
+    // Error handler
+    app.onError((err, c) => {
+      if (c.req.method !== 'GET') {
+        return c.json(
+          {
+            error: 'An error occurred in your app',
+            details: serializeError(err),
+          },
+          500
+        );
+      }
+      return c.html(getHTMLForErrorPage(err), 200);
+    });
+
+    // CORS middleware
+    if (process.env.CORS_ORIGINS) {
+      app.use(
+        '/*',
+        cors({
+          origin: process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()),
+        })
+      );
+    }
+
+    // Body limit for mutations
+    for (const method of ['post', 'put', 'patch'] as const) {
+      app[method](
+        '*',
+        bodyLimit({
+          maxSize: 4.5 * 1024 * 1024, // 4.5mb to match vercel limit
+          onError: (c) => {
+            return c.json({ error: 'Body size limit exceeded' }, 413);
+          },
+        })
+      );
+    }
+
+    // Healthcheck endpoint for Railway
+    app.get('/health', (c) => {
+      return c.json({ status: 'ok', timestamp: new Date().toISOString() }, 200);
+    });
+
+    // Integrations proxy
+    app.all('/integrations/:path{.+}', async (c, next) => {
+      const queryParams = c.req.query();
+      const url = `${process.env.NEXT_PUBLIC_CREATE_BASE_URL ?? 'https://www.create.xyz'}/integrations/${c.req.param('path')}${Object.keys(queryParams).length > 0 ? `?${new URLSearchParams(queryParams).toString()}` : ''}`;
+
+      return proxy(url, {
+        method: c.req.method,
+        body: c.req.raw.body ?? null,
+        // @ts-ignore - this key is accepted even if types not aware and is
+        // required for streaming integrations
+        duplex: 'half',
+        redirect: 'manual',
+        headers: {
+          ...c.req.header(),
+          'X-Forwarded-For': process.env.NEXT_PUBLIC_CREATE_HOST,
+          'x-createxyz-host': process.env.NEXT_PUBLIC_CREATE_HOST,
+          Host: process.env.NEXT_PUBLIC_CREATE_HOST,
+          'x-createxyz-project-group-id': process.env.NEXT_PUBLIC_PROJECT_GROUP_ID,
+        },
+      });
+    });
+
+    // Auth handler
+    app.use('/api/auth/*', async (c, next) => {
+      if (isAuthAction(c.req.path)) {
+        return authHandler()(c, next);
+      }
+      return next();
+    });
+
+    // Register API routes
+    app.route(API_BASENAME, api);
+
+    console.log('✅ Server configured with custom routes');
+  },
+});
