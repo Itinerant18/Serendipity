@@ -7,6 +7,8 @@ import { formatCurrency } from "@/utils/format";
 import OrderCard from "@/components/OrderCard";
 import GlassCard from "@/components/ui/GlassCard";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function SellerOrdersPage() {
     const { token, user } = useAuth();
     const [orders, setOrders] = useState([]);
@@ -48,7 +50,7 @@ export default function SellerOrdersPage() {
         const fetchOrders = async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`http://localhost:5000/api/seller/orders?status=${filter}`, {
+                const res = await fetch(`${API_URL}/api/seller/orders?status=${filter}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error('Failed to fetch orders');
@@ -92,11 +94,10 @@ export default function SellerOrdersPage() {
                         </p>
                     </div>
 
-                    <div className={`flex items-center gap-2 px-4 py-2 border-4 border-black font-bold transition-all ${
-                        isConnected
+                    <div className={`flex items-center gap-2 px-4 py-2 border-4 border-black font-bold transition-all ${isConnected
                             ? "bg-green-200 animate-pulse"
                             : "bg-gray-200"
-                    }`}>
+                        }`}>
                         {isConnected ? (
                             <>
                                 <span className="relative flex h-3 w-3">
@@ -125,11 +126,10 @@ export default function SellerOrdersPage() {
                     <button
                         key={option.value}
                         onClick={() => setFilter(option.value)}
-                        className={`px-4 py-2 border-4 border-black font-bold transition-all ${
-                            filter === option.value
+                        className={`px-4 py-2 border-4 border-black font-bold transition-all ${filter === option.value
                                 ? "bg-orange-500 text-white translate(-2px,-2px) shadow-[4px_4px_0_#000000]"
                                 : "bg-white text-black hover:bg-pink-500 hover:text-white hover:translate(-2px,-2px)"
-                        }`}
+                            }`}
                     >
                         {option.label}
                     </button>

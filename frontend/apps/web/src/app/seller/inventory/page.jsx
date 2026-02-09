@@ -44,6 +44,8 @@ import { useNavigate } from "react-router-dom";
 import UploadProgress from "@/components/UploadProgress";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function SellerInventoryPage() {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -80,7 +82,7 @@ export default function SellerInventoryPage() {
     // Fetch Inventory
     const fetchInventory = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/seller/products", {
+            const res = await fetch(`${API_URL}/api/seller/products`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
@@ -107,7 +109,7 @@ export default function SellerInventoryPage() {
         if (!productToDelete) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/api/products/${productToDelete.id}`, {
+            const res = await fetch(`${API_URL}/api/products/${productToDelete.id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -127,8 +129,8 @@ export default function SellerInventoryPage() {
 
     const downloadSampleCSV = () => {
         const headers = ["name", "price", "category", "subcategory", "brand", "stock", "description", "image_url", "images"];
-    const row1 = ["Sample Product", "99.99", "Electronics", "Headphones", "BrandX", "50", "Great sound", "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60", "https://img1.jpg,https://img2.jpg"];
-    const row2 = ["Another Product", "49.50", "Clothing", "T-Shirts", "BrandY", "100", "Cotton t-shirt", "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&auto=format&fit=crop&q=60", ""];
+        const row1 = ["Sample Product", "99.99", "Electronics", "Headphones", "BrandX", "50", "Great sound", "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60", "https://img1.jpg,https://img2.jpg"];
+        const row2 = ["Another Product", "49.50", "Clothing", "T-Shirts", "BrandY", "100", "Cotton t-shirt", "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&auto=format&fit=crop&q=60", ""];
 
         const csvContent = [
             headers.join(","),
@@ -154,7 +156,7 @@ export default function SellerInventoryPage() {
             setUploadStep('validating');
             setValidatedData([]);
             setSelectedRows(new Set());
-            
+
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
@@ -363,7 +365,7 @@ export default function SellerInventoryPage() {
 
         setUpdatingStock(true);
         try {
-            const res = await fetch(`http://localhost:5000/api/products/${productId}`, {
+            const res = await fetch(`${API_URL}/api/products/${productId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -412,7 +414,7 @@ export default function SellerInventoryPage() {
 
         setUpdatingStock(true);
         try {
-            const res = await fetch(`http://localhost:5000/api/products/${stockModalProduct.id}`, {
+            const res = await fetch(`${API_URL}/api/products/${stockModalProduct.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -984,7 +986,7 @@ export default function SellerInventoryPage() {
                                                 const isError = status === 'error';
                                                 const bgClass = status === 'valid' ? 'bg-green-50/50 dark:bg-green-950/20' :
                                                     status === 'warning' ? 'bg-yellow-50/50 dark:bg-yellow-950/20' :
-                                                    'bg-red-50/50 dark:bg-red-950/20';
+                                                        'bg-red-50/50 dark:bg-red-950/20';
 
                                                 return (
                                                     <TableRow
@@ -1109,7 +1111,7 @@ export default function SellerInventoryPage() {
                                 </h3>
                                 <div className="bg-muted/50 rounded-lg p-3 overflow-x-auto border">
                                     <pre className="text-xs font-mono whitespace-pre">
-{`name,price,category,stock,subcategory,brand,description,image_url
+                                        {`name,price,category,stock,subcategory,brand,description,image_url
 Wireless Bluetooth Headphones,79.99,Electronics,50,Audio & Headphones,SoundMax,"Premium noise-cancelling headphones",https://example.com/headphones.jpg
 Cotton Crew Neck T-Shirt,24.99,Fashion,100,Men's Clothing,UrbanWear,"Comfortable everyday t-shirt",https://example.com/tshirt.jpg
 Stainless Steel Water Bottle,19.99,Home & Living,200,Kitchen & Dining,EcoLife,"1L insulated bottle, keeps drinks cold 24hrs",https://example.com/bottle.jpg`}

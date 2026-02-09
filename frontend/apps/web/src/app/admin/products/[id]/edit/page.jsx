@@ -5,6 +5,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import useAuth from "@/utils/useAuth";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function ProductEdit() {
     const { id: productId } = useParams();
     const navigate = useNavigate();
@@ -28,7 +30,7 @@ export default function ProductEdit() {
 
     const fetchProduct = async (id) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/products/${id}`);
+            const response = await fetch(`${API_URL}/api/products/${id}`);
             const data = await response.json();
             if (response.ok) {
                 setName(data.name);
@@ -51,7 +53,7 @@ export default function ProductEdit() {
     const submitHandler = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:5000/api/products/${productId}`, {
+            const response = await fetch(`${API_URL}/api/products/${productId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

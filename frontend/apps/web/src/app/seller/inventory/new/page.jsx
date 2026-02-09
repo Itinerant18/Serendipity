@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
 import { getAllCategories, getSubcategories as getSubcategoriesUtil } from "@/utils/categories";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function AddProductPage() {
     const { token, user } = useAuth();
     const navigate = useNavigate();
@@ -89,7 +91,7 @@ export default function AddProductPage() {
         const fetchCategories = async () => {
             setLoadingCategories(true);
             try {
-                const res = await fetch('http://localhost:5000/api/categories');
+                const res = await fetch(`${API_URL}/api/categories`);
                 if (!res.ok) {
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
@@ -131,7 +133,7 @@ export default function AddProductPage() {
 
             setLoadingSubcategories(true);
             try {
-                const res = await fetch(`http://localhost:5000/api/categories/${encodeURIComponent(form.category)}/subcategories`);
+                const res = await fetch(`${API_URL}/api/categories/${encodeURIComponent(form.category)}/subcategories`);
                 if (!res.ok) {
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
@@ -334,7 +336,7 @@ export default function AddProductPage() {
             const formData = new FormData();
             validFiles.forEach(file => formData.append('files', file));
 
-            const res = await fetch('http://localhost:5000/api/upload/product-images', {
+            const res = await fetch(`${API_URL}/api/upload/product-images`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
@@ -400,7 +402,7 @@ export default function AddProductPage() {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                const res = await fetch('http://localhost:5000/api/upload/product-media', {
+                const res = await fetch(`${API_URL}/api/upload/product-media`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
@@ -507,7 +509,7 @@ export default function AddProductPage() {
                 tags: form.tags.join(',')
             };
 
-            const res = await fetch("http://localhost:5000/api/products", {
+            const res = await fetch(`${API_URL}/api/products`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -557,7 +559,7 @@ export default function AddProductPage() {
                     null
             };
 
-            const res = await fetch("http://localhost:5000/api/products", {
+            const res = await fetch(`${API_URL}/api/products`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

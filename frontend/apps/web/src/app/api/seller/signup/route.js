@@ -1,9 +1,11 @@
+const API_URL = process.env.VITE_API_URL || 'http://localhost:5000';
+
 export async function POST(request) {
   try {
     const body = await request.json();
 
     // Forward the payload to the backend Express API
-    const backendResponse = await fetch("http://localhost:5000/api/seller/signup", {
+    const backendResponse = await fetch(`${API_URL}/api/seller/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

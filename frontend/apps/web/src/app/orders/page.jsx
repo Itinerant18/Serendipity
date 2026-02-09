@@ -5,6 +5,8 @@ import useAuth from "@/utils/useAuth";
 import { formatCurrency } from "@/utils/format";
 import GlassCard from "@/components/ui/GlassCard";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const statusConfig = {
     pending: { icon: "fa-clock", color: "bg-yellow-200", text: "text-black", border: "border-black", label: "Pending" },
     processing: { icon: "fa-box", color: "bg-blue-200", text: "text-black", border: "border-black", label: "Processing" },
@@ -29,7 +31,7 @@ export default function OrdersPage() {
 
     const fetchOrders = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/orders/history", {
+            const response = await fetch(`${API_URL}/api/orders/history`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
@@ -93,11 +95,10 @@ export default function OrdersPage() {
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
-                            className={`px-4 py-2 border-4 border-black font-bold capitalize transition-all ${
-                                filter === status
+                            className={`px-4 py-2 border-4 border-black font-bold capitalize transition-all ${filter === status
                                     ? "bg-orange-500 text-white translate(-2px,-2px) shadow-[4px_4px_0_#000000]"
                                     : "bg-white text-black hover:bg-pink-500 hover:text-white hover:translate(-2px,-2px)"
-                            }`}
+                                }`}
                         >
                             {status}
                         </button>

@@ -5,6 +5,8 @@ import useAuth from "@/utils/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSubcategories as getSubcategoriesUtil, getAllCategories } from "@/utils/categories";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function EditProductPage() {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -93,7 +95,7 @@ export default function EditProductPage() {
         const fetchCategories = async () => {
             setLoadingCategories(true);
             try {
-                const res = await fetch('http://localhost:5000/api/categories');
+                const res = await fetch(`${API_URL}/api/categories`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
@@ -122,7 +124,7 @@ export default function EditProductPage() {
         const fetchProduct = async () => {
             if (!token || !id) return;
             try {
-                const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+                const res = await fetch(`${API_URL}/api/products/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -228,7 +230,7 @@ export default function EditProductPage() {
 
             setLoadingSubcategories(true);
             try {
-                const res = await fetch(`http://localhost:5000/api/categories/${encodeURIComponent(form.category)}/subcategories`);
+                const res = await fetch(`${API_URL}/api/categories/${encodeURIComponent(form.category)}/subcategories`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && Array.isArray(data.subcategories) && data.subcategories.length > 0) {
@@ -301,7 +303,7 @@ export default function EditProductPage() {
         try {
             const formData = new FormData();
             filesToUpload.forEach(file => formData.append('files', file));
-            const res = await fetch('http://localhost:5000/api/upload/product-images', {
+            const res = await fetch(`${API_URL}/api/upload/product-images`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
@@ -435,7 +437,7 @@ export default function EditProductPage() {
                 tags: form.tags.join(',') // Backend splits this
             };
 
-            const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+            const res = await fetch(`${API_URL}/api/products/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

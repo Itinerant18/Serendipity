@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import useAuth from "@/utils/useAuth";
 // FontAwesome icons loaded globally
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function SellerSettings() {
     const { token, user } = useAuth();
     const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function SellerSettings() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/seller/profile', {
+                const res = await fetch(`${API_URL}/api/seller/profile`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -52,7 +54,7 @@ export default function SellerSettings() {
         setSuccess(null);
 
         try {
-            const res = await fetch('http://localhost:5000/api/seller/profile', {
+            const res = await fetch(`${API_URL}/api/seller/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

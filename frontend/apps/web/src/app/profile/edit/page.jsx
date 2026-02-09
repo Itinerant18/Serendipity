@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 // FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function EditProfilePage() {
     const navigate = useNavigate();
     const token = useAuthStore(state => state.token);
@@ -26,7 +28,7 @@ export default function EditProfilePage() {
             try {
                 if (!token) return;
 
-                const res = await fetch("http://localhost:5000/api/profile", {
+                const res = await fetch(`${API_URL}/api/profile`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -81,7 +83,7 @@ export default function EditProfilePage() {
         formData.append('file', file);
 
         try {
-            const res = await fetch("http://localhost:5000/api/upload/profile-image", {
+            const res = await fetch(`${API_URL}/api/upload/profile-image`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }, // Content-Type handled automatically with FormData
                 body: formData
@@ -111,7 +113,7 @@ export default function EditProfilePage() {
         setSuccess(false);
 
         try {
-            const res = await fetch("http://localhost:5000/api/profile", {
+            const res = await fetch(`${API_URL}/api/profile`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

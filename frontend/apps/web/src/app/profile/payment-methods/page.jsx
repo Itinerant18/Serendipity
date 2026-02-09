@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import useAuthStore from "@/utils/authStore";
 import GlassCard from "@/components/ui/GlassCard";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function PaymentMethodsPage() {
     const token = useAuthStore(state => state.token);
     const [methods, setMethods] = useState([]);
@@ -18,7 +20,7 @@ export default function PaymentMethodsPage() {
         try {
             if (!token) return;
 
-            const res = await fetch("http://localhost:5000/api/profile/payment-methods", {
+            const res = await fetch(`${API_URL}/api/profile/payment-methods`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -43,7 +45,7 @@ export default function PaymentMethodsPage() {
         if (!window.confirm("Are you sure you want to remove this payment method?")) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/api/profile/payment-methods/${id}`, {
+            const res = await fetch(`${API_URL}/api/profile/payment-methods/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -64,7 +66,7 @@ export default function PaymentMethodsPage() {
 
     const handleSetDefault = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/profile/payment-methods/${id}/set-default`, {
+            const res = await fetch(`${API_URL}/api/profile/payment-methods/${id}/set-default`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -210,7 +212,7 @@ export default function PaymentMethodsPage() {
                 {showModal && (
                     <PaymentMethodModal
                         onSave={async (data) => {
-                            const res = await fetch("http://localhost:5000/api/profile/payment-methods", {
+                            const res = await fetch(`${API_URL}/api/profile/payment-methods`, {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",

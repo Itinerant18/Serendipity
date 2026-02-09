@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 // FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function SettingsPage() {
     const token = useAuthStore(state => state.token);
     const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ export default function SettingsPage() {
             try {
                 if (!token) return;
 
-                const res = await fetch("http://localhost:5000/api/profile/preferences", {
+                const res = await fetch(`${API_URL}/api/profile/preferences`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -62,7 +64,7 @@ export default function SettingsPage() {
         setSuccess(false);
 
         try {
-            const res = await fetch("http://localhost:5000/api/profile/preferences", {
+            const res = await fetch(`${API_URL}/api/profile/preferences`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

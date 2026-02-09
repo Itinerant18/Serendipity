@@ -5,6 +5,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import useAuth from "@/utils/useAuth";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function ProductList() {
     const { token } = useAuth();
     const navigate = useNavigate();
@@ -22,7 +24,7 @@ export default function ProductList() {
 
     const fetchProducts = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/products");
+            const response = await fetch(`${API_URL}/api/products`);
             const data = await response.json();
             if (response.ok) {
                 setProducts(data);
@@ -39,7 +41,7 @@ export default function ProductList() {
     const deleteHandler = async (id) => {
         if (window.confirm("Are you sure you want to delete this product?")) {
             try {
-                const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+                const response = await fetch(`${API_URL}/api/products/${id}`, {
                     method: "DELETE",
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -59,7 +61,7 @@ export default function ProductList() {
 
     const createHandler = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/products`, {
+            const response = await fetch(`${API_URL}/api/products`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,

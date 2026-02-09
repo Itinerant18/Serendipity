@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import useAuthStore from "@/utils/authStore";
 import GlassCard from "@/components/ui/GlassCard";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function SecurityPage() {
     const token = useAuthStore(state => state.token);
     const user = useAuthStore(state => state.user);
@@ -41,7 +43,7 @@ export default function SecurityPage() {
         setChangingPassword(true);
 
         try {
-            const res = await fetch("http://localhost:5000/api/profile/security/change-password", {
+            const res = await fetch(`${API_URL}/api/profile/security/change-password`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
