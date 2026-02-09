@@ -44,6 +44,7 @@ const adapter = NeonAdapter(pool);
 
 const app = new Hono();
 
+// Middleware - must be registered before routes
 app.use('*', requestId());
 
 app.use('*', (c, next) => {
@@ -53,11 +54,7 @@ app.use('*', (c, next) => {
 
 app.use(contextStorage());
 
-// Healthcheck endpoint for Railway
-app.get('/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() }, 200);
-});
-
+// Error handler
 app.onError((err, c) => {
   if (c.req.method !== 'GET') {
     return c.json(
@@ -71,6 +68,7 @@ app.onError((err, c) => {
   return c.html(getHTMLForErrorPage(err), 200);
 });
 
+// CORS middleware
 if (process.env.CORS_ORIGINS) {
   app.use(
     '/*',
@@ -79,6 +77,8 @@ if (process.env.CORS_ORIGINS) {
     })
   );
 }
+
+// Body limit for mutations
 for (const method of ['post', 'put', 'patch'] as const) {
   app[method](
     '*',
@@ -148,19 +148,21 @@ if (process.env.AUTH_SECRET) {
             },
           },
           authorize: async (credentials) => {
-            // ... (commented out) 
             return null;
           },
-        }),
-        Credentials({
-           // ... (commented out)
-           return null;
         }),
       ],
     }))
   );
 }
 */
+
+// Healthcheck endpoint for Railway
+app.get('/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() }, 200);
+});
+
+// Integrations proxy
 app.all('/integrations/:path{.+}', async (c, next) => {
   const queryParams = c.req.query();
   const url = `${process.env.NEXT_PUBLIC_CREATE_BASE_URL ?? 'https://www.create.xyz'}/integrations/${c.req.param('path')}${Object.keys(queryParams).length > 0 ? `?${new URLSearchParams(queryParams).toString()}` : ''}`;
@@ -182,32 +184,33 @@ app.all('/integrations/:path{.+}', async (c, next) => {
   });
 });
 
+// Auth handler
 app.use('/api/auth/*', async (c, next) => {
   if (isAuthAction(c.req.path)) {
     return authHandler()(c, next);
   }
   return next();
 });
+
+// Register API routes
 app.route(API_BASENAME, api);
 
-import { registerRoutes } from './route-builder';
+console.log('🔧 Server module loaded');
 
-console.log('🔧 Starting server initialization...');
-const port = parseInt(process.env.PORT || '3000', 10);
-console.log(`🔧 PORT env: ${process.env.PORT || 'not set, will use 3000'}`);
-console.log(`🔧 Using port: ${port}`);
-
+// Production server start function
+// In dev mode, the Vite plugin uses the exported app directly
+// This function is only called in production builds
 export async function start() {
-  // Routes are registered in route-builder.ts for dev mode
+  const port = parseInt(process.env.PORT || '3000', 10);
+  console.log(`🔧 PORT env: ${process.env.PORT || 'not set, will use 3000'}`);
+  console.log(`🔧 Using port: ${port}`);
 
   let server;
   try {
     server = await createHonoServer({
       app,
       port,
-      // @ts-ignore - host might not be in the type definition but is usually passed to underlying server
       host: '0.0.0.0',
-      hostname: '0.0.0.0', // Try both to be safe
       defaultLogger: true,
       listeningListener: (info) => {
         console.log(`🚀 Server is running on port ${info.port}`);
@@ -221,7 +224,9 @@ export async function start() {
   return server;
 }
 
-if (import.meta.env.DEV) {
+// Only start production server when NOT in dev mode
+// In dev mode, Vite plugin handles everything via the exported app
+if (!import.meta.env.DEV) {
   start();
 }
 
