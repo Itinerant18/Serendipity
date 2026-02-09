@@ -357,7 +357,7 @@ export default function EditProductPage() {
             // For now using same endpoint but logically separating.
             const formData = new FormData();
             formData.append('files', files[0]);
-            const res = await fetch('http://localhost:5000/api/upload/product-images', { // Reusing for now
+            const res = await fetch(`${API_URL}/api/upload/product-images`, { // Reusing for now
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData

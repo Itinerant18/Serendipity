@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import GlassCard from "@/components/ui/GlassCard";
+import { API_URL } from "@/lib/api";
 
 export default function SellerSignupPage() {
     const navigate = useNavigate();
@@ -111,8 +112,8 @@ export default function SellerSignupPage() {
 
         try {
             const apiEndpoint = isAuth
-                ? 'http://localhost:5000/api/seller/register'
-                : 'http://localhost:5000/api/seller/signup';
+                ? `${API_URL}/api/seller/register`
+                : `${API_URL}/api/seller/signup`;
 
             if (!storeName || storeName.trim().length < 2) {
                 setError('Store name is required and must be at least 2 characters');
@@ -154,7 +155,7 @@ export default function SellerSignupPage() {
                     setError('You are already registered as a seller. Syncing your account...');
 
                     try {
-                        const syncRes = await fetch('http://localhost:5000/api/seller/sync-status', {
+                        const syncRes = await fetch(`${API_URL}/api/seller/sync-status`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -164,7 +165,7 @@ export default function SellerSignupPage() {
 
                         if (syncRes.ok) {
                             const syncData = await syncRes.json();
-                            const profileRes = await fetch('http://localhost:5000/api/profile', {
+                            const profileRes = await fetch(`${API_URL}/api/profile`, {
                                 headers: { Authorization: `Bearer ${token}` }
                             });
 
@@ -286,11 +287,10 @@ export default function SellerSignupPage() {
                                     <button
                                         type="button"
                                         onClick={() => setAccountType("individual")}
-                                        className={`p-6 border-4 border-black text-left transition-all ${
-                                            accountType === "individual"
+                                        className={`p-6 border-4 border-black text-left transition-all ${accountType === "individual"
                                                 ? 'bg-orange-500 text-white translate(-2px,-2px) shadow-[6px_6px_0_#000000]'
                                                 : 'bg-white text-black hover:bg-pink-500 hover:text-white hover:translate(-2px,-2px)'
-                                        }`}
+                                            }`}
                                     >
                                         <i className="fa-solid fa-user text-3xl mb-4 block"></i>
                                         <h3 className="font-brutalist text-xl mb-2">INDIVIDUAL SELLER</h3>
@@ -300,11 +300,10 @@ export default function SellerSignupPage() {
                                     <button
                                         type="button"
                                         onClick={() => setAccountType("business")}
-                                        className={`p-6 border-4 border-black text-left transition-all ${
-                                            accountType === "business"
+                                        className={`p-6 border-4 border-black text-left transition-all ${accountType === "business"
                                                 ? 'bg-orange-500 text-white translate(-2px,-2px) shadow-[6px_6px_0_#000000]'
                                                 : 'bg-white text-black hover:bg-pink-500 hover:text-white hover:translate(-2px,-2px)'
-                                        }`}
+                                            }`}
                                     >
                                         <i className="fa-solid fa-building text-3xl mb-4 block"></i>
                                         <h3 className="font-brutalist text-xl mb-2">PROFESSIONAL SELLER</h3>
