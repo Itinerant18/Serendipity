@@ -53,6 +53,11 @@ app.use('*', (c, next) => {
 
 app.use(contextStorage());
 
+// Healthcheck endpoint for Railway
+app.get('/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() }, 200);
+});
+
 app.onError((err, c) => {
   if (c.req.method !== 'GET') {
     return c.json(
