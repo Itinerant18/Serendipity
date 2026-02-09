@@ -149,8 +149,8 @@ export async function registerRoutes() {
 
 // Hot reload routes in development
 if (import.meta.env.DEV) {
-  // Initial registration for dev
-  registerRoutes();
+  // Routes registration is now handled by the server initialization
+  // Do NOT call registerRoutes() here - it conflicts with createHonoServer middleware
 
   import.meta.glob('../src/app/api/**/route.js', {
     eager: true,
