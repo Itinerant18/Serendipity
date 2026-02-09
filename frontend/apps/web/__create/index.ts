@@ -198,7 +198,7 @@ console.log(`🔧 PORT env: ${process.env.PORT || 'not set, will use 3000'}`);
 console.log(`🔧 Using port: ${port}`);
 
 export async function start() {
-  await registerRoutes();
+  // Routes are registered in route-builder.ts for dev mode
 
   let server;
   try {
