@@ -125,17 +125,60 @@ export default createHonoServer({
       });
     });
 
-    // Auth handler
-    app.use('/api/auth/*', async (c, next) => {
-      if (isAuthAction(c.req.path)) {
-        return authHandler()(c, next);
-      }
-      return next();
-    });
+    // Conditional: Proxy to remote backend OR use local routes
+    if (process.env.API_PROXY_TARGET) {
+      app.all('/api/*', async (c) => {
+        const target = process.env.API_PROXY_TARGET?.replace(/\/$/, '');
+        const url = `${target}${c.req.path}`;
 
-    // Register API routes
-    app.route(API_BASENAME, api);
+        const proxiedResponse = await proxy(url, {
+          method: c.req.method,
+          body: c.req.raw.body ?? null,
+          // @ts-ignore
+          duplex: 'half',
+          headers: {
+            ...c.req.header(),
+            // Spoof Host and Origin to make the backend accept the request
+            Host: new URL(target!).host,
+            Origin: target,
+          },
+        });
 
-    console.log('✅ Server configured with custom routes');
+        // Rewrite Set-Cookie headers to work on localhost
+        const newHeaders = new Headers(proxiedResponse.headers);
+        const setCookieInfo = newHeaders.get('set-cookie');
+
+        if (setCookieInfo) {
+          // Basic cookie rewriting: remove Domain and Secure attributes
+          // Note: This matches the first cookie if multiple are present in a single header line,
+          // or all if they are split (depending on Hono/env implementation).
+          const newCookie = setCookieInfo
+            .replace(/Domain=[^;]+;?/gi, '')
+            .replace(/Secure;?/gi, '');
+
+          newHeaders.set('set-cookie', newCookie);
+        }
+
+        return new Response(proxiedResponse.body, {
+          status: proxiedResponse.status,
+          headers: newHeaders,
+        });
+      });
+
+      console.log(`✅ Proxying /api/* to ${process.env.API_PROXY_TARGET}`);
+    } else {
+      // Auth handler
+      app.use('/api/auth/*', async (c, next) => {
+        if (isAuthAction(c.req.path)) {
+          return authHandler()(c, next);
+        }
+        return next();
+      });
+
+      // Register API routes
+      app.route(API_BASENAME, api);
+
+      console.log('✅ Server configured with local routes');
+    }
   },
 });

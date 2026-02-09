@@ -89,7 +89,7 @@ export default defineConfig({
       '@auth/create': path.join(__dirname, 'src/__create/@auth/create'),
       '@': path.join(__dirname, 'src'),
     },
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
   },
   clearScreen: false,
   server: {
