@@ -200,9 +200,12 @@ export async function start() {
     server = await createHonoServer({
       app,
       port,
+      // @ts-ignore - host might not be in the type definition but is usually passed to underlying server
+      host: '0.0.0.0',
+      hostname: '0.0.0.0', // Try both to be safe
       defaultLogger: true,
       listeningListener: (info) => {
-        console.log(`🚀 Server is running on http://0.0.0.0:${info.port}`);
+        console.log(`🚀 Server is running on port ${info.port}`);
       },
     });
     console.log('✅ Server created successfully');
