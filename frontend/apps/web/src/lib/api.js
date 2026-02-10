@@ -11,7 +11,7 @@
 
 import { supabase } from '@/lib/supabase';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 /**
  * Helper function for making API requests with proper error handling
@@ -24,7 +24,7 @@ export async function apiRequest(endpoint, options = {}) {
 
     // Get current session token
     let token = null;
-    
+
     // 1. Try getting token from global auth store (Custom Auth)
     try {
         const authState = useAuthStore.getState();

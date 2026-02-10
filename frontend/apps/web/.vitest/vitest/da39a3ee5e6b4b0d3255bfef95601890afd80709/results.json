@@ -1,1 +1,1 @@
-{"version":"3.2.4","results":[[":test/api.test.ts",{"duration":5.554999999993015,"failed":false}],[":test/auth.test.ts",{"duration":15.221100000024308,"failed":false}]]}
+{"version":"3.2.4","results":[[":test/api.test.ts",{"duration":8.133088000000043,"failed":false}],[":test/auth.test.ts",{"duration":19.227925000000027,"failed":false}]]}

@@ -102,7 +102,12 @@ export default defineConfig({
     warmup: {
       clientFiles: ['./src/app/**/*', './src/app/root.tsx', './src/app/routes.ts'],
     },
-    // Proxy removed - frontend now directly calls VITE_API_URL
-    // For local backend dev, set VITE_API_URL=http://localhost:5000
+    proxy: {
+      '/api': {
+        target: process.env.API_PROXY_TARGET || 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

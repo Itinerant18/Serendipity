@@ -74,7 +74,7 @@ export default function ProductCard({
         if (url.startsWith("http") || url.startsWith("https")) return url;
 
         // Prepend API URL for relative paths
-        const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
         // Ensure no double slashes
         const cleanUrl = url.startsWith("/") ? url.substring(1) : url;
@@ -163,9 +163,9 @@ export default function ProductCard({
                     src={imgSrc}
                     alt={name}
                     loading="lazy"
-                            className={cn(
-                                "aspect-square bg-gray-100 relative overflow-hidden bg-white border-4 border-black block cursor-pointer group"
-                            )}
+                    className={cn(
+                        "aspect-square bg-gray-100 relative overflow-hidden bg-white border-4 border-black block cursor-pointer group"
+                    )}
                     onLoad={() => setImgLoaded(true)}
                     onError={() => {
                         if (!imgError) {

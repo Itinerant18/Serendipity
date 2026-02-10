@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import useWishlistStore from "@/utils/wishlistStore";
 import { formatCurrency } from "@/utils/format";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 export default function ActivityDashboard({ token }) {
     const [stats, setStats] = useState({

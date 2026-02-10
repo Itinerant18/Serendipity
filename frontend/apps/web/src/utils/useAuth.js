@@ -3,7 +3,7 @@ import useAuthStore from './authStore';
 import useCartStore from './cartStore';
 import { supabase } from '@/lib/supabase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 function useAuth() {
   const { user, token, isAuthenticated, hasHydrated, login, logout, updateUser, setUser, setToken, setIsAuthenticated } = useAuthStore();

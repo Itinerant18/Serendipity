@@ -17,12 +17,19 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
     cors: {
-        origin: process.env.CORS_ORIGINS 
-            ? process.env.CORS_ORIGINS.split(',') 
+        origin: process.env.CORS_ORIGINS
+            ? process.env.CORS_ORIGINS.split(',')
             : ["http://localhost:4000", "http://localhost:5173"],
         methods: ["GET", "POST"],
         credentials: true
     }
+});
+
+// Debug Logging Middleware
+app.use((req, res, next) => {
+    console.log(`[REQUEST] ${req.method} ${req.url}`);
+    console.log('[HEADERS] Origin:', req.headers.origin);
+    next();
 });
 
 // Security Middleware
@@ -41,8 +48,8 @@ app.use(helmet({
 }));
 
 app.use(cors({
-    origin: process.env.CORS_ORIGINS 
-        ? process.env.CORS_ORIGINS.split(',') 
+    origin: process.env.CORS_ORIGINS
+        ? process.env.CORS_ORIGINS.split(',')
         : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -90,8 +97,8 @@ console.log('Supabase Client Initialized');
 
 // Health Check Endpoint (for container orchestration & load balancers)
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'ok', 
+    res.status(200).json({
+        status: 'ok',
         timestamp: new Date().toISOString(),
         service: 'serendipity-backend'
     });

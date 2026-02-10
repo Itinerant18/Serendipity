@@ -7,7 +7,7 @@
  * - Auto-logout on 401 responses
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 /**
  * Decode JWT and extract expiration time

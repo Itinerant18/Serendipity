@@ -24,7 +24,7 @@ export default function OrdersPage() {
         const fetchOrders = async () => {
             try {
                 if (!token) return;
-                const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/orders/myorders`, {
+                const res = await fetch(`${import.meta.env.VITE_API_URL ?? "http://localhost:5000"}/api/orders/myorders`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -87,11 +87,10 @@ export default function OrdersPage() {
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
-                            className={`px-4 py-2 border-4 border-black font-bold capitalize transition-all ${
-                                filter === status
+                            className={`px-4 py-2 border-4 border-black font-bold capitalize transition-all ${filter === status
                                     ? "bg-orange-500 text-white translate(-2px,-2px) shadow-[4px_4px_0_#000000]"
                                     : "bg-white text-black hover:bg-pink-500 hover:text-white hover:translate(-2px,-2px)"
-                            }`}
+                                }`}
                         >
                             {status}
                         </button>
