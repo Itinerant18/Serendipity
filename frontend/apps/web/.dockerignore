@@ -1,0 +1,10 @@
+node_modules
+.react-router
+build
+.DS_Store
+*.md
+.env
+.env.*
+!.env.production.example
+.git
+.gitignore
