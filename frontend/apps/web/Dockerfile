@@ -5,10 +5,13 @@ FROM node:23-alpine AS builder
 
 WORKDIR /app
 
+# Install build tools for native modules (argon2, etc.)
+RUN apk add --no-cache python3 make g++ gcc musl-dev
+
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including native modules)
 RUN npm ci --legacy-peer-deps
 
 # Copy source code
@@ -36,6 +39,9 @@ FROM node:23-alpine AS production
 
 WORKDIR /app
 
+# Install runtime dependencies for native modules
+RUN apk add --no-cache libc6-compat
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
@@ -57,7 +63,7 @@ ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOST=0.0.0.0
 # API_PROXY_TARGET is set at runtime via Railway env vars
-# It tells the Hono server to proxy /api/* requests to the backend
+# AUTH_SECRET is required for @hono/auth-js
 
 # Start the server
 CMD ["npm", "run", "start"]
