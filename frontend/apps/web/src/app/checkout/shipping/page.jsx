@@ -48,12 +48,9 @@ export default function ShippingPage() {
             phone: selectedAddress.phone
         };
 
-        const res = await fetch(`${API_URL}/api/orders`, {
+        // Uses apiRequest for auto-token refresh & error handling
+        return await apiRequest('/api/orders', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
             body: JSON.stringify({
                 items: cartItems,
                 totalPrice: totalAmount,
@@ -61,36 +58,31 @@ export default function ShippingPage() {
                 paymentMethod: method
             })
         });
-
-        if (!res.ok) throw new Error("Failed to create order");
-        return res.json();
     };
 
     const handleCODPayment = async () => {
-        const orderData = await createOrder("COD");
-        clearCart();
-        window.location.href = `/checkout/success?orderId=${orderData._id || orderData.id}&method=COD`;
+        try {
+            const orderData = await createOrder("COD");
+            clearCart();
+            window.location.href = `/checkout/success?orderId=${orderData._id || orderData.id}&method=COD`;
+        } catch (error) {
+            // Error is already thrown by apiRequest with backend message
+            throw error;
+        }
     };
 
     const handleRazorpayPayment = async () => {
         const orderData = await createOrder("Razorpay");
         const totalAmount = calculateTotal();
 
-        const rzpOrderRes = await fetch(`${API_URL}/api/payment/razorpay/order`, {
+        const rzpOrder = await apiRequest('/api/payment/razorpay/order', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
             body: JSON.stringify({
                 amount: totalAmount,
                 currency: "INR",
                 receipt: orderData._id || orderData.id
             })
         });
-
-        if (!rzpOrderRes.ok) throw new Error("Failed to init payment");
-        const rzpOrder = await rzpOrderRes.json();
 
         const options = {
             key: RAZORPAY_KEY,
@@ -100,26 +92,25 @@ export default function ShippingPage() {
             description: "Order #" + orderData.orderNumber,
             order_id: rzpOrder.id,
             handler: async function (response) {
-                const verifyRes = await fetch(`${API_URL}/api/payment/razorpay/verify`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature,
-                        order_id: orderData._id || orderData.id
-                    })
-                });
+                try {
+                    const verifyData = await apiRequest('/api/payment/razorpay/verify', {
+                        method: "POST",
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            order_id: orderData._id || orderData.id
+                        })
+                    });
 
-                const verifyData = await verifyRes.json();
-                if (verifyData.success) {
-                    clearCart();
-                    window.location.href = `/checkout/success?orderId=${orderData._id || orderData.id}&method=Razorpay`;
-                } else {
-                    toast.error("Payment Verification Failed");
+                    if (verifyData.success) {
+                        clearCart();
+                        window.location.href = `/checkout/success?orderId=${orderData._id || orderData.id}&method=Razorpay`;
+                    } else {
+                        toast.error("Payment Verification Failed");
+                    }
+                } catch (err) {
+                    toast.error("Payment verification error: " + err.message);
                 }
             },
             prefill: { name: user?.name, email: user?.email },
@@ -189,8 +180,8 @@ export default function ShippingPage() {
                                 type="button"
                                 onClick={() => setPaymentMethod("COD")}
                                 className={`p-5 border-4 border-black text-left transition-all cursor-pointer group ${paymentMethod === "COD"
-                                        ? "bg-green-100 shadow-[6px_6px_0_#000000] translate-x-[-2px] translate-y-[-2px]"
-                                        : "bg-white hover:bg-green-50 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_#000000]"
+                                    ? "bg-green-100 shadow-[6px_6px_0_#000000] translate-x-[-2px] translate-y-[-2px]"
+                                    : "bg-white hover:bg-green-50 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_#000000]"
                                     }`}
                             >
                                 <div className="flex items-center gap-3 mb-2">
@@ -214,10 +205,10 @@ export default function ShippingPage() {
                                 onClick={() => IS_RAZORPAY_ENABLED && setPaymentMethod("Razorpay")}
                                 disabled={!IS_RAZORPAY_ENABLED}
                                 className={`p-5 border-4 border-black text-left transition-all group ${!IS_RAZORPAY_ENABLED
-                                        ? "bg-gray-100 opacity-50 cursor-not-allowed"
-                                        : paymentMethod === "Razorpay"
-                                            ? "bg-blue-100 shadow-[6px_6px_0_#000000] translate-x-[-2px] translate-y-[-2px] cursor-pointer"
-                                            : "bg-white hover:bg-blue-50 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_#000000] cursor-pointer"
+                                    ? "bg-gray-100 opacity-50 cursor-not-allowed"
+                                    : paymentMethod === "Razorpay"
+                                        ? "bg-blue-100 shadow-[6px_6px_0_#000000] translate-x-[-2px] translate-y-[-2px] cursor-pointer"
+                                        : "bg-white hover:bg-blue-50 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_#000000] cursor-pointer"
                                     }`}
                             >
                                 <div className="flex items-center gap-3 mb-2">
