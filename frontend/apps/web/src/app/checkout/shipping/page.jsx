@@ -20,6 +20,7 @@ export default function ShippingPage() {
 
     const cartItems = useCartStore((state) => state.items);
     const clearCart = useCartStore((state) => state.clearCart);
+    const removeFromCart = useCartStore((state) => state.removeFromCart);
 
     useEffect(() => {
         if (!isAuthenticated && !localStorage.getItem("token")) {
@@ -60,12 +61,30 @@ export default function ShippingPage() {
         });
     };
 
+    // Handle "Products not found" error - clean up invalid cart items
+    const handleProductsNotFound = (errorMessage) => {
+        const match = errorMessage.match(/Products not found:\s*([^\.]+)/);
+        if (match) {
+            const missingIds = match[1].split(',').map(id => id.trim());
+            missingIds.forEach(id => {
+                removeFromCart(id);
+            });
+            toast.error("Some items in your cart are no longer available and have been removed.");
+            return true;
+        }
+        return false;
+    };
+
     const handleCODPayment = async () => {
         try {
             const orderData = await createOrder("COD");
             clearCart();
             window.location.href = `/checkout/success?orderId=${orderData._id || orderData.id}&method=COD`;
         } catch (error) {
+            // Check for "Products not found" error and clean up cart
+            if (error.message && error.message.includes("Products not found")) {
+                handleProductsNotFound(error.message);
+            }
             // Error is already thrown by apiRequest with backend message
             throw error;
         }
@@ -141,6 +160,10 @@ export default function ShippingPage() {
                 await handleRazorpayPayment();
             }
         } catch (error) {
+            // Check for "Products not found" error and clean up cart
+            if (error.message && error.message.includes("Products not found")) {
+                handleProductsNotFound(error.message);
+            }
             console.error(error);
             toast.error("Error processing order: " + error.message);
         } finally {

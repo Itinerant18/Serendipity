@@ -2,6 +2,7 @@ const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
 const asyncHandler = require('express-async-handler');
 const { supabase, supabaseAdmin } = require('../config/supabase');
+const { supabaseSeller, supabaseSellerAdmin } = require('../config/supabaseSeller');
 const {
   STATUSES,
   BUYER_CANCELLABLE,
@@ -40,14 +41,22 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   // Pre-validate products (Existence + Stock + Seller Ownership Warning)
   const productIds = [...new Set(items.map(item => item.product_id || item.product || item.id).filter(Boolean))];
 
-  const { data: validProducts, error: prodCheckError } = await supabaseAdmin
-    .from('products')
-    .select('id, count_in_stock, name, user_id')
-    .in('id', productIds);
+  // Check BOTH main database AND seller database for products
+  const sellerClient = supabaseSellerAdmin || supabaseSeller;
+  
+  const [mainProductsResult, sellerProductsResult] = await Promise.all([
+    supabaseAdmin.from('products').select('id, count_in_stock, name, user_id').in('id', productIds),
+    sellerClient 
+      ? sellerClient.from('products').select('id, count_in_stock, name, user_id').in('id', productIds)
+      : Promise.resolve({ data: [], error: null })
+  ]);
 
-  if (prodCheckError) {
-    console.error('[ORDER] ❌ Product check failed:', prodCheckError);
-  } else {
+  const validProducts = [
+    ...(mainProductsResult.data || []),
+    ...(sellerProductsResult.data || [])
+  ];
+
+  console.log('[ORDER] Product check - Main DB:', mainProductsResult.data?.length || 0, 'Seller DB:', sellerProductsResult.data?.length || 0, 'Using admin:', !!supabaseSellerAdmin);
     // 1. Check for missing products
     const foundIds = validProducts?.map(p => p.id) || [];
     const missing = productIds.filter(id => !foundIds.includes(id));
@@ -76,7 +85,6 @@ router.post('/', protect, asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error(`Out of Stock: ${outOfStockItems.join(', ')}`);
     }
-  }
 
   console.log('[ORDER] Items count:', items.length);
   console.log('[ORDER] Payment method:', paymentMethod);
