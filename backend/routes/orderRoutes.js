@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
 const asyncHandler = require('express-async-handler');
-const { supabase } = require('../config/supabase');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const {
   STATUSES,
   BUYER_CANCELLABLE,
@@ -37,6 +37,25 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     throw new Error('No order items');
   }
 
+  // Pre-validate products to prevent FK errors
+  const productIds = [...new Set(items.map(item => item.product_id || item.product || item.id).filter(Boolean))];
+  // Use admin client to optionally bypass RLS for check
+  const { data: validProducts, error: prodCheckError } = await supabaseAdmin
+    .from('products')
+    .select('id')
+    .in('id', productIds);
+
+  if (prodCheckError) {
+    console.error('[ORDER] ❌ Product check failed:', prodCheckError);
+    // Don't fail hard on check error, let FK constraint handle it, but log it
+  } else if (!validProducts || validProducts.length !== productIds.length) {
+    const foundIds = validProducts.map(p => p.id);
+    const missing = productIds.filter(id => !foundIds.includes(id));
+    console.warn('[ORDER] ⚠️ Missing products:', missing);
+    res.status(400);
+    throw new Error(`Products not found: ${missing.join(', ')}`);
+  }
+
   console.log('[ORDER] Items count:', items.length);
   console.log('[ORDER] Payment method:', paymentMethod);
   console.log('[ORDER] Shipping:', JSON.stringify(shipping));
@@ -47,7 +66,7 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   const initialHistory = [buildStatusHistoryEntry(STATUSES.PENDING, req.user.id, 'Order placed')];
 
-  // Step 1: Insert order
+  // Step 1: Insert order using ADMIN client (bypass RLS)
   // DB schema: shipping_address is JSONB, total_price is the original column
   const orderPayload = {
     user_id: req.user.id,
@@ -74,7 +93,7 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   console.log('[ORDER] Step 1: Inserting order with columns:', Object.keys(orderPayload));
 
-  const { data: order, error: orderError } = await supabase
+  const { data: order, error: orderError } = await supabaseAdmin
     .from('orders')
     .insert(orderPayload)
     .select()
@@ -82,13 +101,21 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   if (orderError) {
     console.error('[ORDER] ❌ Step 1 FAILED - Order insert error:', JSON.stringify(orderError));
+    if (orderError.code === '23503') { // Foreign key violation
+      res.status(400);
+      throw new Error(`Order creation failed: User or related data not found (FK violation). details: ${orderError.details}`);
+    }
+    if (orderError.code === '42501') { // RLS violation
+      res.status(403); // Forbidden
+      throw new Error('Order creation failed: Permission denied (RLS). Check request headers.');
+    }
     res.status(500);
     throw new Error(`Order creation failed: ${orderError.message} (code: ${orderError.code}, details: ${orderError.details})`);
   }
 
   console.log('[ORDER] ✅ Step 1 OK - Order created:', order.id);
 
-  // Step 2: Create Order Items
+  // Step 2: Create Order Items using ADMIN client
   // DB schema: columns are name, qty, image (NOT product_title, quantity, image_url)
   const orderItemsData = items.map(item => ({
     order_id: order.id,
@@ -102,14 +129,19 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   console.log('[ORDER] Step 2: Inserting', orderItemsData.length, 'order items');
   console.log('[ORDER] Step 2: Item columns:', Object.keys(orderItemsData[0] || {}));
 
-  const { error: itemsError } = await supabase
+  const { error: itemsError } = await supabaseAdmin
     .from('order_items')
     .insert(orderItemsData);
 
   if (itemsError) {
     console.error('[ORDER] ❌ Step 2 FAILED - Order items insert error:', JSON.stringify(itemsError));
     // Don't leave orphan order — clean up
-    await supabase.from('orders').delete().eq('id', order.id);
+    await supabaseAdmin.from('orders').delete().eq('id', order.id);
+
+    if (itemsError.code === '23503') {
+      res.status(400);
+      throw new Error('Order items failed: Product not found (Foreign Key Violation).');
+    }
     res.status(500);
     throw new Error(`Order items creation failed: ${itemsError.message} (code: ${itemsError.code}, details: ${itemsError.details})`);
   }

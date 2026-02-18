@@ -37,13 +37,30 @@ const protect = asyncHandler(async (req, res, next) => {
         throw new Error('Not authorized, token failed');
       }
 
-      // Fetch user profile from public table (syncs with auth)
       const { data: profile } = await supabase
         .from('users')
-        // Avoid pulling large/unused fields on every request
         .select('id, name, email, mobile, is_admin, is_seller, seller_profile_id, avatar_url, auth_provider')
         .eq('id', user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle to avoid 406 error if multiple rows (unlikely) or just null
+
+      // SELF-HEALING: If user missing in public.users (trigger failed?), create them now
+      if (!profile) {
+        console.log('[AUTH] User missing in public.users, syncing from Auth...', user.id);
+        const { error: insertError } = await supabaseAdmin
+          .from('users')
+          .insert({
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            avatar_url: user.user_metadata?.avatar_url || '',
+            auth_provider: user.app_metadata?.provider || 'email'
+          });
+
+        if (insertError) {
+          console.error('[AUTH] Failed to sync user to public table:', insertError);
+          // Continue anyway, but downstream FKs might fail
+        }
+      }
 
       const merged = { ...user, ...profile };
 

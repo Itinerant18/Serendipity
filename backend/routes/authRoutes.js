@@ -251,4 +251,30 @@ router.post('/refresh', asyncHandler(async (req, res) => {
   });
 }));
 
+// @desc    Refresh token
+// @route   POST /api/auth/refresh
+// @access  Public
+router.post('/refresh', asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    res.status(400);
+    throw new Error('Refresh token is required');
+  }
+
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token: refreshToken,
+  });
+
+  if (error || !data.session) {
+    res.status(401);
+    throw new Error('Invalid refresh token');
+  }
+
+  res.json({
+    token: data.session.access_token,
+    refreshToken: data.session.refresh_token,
+  });
+}));
+
 module.exports = router;
