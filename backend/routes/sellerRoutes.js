@@ -4,6 +4,14 @@ const { protect } = require('../middleware/authMiddleware');
 const { protectSeller } = require('../middleware/sellerMiddleware');
 const { supabase, supabaseAdmin } = require('../config/supabase');
 const { supabaseSeller, supabaseSellerAdmin } = require('../config/supabaseSeller');
+const {
+    STATUSES,
+    isValidTransition,
+    buildStatusHistoryEntry,
+    statusLabel,
+    STOCK_DEDUCT_ON,
+    STOCK_RESTORE_ON,
+} = require('../utils/orderStatusValidation');
 
 // Note: server.js already loads dotenv; use shared clients from config for connection reuse.
 
@@ -15,7 +23,7 @@ router.post('/register', protect, async (req, res) => {
         console.log('=== Seller Registration Request ===');
         console.log('User ID:', req.user?.id);
         console.log('Request Body:', req.body);
-        
+
         // Validate seller database client
         if (!supabaseSellerAdmin || typeof supabaseSellerAdmin.from !== 'function') {
             console.error('ERROR: supabaseSellerAdmin is not initialized!');
@@ -23,7 +31,7 @@ router.post('/register', protect, async (req, res) => {
             console.error('  - SELLER_SUPABASE_URL');
             console.error('  - SELLER_SUPABASE_KEY');
             console.error('  - SELLER_SUPABASE_SERVICE_KEY');
-            return res.status(500).json({ 
+            return res.status(500).json({
                 message: 'Seller database not configured',
                 error: 'SELLER_SUPABASE_SERVICE_KEY is missing or invalid. Please check your .env file and restart the server.'
             });
@@ -50,7 +58,7 @@ router.post('/register', protect, async (req, res) => {
         if (!store_name || typeof store_name !== 'string' || !store_name.trim()) {
             console.error('Validation failed: store_name is missing or invalid');
             console.error('Received store_name:', store_name);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Store name is required',
                 received: { store_name: store_name || null }
             });
@@ -60,7 +68,7 @@ router.post('/register', protect, async (req, res) => {
         if (trimmedStoreName.length < 2) {
             console.error('Validation failed: store_name too short');
             console.error('Store name length:', trimmedStoreName.length);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Store name must be at least 2 characters',
                 received: { store_name: trimmedStoreName, length: trimmedStoreName.length }
             });
@@ -84,7 +92,7 @@ router.post('/register', protect, async (req, res) => {
 
         if (existingProfile) {
             console.log('User is already registered as a seller:', existingProfile.id);
-            
+
             // Sync seller status to main database if not already set
             const { data: mainUser } = await supabaseAdmin
                 .from('users')
@@ -112,7 +120,7 @@ router.post('/register', protect, async (req, res) => {
                             // Don't set seller_profile_id - it exists in seller database, not main database
                         })
                         .eq('id', userId);
-                    
+
                     if (fallbackError) {
                         console.error('Failed to sync seller status (fallback):', fallbackError);
                     } else {
@@ -125,7 +133,7 @@ router.post('/register', protect, async (req, res) => {
                 }
             }
 
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'You are already registered as a seller',
                 sellerProfileId: existingProfile.id,
                 synced: true
@@ -180,7 +188,7 @@ router.post('/register', protect, async (req, res) => {
             console.error('Error Message:', error.message);
             console.error('Error Details:', error.details);
             console.error('Error Hint:', error.hint);
-            
+
             // Handle specific error codes
             if (error.code === 'PGRST205') {
                 console.error('\n⚠️  SCHEMA CACHE ISSUE DETECTED!');
@@ -200,7 +208,7 @@ router.post('/register', protect, async (req, res) => {
                     hint: 'Run: backend/migrations/createSellerDatabaseSchema.sql in your seller database'
                 });
             }
-            
+
             throw error;
         }
 
@@ -244,8 +252,8 @@ router.post('/register', protect, async (req, res) => {
             hint: error.hint,
             stack: error.stack
         });
-        res.status(500).json({ 
-            message: 'Server Error', 
+        res.status(500).json({
+            message: 'Server Error',
             error: error.message,
             ...(process.env.NODE_ENV === 'development' && { details: error.details, hint: error.hint })
         });
@@ -639,6 +647,230 @@ router.get('/orders', protect, protectSeller, async (req, res) => {
     }
 });
 
+// @desc    Get Seller Order Detail
+// @route   GET /api/seller/orders/:id
+// @access  Private (Seller)
+router.get('/orders/:id', protect, protectSeller, async (req, res) => {
+    try {
+        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+
+        // 1. Get seller's product IDs
+        const { data: products } = await supabaseSeller
+            .from('products')
+            .select('id')
+            .eq('seller_profile_id', sellerProfileId);
+
+        if (!products || products.length === 0) {
+            return res.status(404).json({ message: 'No products found for this seller' });
+        }
+
+        const productIds = products.map(p => p.id);
+
+        // 2. Verify this order contains at least one of seller's products
+        const { data: orderItems } = await supabase
+            .from('order_items')
+            .select('*')
+            .eq('order_id', req.params.id)
+            .in('product_id', productIds);
+
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(404).json({ message: 'Order not found or does not contain your products' });
+        }
+
+        // 3. Get full order details
+        const { data: order, error } = await supabase
+            .from('orders')
+            .select('*, user:users(name, email)')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error || !order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        res.json({
+            id: order.id,
+            orderNumber: order.order_number,
+            status: order.status || 'pending',
+            statusHistory: order.status_history || [],
+            paymentMethod: order.payment_method || 'N/A',
+            paymentStatus: order.is_paid ? 'Paid' : (order.payment_method === 'COD' ? 'COD - Pay on Delivery' : 'Unpaid'),
+            isPaid: order.is_paid,
+            isDelivered: order.is_delivered,
+            totalAmount: order.total_amount,
+            createdAt: order.created_at,
+            customer: {
+                name: order.user?.name || 'Guest',
+                email: order.user?.email || '',
+            },
+            shippingAddress: {
+                name: order.shipping_name,
+                address: order.shipping_address,
+                city: order.shipping_city,
+                state: order.shipping_state,
+                zip: order.shipping_zip,
+                country: order.shipping_country,
+            },
+            items: orderItems.map(item => ({
+                id: item.id,
+                productId: item.product_id,
+                title: item.product_title,
+                price: item.price,
+                quantity: item.quantity,
+                image: item.image_url,
+            })),
+        });
+    } catch (error) {
+        console.error('Get Seller Order Detail Error:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Update Order Status (Seller)
+// @route   PATCH /api/seller/orders/:id/status
+// @access  Private (Seller)
+router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
+    try {
+        const { status: newStatus, note } = req.body;
+        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+
+        if (!newStatus) {
+            return res.status(400).json({ message: 'Status is required' });
+        }
+
+        // 1. Verify seller owns products in this order
+        const { data: products } = await supabaseSeller
+            .from('products')
+            .select('id')
+            .eq('seller_profile_id', sellerProfileId);
+
+        if (!products || products.length === 0) {
+            return res.status(403).json({ message: 'No products found for this seller' });
+        }
+
+        const productIds = products.map(p => p.id);
+
+        const { data: orderItems } = await supabase
+            .from('order_items')
+            .select('product_id, quantity')
+            .eq('order_id', req.params.id)
+            .in('product_id', productIds);
+
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(403).json({ message: 'Not authorized to update this order' });
+        }
+
+        // 2. Get current order
+        const { data: order, error: orderErr } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (orderErr || !order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        const currentStatus = order.status || 'pending';
+
+        // 3. Validate transition
+        if (!isValidTransition(currentStatus, newStatus)) {
+            return res.status(400).json({
+                message: `Cannot change status from "${statusLabel(currentStatus)}" to "${statusLabel(newStatus)}"`,
+            });
+        }
+
+        // 4. Build update payload
+        const history = Array.isArray(order.status_history) ? [...order.status_history] : [];
+        history.push(buildStatusHistoryEntry(newStatus, req.user.id, note));
+
+        const updateData = {
+            status: newStatus,
+            status_history: history,
+        };
+
+        // Extra fields based on new status
+        if (newStatus === STATUSES.SHIPPED) {
+            updateData.shipped_at = new Date().toISOString();
+        } else if (newStatus === STATUSES.DELIVERED) {
+            updateData.is_delivered = true;
+            updateData.delivered_at = new Date().toISOString();
+            // COD: mark as paid on delivery
+            if (order.payment_method === 'COD') {
+                updateData.is_paid = true;
+                updateData.paid_at = new Date().toISOString();
+                updateData.payment_status = 'paid';
+            }
+        } else if (newStatus === STATUSES.CANCELLED) {
+            updateData.cancelled_at = new Date().toISOString();
+            updateData.cancellation_reason = note || 'Cancelled by seller';
+        }
+
+        // 5. Update order
+        const { error: updateErr } = await supabase
+            .from('orders')
+            .update(updateData)
+            .eq('id', order.id);
+
+        if (updateErr) throw updateErr;
+
+        // 6. Stock management
+        if (newStatus === STOCK_DEDUCT_ON) {
+            // Deduct stock on confirmation
+            for (const item of orderItems) {
+                const { data: prod } = await supabase
+                    .from('products')
+                    .select('count_in_stock')
+                    .eq('id', item.product_id)
+                    .single();
+
+                if (prod) {
+                    const newStock = Math.max(0, (prod.count_in_stock || 0) - item.quantity);
+                    await supabase.from('products')
+                        .update({ count_in_stock: newStock })
+                        .eq('id', item.product_id);
+                }
+            }
+        } else if (STOCK_RESTORE_ON.includes(newStatus)) {
+            // Restore stock on cancel/return
+            for (const item of orderItems) {
+                const { data: prod } = await supabase
+                    .from('products')
+                    .select('count_in_stock')
+                    .eq('id', item.product_id)
+                    .single();
+
+                if (prod) {
+                    await supabase.from('products')
+                        .update({ count_in_stock: (prod.count_in_stock || 0) + item.quantity })
+                        .eq('id', item.product_id);
+                }
+            }
+        }
+
+        // 7. Notify buyer via socket
+        try {
+            req.io.to(order.user_id).emit('ORDER_STATUS_UPDATED', {
+                orderId: order.id,
+                orderNumber: order.order_number,
+                newStatus,
+                message: `Your order #${order.order_number} is now ${statusLabel(newStatus)}`,
+            });
+        } catch (socketErr) {
+            console.error('Socket notification error:', socketErr);
+        }
+
+        res.json({
+            success: true,
+            message: `Order status updated to ${statusLabel(newStatus)}`,
+            status: newStatus,
+        });
+    } catch (error) {
+        console.error('Update Order Status Error:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
 // @desc    Get Seller Weekly Analytics
 // @route   GET /api/seller/analytics/weekly
 // @access  Private (Seller)
@@ -746,7 +978,7 @@ router.post('/sync-status', protect, async (req, res) => {
                         // Don't set seller_profile_id - it exists in seller database, not main database
                     })
                     .eq('id', userId);
-                
+
                 if (fallbackError) {
                     throw fallbackError;
                 }

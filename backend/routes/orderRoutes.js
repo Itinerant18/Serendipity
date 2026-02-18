@@ -2,35 +2,42 @@ const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
 const asyncHandler = require('express-async-handler');
 const { supabase } = require('../config/supabase');
+const {
+  STATUSES,
+  BUYER_CANCELLABLE,
+  STOCK_RESTORE_ON,
+  buildStatusHistoryEntry,
+  statusLabel,
+} = require('../utils/orderStatusValidation');
 
 const router = express.Router();
 
+// @desc    Create new order (COD or Razorpay)
+// @route   POST /api/orders
+// @access  Private
 router.post('/', protect, asyncHandler(async (req, res) => {
   const {
-    items, // Frontend sends 'items'
+    items,
     shippingAddress,
-    paymentMethod, // Frontend sends stripeSessionId, logic might need adjustment
+    paymentMethod = 'COD',
     itemsPrice,
     taxPrice,
     shippingPrice,
     totalPrice,
-    shipping, // Frontend sends shipping object
+    shipping,
     stripeSessionId
   } = req.body;
-
-  // Map frontend payload to backend variables if needed
-  // Frontend: items, shipping, stripeSessionId
-  // Backend DB: payment_method, shipping_address etc.
 
   if (!items || items.length === 0) {
     res.status(400);
     throw new Error('No order items');
   }
 
-  // Generate order number
   const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  const isCOD = paymentMethod === 'COD';
 
-  // 1. Create Order
+  const initialHistory = [buildStatusHistoryEntry(STATUSES.PENDING, req.user.id, 'Order placed')];
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
@@ -38,16 +45,18 @@ router.post('/', protect, asyncHandler(async (req, res) => {
       order_number: orderNumber,
       total_amount: totalPrice || 0,
       stripe_session_id: stripeSessionId || null,
-      payment_status: 'pending',
+      payment_status: isCOD ? 'cod_pending' : 'pending',
       shipping_name: shipping?.name,
       shipping_address: shipping?.address,
       shipping_city: shipping?.city,
       shipping_state: shipping?.state,
       shipping_zip: shipping?.zip,
-      shipping_country: shipping?.country || 'US',
+      shipping_country: shipping?.country || 'IN',
       is_paid: false,
       is_delivered: false,
-      payment_method: 'Stripe'
+      status: STATUSES.PENDING,
+      payment_method: isCOD ? 'COD' : 'Razorpay',
+      status_history: initialHistory,
     })
     .select()
     .single();
@@ -58,7 +67,7 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     throw new Error(orderError.message);
   }
 
-  // 2. Create Order Items
+  // Create Order Items
   const orderItemsData = items.map(item => ({
     order_id: order.id,
     product_id: item.product_id || item.product,
@@ -72,21 +81,14 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     .from('order_items')
     .insert(orderItemsData);
 
-  if (itemsError) {
-    throw new Error(itemsError.message);
-  }
+  if (itemsError) throw new Error(itemsError.message);
 
-  // 3. Clear User's Cart
-  await supabase
-    .from('saved_carts')
-    .delete()
-    .eq('user_id', req.user.id);
+  // Clear User's Cart
+  await supabase.from('saved_carts').delete().eq('user_id', req.user.id);
 
-  // 4. Real-time Notifications for Sellers
+  // Real-time Notifications for Sellers
   try {
     const productIds = items.map(item => item.product_id || item.product);
-
-    // Fetch unique seller user IDs for these products
     const { data: productsData } = await supabase
       .from('products')
       .select('seller_profile:seller_profiles(user_id)')
@@ -94,20 +96,18 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
     if (productsData) {
       const sellerUserIds = [...new Set(productsData.map(p => p.seller_profile?.user_id).filter(Boolean))];
-
       sellerUserIds.forEach(sellerUserId => {
         req.io.to(sellerUserId).emit('NEW_ORDER', {
           orderId: order.id,
           orderNumber: order.order_number,
           totalAmount: order.total_amount,
+          paymentMethod: order.payment_method,
           message: 'You have a new order!'
         });
-        console.log(`Notification sent to seller room: ${sellerUserId}`);
       });
     }
   } catch (socketErr) {
     console.error('Socket notification error:', socketErr);
-    // Don't fail the request if notification fails
   }
 
   res.status(201).json({ ...order, _id: order.id, orderNumber: order.order_number });
@@ -124,7 +124,7 @@ router.get('/myorders', protect, asyncHandler(async (req, res) => {
 
   const { data: orders, error, count } = await supabase
     .from('orders')
-    .select('id,order_number,total_amount,payment_status,is_paid,is_delivered,created_at', { count: 'exact' })
+    .select('id,order_number,total_amount,payment_status,payment_method,status,is_paid,is_delivered,created_at', { count: 'exact' })
     .eq('user_id', req.user.id)
     .order('created_at', { ascending: false })
     .range(from, to);
@@ -156,11 +156,116 @@ router.get('/history', protect, asyncHandler(async (req, res) => {
   res.json({ orders: orders || [] });
 }));
 
+// @desc    Cancel order (buyer)
+// @route   POST /api/orders/:id/cancel
+// @access  Private
+router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
+  const { reason } = req.body;
 
+  const { data: order, error: fetchErr } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', req.params.id)
+    .eq('user_id', req.user.id)
+    .single();
+
+  if (fetchErr || !order) {
+    res.status(404);
+    throw new Error('Order not found');
+  }
+
+  if (!BUYER_CANCELLABLE.includes(order.status)) {
+    res.status(400);
+    throw new Error(`Cannot cancel order in "${statusLabel(order.status)}" status`);
+  }
+
+  const wasConfirmed = order.status === STATUSES.CONFIRMED;
+  const history = Array.isArray(order.status_history) ? order.status_history : [];
+  history.push(buildStatusHistoryEntry(STATUSES.CANCELLED, req.user.id, reason || 'Cancelled by buyer'));
+
+  const { error: updateErr } = await supabase
+    .from('orders')
+    .update({
+      status: STATUSES.CANCELLED,
+      status_history: history,
+      cancelled_at: new Date().toISOString(),
+      cancellation_reason: reason || 'Cancelled by buyer',
+    })
+    .eq('id', order.id);
+
+  if (updateErr) throw new Error(updateErr.message);
+
+  // Restore stock if the order was confirmed (stock was deducted)
+  if (wasConfirmed) {
+    try {
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('product_id, quantity')
+        .eq('order_id', order.id);
+
+      if (items) {
+        for (const item of items) {
+          await supabase.rpc('increment_stock', {
+            p_product_id: item.product_id,
+            p_amount: item.quantity,
+          }).catch(() => {
+            // fallback: manual increment
+            supabase.from('products')
+              .select('count_in_stock')
+              .eq('id', item.product_id)
+              .single()
+              .then(({ data: prod }) => {
+                if (prod) {
+                  supabase.from('products')
+                    .update({ count_in_stock: (prod.count_in_stock || 0) + item.quantity })
+                    .eq('id', item.product_id);
+                }
+              });
+          });
+        }
+      }
+    } catch (stockErr) {
+      console.error('Stock restore error on cancel:', stockErr);
+    }
+  }
+
+  // Notify seller
+  try {
+    const { data: items } = await supabase
+      .from('order_items')
+      .select('product_id')
+      .eq('order_id', order.id);
+
+    if (items) {
+      const productIds = items.map(i => i.product_id);
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('seller_profile:seller_profiles(user_id)')
+        .in('id', productIds);
+
+      if (productsData) {
+        const sellerUserIds = [...new Set(productsData.map(p => p.seller_profile?.user_id).filter(Boolean))];
+        sellerUserIds.forEach(sellerUserId => {
+          req.io.to(sellerUserId).emit('ORDER_STATUS_UPDATED', {
+            orderId: order.id,
+            orderNumber: order.order_number,
+            newStatus: STATUSES.CANCELLED,
+            message: `Order #${order.order_number} was cancelled by the buyer`,
+          });
+        });
+      }
+    }
+  } catch (socketErr) {
+    console.error('Socket notification error:', socketErr);
+  }
+
+  res.json({ success: true, message: 'Order cancelled successfully' });
+}));
+
+// @desc    Get single order by ID
+// @route   GET /api/orders/:id
+// @access  Private
 router.get('/:id', protect, asyncHandler(async (req, res) => {
-  // Fetch order with user details and partial order items logic if needed
-  // Supabase join syntax: user:users(...)
-
   const { data: order, error } = await supabase
     .from('orders')
     .select('*, user:users(name, email), orderItems:order_items(*)')
@@ -168,9 +273,6 @@ router.get('/:id', protect, asyncHandler(async (req, res) => {
     .single();
 
   if (order) {
-    // Transform to match frontend expectation
-    // Map order.id to order._id
-    // And map items if necessary.
     res.json({ ...order, _id: order.id });
   } else {
     res.status(404);
@@ -178,7 +280,7 @@ router.get('/:id', protect, asyncHandler(async (req, res) => {
   }
 }));
 
-// @desc    Get all orders (Admin) or Stats
+// @desc    Get all orders stats (Admin)
 // @route   GET /api/orders/admin/stats
 // @access  Private/Admin
 router.get('/admin/stats', protect, asyncHandler(async (req, res) => {
@@ -187,13 +289,9 @@ router.get('/admin/stats', protect, asyncHandler(async (req, res) => {
     throw new Error('Not authorized as admin');
   }
 
-  // Fetch Stats
   const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
   const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
   const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
-
-  // Access restricted
-  // Calculate total sales - sum total_amount
   const { data: salesData } = await supabase.from('orders').select('total_amount').eq('is_paid', true);
   const totalSales = salesData ? salesData.reduce((acc, order) => acc + (order.total_amount || 0), 0) : 0;
 

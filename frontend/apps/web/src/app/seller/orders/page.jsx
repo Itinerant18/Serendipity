@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
 import useSocket from "@/utils/useSocket";
 import { formatCurrency } from "@/utils/format";
@@ -11,6 +12,7 @@ import { API_URL } from '@/lib/api';
 
 export default function SellerOrdersPage() {
     const { token, user } = useAuth();
+    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState(false);
@@ -30,6 +32,7 @@ export default function SellerOrdersPage() {
                 id: data.orderId,
                 order_number: data.orderNumber,
                 total_amount: data.totalAmount,
+                payment_method: data.paymentMethod || 'N/A',
                 created_at: new Date().toISOString(),
                 status: 'pending',
                 isNew: true
@@ -43,6 +46,13 @@ export default function SellerOrdersPage() {
                 ));
             }, 5000);
         }
+
+        if (event === 'ORDER_STATUS_UPDATED') {
+            setOrders(prev => prev.map(o =>
+                o.id === data.orderId ? { ...o, status: data.newStatus } : o
+            ));
+        }
+
         setIsConnected(true);
     });
 
@@ -76,8 +86,12 @@ export default function SellerOrdersPage() {
     const filterOptions = [
         { value: "all", label: "All Orders" },
         { value: "pending", label: "Pending" },
+        { value: "confirmed", label: "Confirmed" },
+        { value: "packed", label: "Packed" },
         { value: "shipped", label: "Shipped" },
-        { value: "delivered", label: "Delivered" }
+        { value: "out_for_delivery", label: "Out for Delivery" },
+        { value: "delivered", label: "Delivered" },
+        { value: "cancelled", label: "Cancelled" }
     ];
 
     return (
@@ -179,7 +193,8 @@ export default function SellerOrdersPage() {
                                 <OrderCard
                                     order={order}
                                     isNew={order.isNew}
-                                    onViewDetails={() => console.log('View order:', order.id)}
+                                    showViewLink={true}
+                                    linkTo={`/seller/orders/${order.id}`}
                                 />
                             </div>
                         ))}

@@ -2,146 +2,136 @@
 
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import CheckoutStepper from "@/components/checkout/CheckoutStepper";
-import { apiRequest } from "@/lib/api";
+import useAuth from "@/utils/useAuth";
 import { formatCurrency } from "@/utils/format";
+import { API_URL } from "@/lib/api";
 
 export default function OrderSuccessPage() {
     const [searchParams] = useSearchParams();
+    const { token } = useAuth();
     const orderId = searchParams.get("orderId");
+    const paymentMethod = searchParams.get("method") || "COD";
+
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (orderId) {
-            fetchOrderDetails();
-        } else {
-            setLoading(false);
-        }
-    }, [orderId]);
+        const fetchOrder = async () => {
+            if (!orderId || !token) {
+                setLoading(false);
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/api/orders/${orderId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setOrder(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch order:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrder();
+    }, [orderId, token]);
 
-    const fetchOrderDetails = async () => {
-        try {
-            const data = await apiRequest(`/api/orders/${orderId}`);
-            setOrder(data);
-        } catch (error) {
-            console.error("Failed to fetch order:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Estimated delivery: 5-7 business days from now
-    const getEstimatedDelivery = () => {
-        const start = new Date();
-        start.setDate(start.getDate() + 5);
-        const end = new Date();
-        end.setDate(end.getDate() + 7);
-        const options = { month: 'short', day: 'numeric' };
-        return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+    const estimatedDelivery = () => {
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     };
 
     return (
-        <div className="min-h-screen bg-green-50 border-8 border-black py-12 px-4">
-            {/* Checkout Progress Stepper */}
-            <CheckoutStepper currentStep={4} />
-
-            <div className="max-w-2xl mx-auto">
-                {/* Success Header */}
-                <div className="bg-white border-4 border-black shadow-[12px_12px_0_#000000] p-8 text-center mb-8">
-                    <div className="w-20 h-20 bg-green-500 border-4 border-black flex items-center justify-center mx-auto mb-6">
-                        <i className="fa-solid fa-circle-check text-4xl text-white" />
-                    </div>
-
-                    <h1 className="font-brutalist text-black font-bold text-3xl mb-4 border-4 border-black bg-yellow-200 p-2 inline-block">
-                        ORDER PLACED!
-                    </h1>
-
-                    <p className="font-brutalist text-gray-700 mt-4 max-w-sm mx-auto">
-                        Thank you for your purchase. Your order has been confirmed and will be shipped soon.
-                    </p>
-
-                    {orderId && (
-                        <div className="bg-gray-100 border-2 border-black p-4 mt-6 inline-block">
-                            <span className="text-sm text-gray-500 block mb-1">Order ID</span>
-                            <span className="font-mono text-[#D97534] font-bold text-lg">{orderId}</span>
-                        </div>
-                    )}
-
-                    {/* Estimated Delivery */}
-                    <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-300 inline-flex items-center gap-3">
-                        <i className="fa-solid fa-truck text-blue-500 text-xl" />
-                        <div className="text-left">
-                            <span className="text-sm text-blue-600 block">Estimated Delivery</span>
-                            <span className="font-bold text-blue-800">{getEstimatedDelivery()}</span>
-                        </div>
+        <div className="min-h-screen bg-pink-50 border-8 border-black flex items-center justify-center px-4 py-12">
+            <div className="max-w-lg w-full text-center">
+                {/* Success Icon */}
+                <div className="mb-6">
+                    <div className="w-24 h-24 mx-auto bg-green-500 border-4 border-black shadow-[6px_6px_0_#000000] flex items-center justify-center">
+                        <i className="fa-solid fa-check text-white text-4xl"></i>
                     </div>
                 </div>
 
-                {/* Order Details */}
-                {loading ? (
-                    <div className="bg-white border-4 border-black p-6 text-center">
-                        <i className="fa-solid fa-spinner fa-spin text-2xl text-gray-400" />
-                        <p className="text-gray-500 mt-2">Loading order details...</p>
+                <h1 className="font-brutalist text-3xl sm:text-4xl text-black bg-black text-white px-6 py-3 inline-block mb-4">
+                    ORDER PLACED!
+                </h1>
+
+                <p className="text-gray-600 font-bold mt-4 mb-6">
+                    Thank you for your order! We'll notify you when it ships.
+                </p>
+
+                {/* Payment Method Badge */}
+                <div className={`inline-flex items-center gap-2 px-4 py-2 border-4 border-black font-bold text-sm mb-6 ${paymentMethod === "COD"
+                        ? "bg-green-200 text-green-800"
+                        : "bg-blue-200 text-blue-800"
+                    }`}>
+                    <i className={`fa-solid ${paymentMethod === "COD" ? "fa-money-bill-wave" : "fa-credit-card"}`}></i>
+                    {paymentMethod === "COD" ? "Cash on Delivery" : "Paid via Razorpay"}
+                </div>
+
+                {/* Order ID */}
+                {orderId && (
+                    <div className="bg-gray-100 border-4 border-black p-4 inline-block mb-6">
+                        <span className="text-sm text-gray-500 block mb-1 font-bold">Order ID</span>
+                        <span className="font-mono text-[#D97534] font-bold text-lg">{orderId.slice(0, 8)}...</span>
                     </div>
-                ) : order && order.orderItems ? (
-                    <div className="bg-white border-4 border-black shadow-[8px_8px_0_#000000] p-6 mb-8">
-                        <div className="inline-block bg-black text-white px-3 py-1 text-sm font-bold uppercase tracking-widest mb-4">
-                            Order Details
-                        </div>
+                )}
 
-                        {/* Items List */}
-                        <div className="space-y-4 mb-6">
-                            {order.orderItems.map((item, index) => (
-                                <div key={item.id || index} className="flex gap-4 py-3 border-b border-gray-200 last:border-0">
-                                    {item.image_url && (
-                                        <div className="w-16 h-16 border-2 border-black overflow-hidden flex-shrink-0">
-                                            <img src={item.image_url} alt={item.product_title} className="w-full h-full object-contain" />
-                                        </div>
-                                    )}
-                                    <div className="flex-1">
-                                        <p className="font-medium text-gray-900 line-clamp-1">{item.product_title}</p>
-                                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                {/* Order Summary */}
+                {order && (
+                    <div className="bg-white border-4 border-black p-6 text-left mb-6">
+                        <h3 className="font-brutalist text-lg bg-black text-white px-4 py-1 inline-block mb-4">
+                            ORDER SUMMARY
+                        </h3>
+
+                        {order.orderItems?.length > 0 && (
+                            <div className="space-y-2 mb-4">
+                                {order.orderItems.map((item, i) => (
+                                    <div key={i} className="flex justify-between text-sm border-b border-gray-100 pb-1">
+                                        <span className="text-gray-600 truncate max-w-[200px]">
+                                            {item.product_title} × {item.quantity || 1}
+                                        </span>
+                                        <span className="font-bold">{formatCurrency(item.price * (item.quantity || 1))}</span>
                                     </div>
-                                    <p className="font-bold text-gray-900">{formatCurrency(item.price)}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Shipping Address */}
-                        {order.shipping_address && (
-                            <div className="border-t-2 border-dashed border-gray-300 pt-4 mb-4">
-                                <p className="text-sm text-gray-500 mb-2">Shipping to:</p>
-                                <p className="font-medium">{order.shipping_name}</p>
-                                <p className="text-gray-600 text-sm">
-                                    {order.shipping_address}, {order.shipping_city} {order.shipping_zip}
-                                </p>
+                                ))}
                             </div>
                         )}
 
-                        {/* Total */}
-                        <div className="border-t-4 border-black pt-4 flex justify-between items-center">
-                            <span className="font-bold text-lg">Total Paid</span>
-                            <span className="font-bold text-2xl text-green-600">{formatCurrency(order.total_amount)}</span>
+                        <div className="flex justify-between font-bold pt-2 border-t-2 border-dashed border-gray-300">
+                            <span>Total</span>
+                            <span className="text-[#D97534]">{formatCurrency(order.total_amount)}</span>
                         </div>
-                    </div>
-                ) : null}
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        {paymentMethod === "COD" && (
+                            <div className="mt-4 p-3 bg-yellow-50 border-2 border-yellow-300 text-sm text-yellow-800">
+                                <i className="fa-solid fa-info-circle mr-2"></i>
+                                Payment of {formatCurrency(order.total_amount)} will be collected at the time of delivery.
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Estimated Delivery */}
+                <div className="bg-orange-100 border-4 border-black p-4 mb-6">
+                    <p className="font-bold text-sm text-gray-500">Estimated Delivery</p>
+                    <p className="font-brutalist text-lg text-black">{estimatedDelivery()}</p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link
-                        to="/orders"
-                        className="inline-flex items-center justify-center px-8 py-4 border-4 border-black bg-white text-black font-bold hover:bg-gray-100 transition-all shadow-[4px_4px_0_#000000] hover:shadow-[6px_6px_0_#000000]"
+                        to="/profile/orders"
+                        className="px-6 py-3 bg-black text-white font-bold border-4 border-white hover:bg-orange-500 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_#000000]"
                     >
-                        <i className="fa-solid fa-list-check mr-2" />
-                        View My Orders
+                        <i className="fa-solid fa-list mr-2"></i>View My Orders
                     </Link>
                     <Link
                         to="/"
-                        className="inline-flex items-center justify-center px-8 py-4 border-4 border-black bg-orange-500 text-white font-bold hover:bg-orange-600 transition-all shadow-[4px_4px_0_#000000] hover:shadow-[6px_6px_0_#000000]"
+                        className="px-6 py-3 bg-white text-black font-bold border-4 border-black hover:bg-orange-500 hover:text-white transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_#000000]"
                     >
-                        <i className="fa-solid fa-bag-shopping mr-2" />
-                        Continue Shopping
+                        <i className="fa-solid fa-cart-shopping mr-2"></i>Continue Shopping
                     </Link>
                 </div>
             </div>
