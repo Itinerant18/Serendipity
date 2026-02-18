@@ -10,7 +10,7 @@ const { protect } = require('../middleware/authMiddleware');
 router.put('/profile', protect, asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const { name, email, mobile, avatar } = req.body;
-    
+
     console.log('📝 Profile update request:', {
         userId,
         name,
@@ -24,8 +24,13 @@ router.put('/profile', protect, asyncHandler(async (req, res) => {
     if (email !== undefined) updateData.email = email;
     if (mobile !== undefined) updateData.mobile = mobile;
     if (avatar !== undefined) updateData.avatar_url = avatar;
-    
+
     console.log('📊 Update data:', updateData);
+
+    if (Object.keys(updateData).length === 0) {
+        res.status(400);
+        throw new Error('No changes provided');
+    }
 
     const { data, error } = await supabaseAdmin
         .from('users')
@@ -37,9 +42,9 @@ router.put('/profile', protect, asyncHandler(async (req, res) => {
     if (error) {
         console.error('❌ Profile update error:', error);
         res.status(400);
-        throw new Error('Failed to update profile');
+        throw new Error(error.message || 'Failed to update profile');
     }
-    
+
     console.log('✅ Profile updated in database:', {
         id: data.id,
         name: data.name,
@@ -57,7 +62,7 @@ router.put('/profile', protect, asyncHandler(async (req, res) => {
         isAdmin: data.is_admin || false,
         isSeller: data.is_seller || false
     };
-    
+
     console.log('📤 Sending response:', {
         ...responseData,
         avatar: responseData.avatar ? responseData.avatar.substring(0, 50) + '...' : 'null'

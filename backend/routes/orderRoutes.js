@@ -196,7 +196,8 @@ router.get('/myorders', protect, asyncHandler(async (req, res) => {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { data: orders, error, count } = await supabase
+  // Use admin client to ensure consistent read access
+  const { data: orders, error, count } = await supabaseAdmin
     .from('orders')
     .select('id,order_number,total_amount,total_price,payment_status,payment_method,status,is_paid,is_delivered,created_at', { count: 'exact' })
     .eq('user_id', req.user.id)
@@ -216,7 +217,8 @@ router.get('/myorders', protect, asyncHandler(async (req, res) => {
 // @route   GET /api/orders/history
 // @access  Private
 router.get('/history', protect, asyncHandler(async (req, res) => {
-  const { data: orders, error } = await supabase
+  // Use admin client to ensure consistent read access
+  const { data: orders, error } = await supabaseAdmin
     .from('orders')
     .select('*, items:order_items(*)')
     .eq('user_id', req.user.id)
@@ -236,7 +238,8 @@ router.get('/history', protect, asyncHandler(async (req, res) => {
 router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
   const { reason } = req.body;
 
-  const { data: order, error: fetchErr } = await supabase
+  // Use admin client + explicit user_id check
+  const { data: order, error: fetchErr } = await supabaseAdmin
     .from('orders')
     .select('*')
     .eq('id', req.params.id)
@@ -257,7 +260,8 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
   const history = Array.isArray(order.status_history) ? order.status_history : [];
   history.push(buildStatusHistoryEntry(STATUSES.CANCELLED, req.user.id, reason || 'Cancelled by buyer'));
 
-  const { error: updateErr } = await supabase
+  // Use admin client for update
+  const { error: updateErr } = await supabaseAdmin
     .from('orders')
     .update({
       status: STATUSES.CANCELLED,
@@ -272,25 +276,25 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
   // Restore stock if the order was confirmed (stock was deducted)
   if (wasConfirmed) {
     try {
-      const { data: items } = await supabase
+      const { data: items } = await supabaseAdmin
         .from('order_items')
         .select('product_id, qty')
         .eq('order_id', order.id);
 
       if (items) {
         for (const item of items) {
-          await supabase.rpc('increment_stock', {
+          await supabaseAdmin.rpc('increment_stock', {
             p_product_id: item.product_id,
             p_amount: item.qty,
           }).catch(() => {
             // fallback: manual increment
-            supabase.from('products')
+            supabaseAdmin.from('products')
               .select('count_in_stock')
               .eq('id', item.product_id)
               .single()
               .then(({ data: prod }) => {
                 if (prod) {
-                  supabase.from('products')
+                  supabaseAdmin.from('products')
                     .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
                     .eq('id', item.product_id);
                 }
@@ -305,14 +309,14 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
 
   // Notify seller
   try {
-    const { data: items } = await supabase
+    const { data: items } = await supabaseAdmin
       .from('order_items')
       .select('product_id')
       .eq('order_id', order.id);
 
     if (items) {
       const productIds = items.map(i => i.product_id);
-      const { data: productsData } = await supabase
+      const { data: productsData } = await supabaseAdmin
         .from('products')
         .select('seller_profile:seller_profiles(user_id)')
         .in('id', productIds);
@@ -337,16 +341,22 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
 }));
 
 // @desc    Get single order by ID
+// @desc    Get single order by ID
 // @route   GET /api/orders/:id
 // @access  Private
 router.get('/:id', protect, asyncHandler(async (req, res) => {
-  const { data: order, error } = await supabase
+  // Use admin client to bypass potential RLS issues, but strictly verify ownership
+  const { data: order, error } = await supabaseAdmin
     .from('orders')
     .select('*, user:users(name, email), orderItems:order_items(*)')
     .eq('id', req.params.id)
     .single();
 
   if (order) {
+    if (order.user_id !== req.user.id && !req.user.isAdmin) {
+      res.status(403);
+      throw new Error('Not authorized to view this order');
+    }
     res.json({ ...order, _id: order.id });
   } else {
     res.status(404);
@@ -363,10 +373,10 @@ router.get('/admin/stats', protect, asyncHandler(async (req, res) => {
     throw new Error('Not authorized as admin');
   }
 
-  const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-  const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
-  const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
-  const { data: salesData } = await supabase.from('orders').select('total_amount, total_price').eq('is_paid', true);
+  const { count: orderCount } = await supabaseAdmin.from('orders').select('*', { count: 'exact', head: true });
+  const { count: productCount } = await supabaseAdmin.from('products').select('*', { count: 'exact', head: true });
+  const { count: userCount } = await supabaseAdmin.from('users').select('*', { count: 'exact', head: true });
+  const { data: salesData } = await supabaseAdmin.from('orders').select('total_amount, total_price').eq('is_paid', true);
   const totalSales = salesData ? salesData.reduce((acc, order) => acc + (order.total_amount || order.total_price || 0), 0) : 0;
 
   res.json({
