@@ -7,7 +7,7 @@ import { formatCurrency } from "@/utils/format";
 import AddressSelection from "@/components/checkout/AddressSelection";
 import CheckoutStepper from "@/components/checkout/CheckoutStepper";
 import toast from "react-hot-toast";
-import { API_URL } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 const IS_RAZORPAY_ENABLED = Boolean(RAZORPAY_KEY && RAZORPAY_KEY !== 'rzp_test_PLACEHOLDER');
