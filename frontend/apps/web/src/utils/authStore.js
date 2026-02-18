@@ -35,15 +35,18 @@ const useAuthStore = create(
         (set, get) => ({
             user: null,
             token: null,
+            refreshToken: null,
             isAuthenticated: false,
             hasHydrated: false,
-            login: (userData, token) => set({ user: userData, token, isAuthenticated: true }),
-            logout: () => set({ user: null, token: null, isAuthenticated: false }),
+            login: (userData, token, refreshToken) => set({ user: userData, token, refreshToken, isAuthenticated: true }),
+            logout: () => set({ user: null, token: null, refreshToken: null, isAuthenticated: false }),
             updateUser: (updates) => set((state) => ({ user: { ...state.user, ...updates } })),
             setHasHydrated: (val) => set({ hasHydrated: val }),
+            setTokens: (token, refreshToken) => set({ token, refreshToken }),
 
             // Token helpers
             getToken: () => get().token,
+            getRefreshToken: () => get().refreshToken,
             isTokenValid: () => {
                 const token = get().token;
                 return token && !isTokenExpired(token);

@@ -44,7 +44,7 @@ function useAuth() {
         sellerProfileId: data.sellerProfileId,
       };
 
-      login(userData, data.token);
+      login(userData, data.token, data.refreshToken);
       return { success: true, user: userData };
     } catch (error) {
       console.error('Login error:', error);
@@ -82,7 +82,7 @@ function useAuth() {
 
       // Automatically login after register (if token is available)
       if (data.token) {
-        login(userData, data.token);
+        login(userData, data.token, data.refreshToken);
       }
 
       return { success: true, user: userData };
@@ -121,7 +121,7 @@ function useAuth() {
         sellerProfileId: data.sellerProfileId,
       };
 
-      login(userData, data.token);
+      login(userData, data.token, data.refreshToken);
       return { success: true, user: userData };
     } catch (error) {
       console.error('Seller login error:', error);

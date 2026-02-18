@@ -26,10 +26,36 @@ export async function apiRequest(endpoint, options = {}) {
     let token = null;
 
     // 1. Try getting token from global auth store (Custom Auth)
+    // 1. Try getting token from global auth store (Custom Auth)
     try {
         const authState = useAuthStore.getState();
         if (authState && authState.token) {
             token = authState.token;
+            // Check for expiration and refresh if needed
+            if (authState.isTokenValid && !authState.isTokenValid() && authState.refreshToken) {
+                console.log('Token expired in apiRequest, attempting refresh...');
+                try {
+                    const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refreshToken: authState.refreshToken }),
+                    });
+
+                    if (refreshResponse.ok) {
+                        const data = await refreshResponse.json();
+                        // Update store
+                        authState.setTokens(data.token, data.refreshToken);
+                        token = data.token;
+                        console.log('Token refreshed successfully in apiRequest');
+                    } else {
+                        throw new Error('Refresh failed');
+                    }
+                } catch (refreshError) {
+                    console.warn('Token refresh failed in apiRequest, logging out...', refreshError);
+                    authState.logout();
+                    throw new Error('Session expired. Please log in again.');
+                }
+            }
         }
     } catch (e) {
         console.warn('Could not get auth store token:', e);
@@ -38,7 +64,8 @@ export async function apiRequest(endpoint, options = {}) {
     // 2. Fallback to Supabase session (Social Auth / Direct Supabase)
     if (!token) {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error) throw error;
             token = session?.access_token;
         } catch (e) {
             console.warn('Could not get supabase auth session:', e);
@@ -61,6 +88,14 @@ export async function apiRequest(endpoint, options = {}) {
     });
 
     if (!response.ok) {
+        if (response.status === 401) {
+            console.warn('Received 401 in apiRequest, logging out...');
+            try {
+                useAuthStore.getState().logout();
+                window.location.href = '/account/signin';
+            } catch (e) { console.error('Logout failed', e); }
+            throw new Error('Session expired. Please log in again.');
+        }
         const error = await response.json().catch(() => ({ message: 'Request failed' }));
         throw new Error(error.message || `HTTP ${response.status}`);
     }

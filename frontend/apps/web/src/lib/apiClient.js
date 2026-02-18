@@ -34,6 +34,21 @@ function isTokenExpired(token) {
 /**
  * Get token from localStorage
  */
+function getStoredRefreshToken() {
+    if (typeof window === 'undefined') return null;
+    try {
+        const authStorage = localStorage.getItem('auth-storage');
+        if (!authStorage) return null;
+        const parsed = JSON.parse(authStorage);
+        return parsed?.state?.refreshToken || null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Get token from localStorage
+ */
 function getStoredToken() {
     if (typeof window === 'undefined') return null;
     try {
@@ -67,13 +82,45 @@ const apiClient = {
      * @returns {Promise<Response>}
      */
     async request(endpoint, options = {}) {
-        const token = getStoredToken();
+        let token = getStoredToken();
+        const refreshToken = getStoredRefreshToken();
 
         // Check token expiration before making request
         if (token && isTokenExpired(token)) {
-            console.warn('Token expired, logging out...');
-            handleLogout();
-            throw new Error('Session expired. Please log in again.');
+            if (refreshToken) {
+                console.log('Token expired, attempting refresh...');
+                try {
+                    const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refreshToken }),
+                    });
+
+                    if (refreshResponse.ok) {
+                        const data = await refreshResponse.json();
+                        // Update localStorage directly to ensure subsequent requests use new token
+                        const authStorage = localStorage.getItem('auth-storage');
+                        if (authStorage) {
+                            const parsed = JSON.parse(authStorage);
+                            parsed.state.token = data.token;
+                            parsed.state.refreshToken = data.refreshToken;
+                            localStorage.setItem('auth-storage', JSON.stringify(parsed));
+                            token = data.token; // Use new token for this request
+                            console.log('Token refreshed successfully');
+                        }
+                    } else {
+                        throw new Error('Refresh failed');
+                    }
+                } catch (error) {
+                    console.warn('Token refresh failed, logging out...', error);
+                    handleLogout();
+                    throw new Error('Session expired. Please log in again.');
+                }
+            } else {
+                console.warn('Token expired and no refresh token, logging out...');
+                handleLogout();
+                throw new Error('Session expired. Please log in again.');
+            }
         }
 
         // Build headers with auth

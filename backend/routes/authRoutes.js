@@ -53,6 +53,7 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
     sellerProfileId: profile ? profile.seller_profile_id : null,
     avatar: profile ? profile.avatar_url : null,
     token: data.session.access_token,
+    refreshToken: data.session.refresh_token,
   });
 }));
 
@@ -125,40 +126,40 @@ router.post('/register', authLimiter, asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 
-   // Ensure user profile is created or updated in users table
-   if (data.user) {
-     // Check if user profile already exists
-     const { data: existingProfile, error: profileError } = await supabaseAdmin
-       .from('users')
-       .select('id')
-       .eq('id', data.user.id)
-       .single();
+  // Ensure user profile is created or updated in users table
+  if (data.user) {
+    // Check if user profile already exists
+    const { data: existingProfile, error: profileError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('id', data.user.id)
+      .single();
 
-     if (profileError || !existingProfile) {
-       // Create user profile if it doesn't exist
-       await supabaseAdmin
-         .from('users')
-         .insert({
-           id: data.user.id,
-           email: email,
-           name: name,
-           mobile: mobile,
-           is_admin: false,
-           is_seller: false,
-           auth_provider: 'email' // Default to email provider for registered users
-         });
-     } else {
-       // Update existing profile
-       await supabaseAdmin
-         .from('users')
-         .update({
-           name: name,
-           mobile: mobile,
-           auth_provider: 'email'
-         })
-         .eq('id', data.user.id);
-     }
-   }
+    if (profileError || !existingProfile) {
+      // Create user profile if it doesn't exist
+      await supabaseAdmin
+        .from('users')
+        .insert({
+          id: data.user.id,
+          email: email,
+          name: name,
+          mobile: mobile,
+          is_admin: false,
+          is_seller: false,
+          auth_provider: 'email' // Default to email provider for registered users
+        });
+    } else {
+      // Update existing profile
+      await supabaseAdmin
+        .from('users')
+        .update({
+          name: name,
+          mobile: mobile,
+          auth_provider: 'email'
+        })
+        .eq('id', data.user.id);
+    }
+  }
 
   if (data.user) {
     res.status(201).json({
@@ -169,6 +170,7 @@ router.post('/register', authLimiter, asyncHandler(async (req, res) => {
       isAdmin: false,
       isSeller: false,
       token: data.session ? data.session.access_token : null,
+      refreshToken: data.session ? data.session.refresh_token : null,
     });
   } else {
     res.status(400);
@@ -221,6 +223,31 @@ router.post('/seller-login', authLimiter, asyncHandler(async (req, res) => {
     sellerProfileId: profile.seller_profile_id,
     avatar: profile.avatar_url || null,
     token: data.session.access_token,
+    refreshToken: data.session.refresh_token,
+  });
+}));
+
+// @route   POST /api/auth/refresh
+// @desc    Refresh session token
+// @access  Public
+router.post('/refresh', asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    res.status(400);
+    throw new Error('Refresh token is required');
+  }
+
+  const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+
+  if (error || !data.session) {
+    res.status(401);
+    throw new Error('Invalid or expired refresh token');
+  }
+
+  res.json({
+    token: data.session.access_token,
+    refreshToken: data.session.refresh_token,
   });
 }));
 
