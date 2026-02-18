@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import useAuthStore from "@/utils/authStore";
 import GlassCard from "@/components/ui/GlassCard";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/lib/api';
 
 export default function PaymentMethodsPage() {
     const token = useAuthStore(state => state.token);

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import useAuth from './useAuth';
 
-const SOCKET_SERVER_URL = import.meta.env.VITE_SOCKET_URL ?? (import.meta.env.VITE_API_URL ?? 'http://localhost:5000');
+import { API_URL } from '@/lib/api';
+const SOCKET_SERVER_URL = import.meta.env.VITE_SOCKET_URL ?? API_URL;
 
 /**
  * useSocket Hook

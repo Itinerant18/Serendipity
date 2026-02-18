@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from '@/lib/api';
 import { cn } from "@/lib/utils";
 import useAuth from "@/utils/useAuth";
 import useWishlistStore from "@/utils/wishlistStore";
@@ -55,7 +56,7 @@ export default function ProductCard({
     const isOutOfStock = count_in_stock === 0;
 
     // Category-specific fallback images from Unsplash
-    const categoryFallbacks = React.useMemo(() => ({
+    const categoryFallbacks = useMemo(() => ({
         'Electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?q=80&w=400&auto=format&fit=crop',
         'Fashion': 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=400&auto=format&fit=crop',
         'Home & Living': 'https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=400&auto=format&fit=crop',
@@ -65,20 +66,17 @@ export default function ProductCard({
         'default': 'https://images.unsplash.com/photo-1560343076-ec343e42ac6e?q=80&w=400&auto=format&fit=crop'
     }), []);
 
-    const getFallbackImage = React.useCallback(() => {
+    const getFallbackImage = useCallback(() => {
         return categoryFallbacks[category] || categoryFallbacks['default'];
     }, [category, categoryFallbacks]);
 
-    const getValidImageUrl = React.useCallback((url) => {
+    const getValidImageUrl = useCallback((url) => {
         if (!url) return "";
         if (url.startsWith("http") || url.startsWith("https")) return url;
 
         // Prepend API URL for relative paths
-        const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
-
-        // Ensure no double slashes
         const cleanUrl = url.startsWith("/") ? url.substring(1) : url;
-        const cleanApiUrl = apiUrl.endsWith("/") ? apiUrl.substring(0, apiUrl.length - 1) : apiUrl;
+        const cleanApiUrl = API_URL.endsWith("/") ? API_URL.substring(0, API_URL.length - 1) : API_URL;
 
         return `${cleanApiUrl}/${cleanUrl}`;
     }, []);

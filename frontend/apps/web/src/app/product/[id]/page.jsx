@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from '@/lib/api';
+
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -84,7 +86,7 @@ export default function ProductPage() {
     const fetchProduct = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:5000'}/api/products/${params.id}`);
+            const response = await fetch(`${API_URL}/api/products/${params.id}`);
             const data = await response.json();
 
             if (data && !data.error) {
@@ -133,7 +135,7 @@ export default function ProductPage() {
 
     const fetchRelated = async (category, currentId) => {
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:5000'}/api/products?limit=8`);
+            const res = await fetch(`${API_URL}/api/products?limit=8`);
             const data = await res.json();
             if (data.products) {
                 setRelatedProducts(data.products.filter(p => p.category === category && p.id !== currentId).slice(0, 4));

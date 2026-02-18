@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/utils/authStore";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/lib/api';
 
 export default function AuthCallbackPage() {
     const navigate = useNavigate();
@@ -70,14 +70,14 @@ export default function AuthCallbackPage() {
                     try {
                         await fetch(`${API_URL}/api/profile`, {
                             method: 'PUT',
-                            headers: { 
+                            headers: {
                                 'Authorization': `Bearer ${session.access_token}`,
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({ 
+                            body: JSON.stringify({
                                 auth_provider: 'google',
                                 // Update with Google avatar if not already set in DB
-                                avatar_url: dbAvatar || session.user.user_metadata?.avatar_url 
+                                avatar_url: dbAvatar || session.user.user_metadata?.avatar_url
                             })
                         });
                     } catch (err) {

@@ -1,4 +1,4 @@
-const API_URL = process.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = process.env.API_PROXY_TARGET || 'http://localhost:5000';
 
 export async function POST(request) {
   try {

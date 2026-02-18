@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 // FontAwesome icons used globally
 import useAuthStore from "@/utils/authStore";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/lib/api';
 
 export default function EditProfilePage() {
     const navigate = useNavigate();

@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 // FontAwesome icons loaded globally
 
 import useAuth from "@/utils/useAuth";
+import { API_URL } from '@/lib/api';
 import { formatCurrency } from "@/utils/format";
 import StatCard from "@/components/StatCard";
 import QuickActionCard, { LargeActionCard } from "@/components/QuickActionCard";
@@ -25,7 +26,6 @@ export default function AdminDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     useEffect(() => {
         // Check if user is admin

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import useAuth from "@/utils/useAuth";
 // FontAwesome icons loaded globally
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/lib/api';
 
 export default function SellerSettings() {
     const { token, user } = useAuth();

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 // FontAwesome icons loaded globally
 
-import { formatCurrency } from "@/utils/format";
+import { API_URL } from '@/lib/api';
 import useAuth from "@/utils/useAuth";
 import useSocket from "@/utils/useSocket";
 import StatCard from "@/components/StatCard";
@@ -26,8 +26,6 @@ export default function SellerDashboardPage() {
     const [salesData, setSalesData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     useEffect(() => {
         if (token) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from '@/lib/api';
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { cn } from "../../lib/utils";
@@ -80,7 +81,7 @@ export default function ProfilePage() {
             const formDataUpload = new FormData();
             formDataUpload.append('file', avatarFile);
 
-            const uploadUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/upload/profile-image`;
+            const uploadUrl = `${API_URL}/api/upload/profile-image`;
 
             const response = await fetch(uploadUrl, {
                 method: 'POST',
@@ -99,7 +100,7 @@ export default function ProfilePage() {
             setAvatarPreview(newAvatarUrl);
             setAvatarFile(null);
 
-            const saveResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/profile`, {
+            const saveResponse = await fetch(`${API_URL}/api/user/profile`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...formData, avatar: newAvatarUrl })
@@ -113,9 +114,9 @@ export default function ProfilePage() {
             setIsEditing(false);
         } catch (error) {
             console.error('Avatar upload error:', error);
-            setMessage({ 
-                type: "error", 
-                text: error.message || "Failed to upload avatar. Please try again." 
+            setMessage({
+                type: "error",
+                text: error.message || "Failed to upload avatar. Please try again."
             });
         } finally {
             setUploadingAvatar(false);
@@ -127,7 +128,7 @@ export default function ProfilePage() {
         setMessage({ type: "", text: "" });
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/profile`, {
+            const response = await fetch(`${API_URL}/api/user/profile`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

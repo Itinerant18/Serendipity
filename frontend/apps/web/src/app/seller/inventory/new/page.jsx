@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import useAuth from "@/utils/useAuth";
 import { getAllCategories, getSubcategories as getSubcategoriesUtil } from "@/utils/categories";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/lib/api';
 
 export default function AddProductPage() {
     const { token, user } = useAuth();

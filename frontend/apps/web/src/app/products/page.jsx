@@ -1,4 +1,6 @@
 "use client";
+
+import { API_URL } from '@/lib/api';
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -56,8 +58,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
-            const response = await fetch(`${apiUrl}/api/products?limit=1000`);
+            const response = await fetch(`${API_URL}/api/products?limit=1000`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

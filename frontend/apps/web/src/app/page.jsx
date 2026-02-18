@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from '@/lib/api';
+
 import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -22,7 +24,7 @@ export default function HomePage() {
     const { data: products = [], isLoading: loading, error } = useQuery({
         queryKey: ['products'],
         queryFn: async () => {
-            const response = await fetch(`${import.meta.env.VITE_API_URL ?? "http://localhost:5000"}/api/products`);
+            const response = await fetch(`${API_URL}/api/products`);
             if (!response.ok) {
                 throw new Error("Failed to fetch products");
             }

@@ -44,7 +44,7 @@ import { useNavigate } from "react-router-dom";
 import UploadProgress from "@/components/UploadProgress";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/lib/api';
 
 export default function SellerInventoryPage() {
     const { token } = useAuth();
@@ -245,7 +245,7 @@ export default function SellerInventoryPage() {
         const validNames = validated.filter(v => v._validation.status === 'valid').map(v => v.name);
         if (validNames.length > 0) {
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/products/check-duplicates`, {
+                const res = await fetch(`${API_URL}/api/products/check-duplicates`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                     body: JSON.stringify({ names: validNames })
@@ -292,7 +292,7 @@ export default function SellerInventoryPage() {
         for (let i = 0; i < totalChunks; i++) {
             const chunk = products.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/products/bulk`, {
+                const res = await fetch(`${API_URL}/api/products/bulk`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                     body: JSON.stringify(chunk)
