@@ -503,7 +503,7 @@ router.get('/stats', protect, protectSeller, async (req, res) => {
             // Order items are in main database (orders are customer-facing)
             const { data: orderItems } = await supabase
                 .from('order_items')
-                .select('price, quantity, order_id')
+                .select('price, qty, order_id')
                 .in('product_id', productIds);
 
             if (orderItems) {
@@ -511,7 +511,7 @@ router.get('/stats', protect, protectSeller, async (req, res) => {
                 totalOrders = uniqueOrderIds.size;
 
                 totalSales = orderItems.reduce((sum, item) => {
-                    return sum + (parseFloat(item.price) * item.quantity);
+                    return sum + (parseFloat(item.price) * item.qty);
                 }, 0);
             }
         }
@@ -633,7 +633,7 @@ router.get('/orders', protect, protectSeller, async (req, res) => {
                     name: order.user?.name || 'Guest User',
                     email: order.user?.email
                 },
-                totalAmount: order.total_amount,
+                totalAmount: order.total_amount || order.total_price,
                 status,
                 createdAt: order.created_at,
                 paymentStatus: order.is_paid ? 'Paid' : 'Unpaid'
@@ -688,6 +688,9 @@ router.get('/orders/:id', protect, protectSeller, async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
+        // shipping_address is JSONB in DB
+        const shippingAddr = order.shipping_address || {};
+
         res.json({
             id: order.id,
             orderNumber: order.order_number,
@@ -697,27 +700,28 @@ router.get('/orders/:id', protect, protectSeller, async (req, res) => {
             paymentStatus: order.is_paid ? 'Paid' : (order.payment_method === 'COD' ? 'COD - Pay on Delivery' : 'Unpaid'),
             isPaid: order.is_paid,
             isDelivered: order.is_delivered,
-            totalAmount: order.total_amount,
+            totalAmount: order.total_amount || order.total_price,
             createdAt: order.created_at,
             customer: {
                 name: order.user?.name || 'Guest',
                 email: order.user?.email || '',
             },
             shippingAddress: {
-                name: order.shipping_name,
-                address: order.shipping_address,
-                city: order.shipping_city,
-                state: order.shipping_state,
-                zip: order.shipping_zip,
-                country: order.shipping_country,
+                name: shippingAddr.name || '',
+                address: shippingAddr.address || '',
+                city: shippingAddr.city || '',
+                state: shippingAddr.state || '',
+                zip: shippingAddr.zip || '',
+                country: shippingAddr.country || '',
             },
+            // order_items use DB columns: name, qty, image
             items: orderItems.map(item => ({
                 id: item.id,
                 productId: item.product_id,
-                title: item.product_title,
+                title: item.name,
                 price: item.price,
-                quantity: item.quantity,
-                image: item.image_url,
+                quantity: item.qty,
+                image: item.image,
             })),
         });
     } catch (error) {
@@ -752,7 +756,7 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
 
         const { data: orderItems } = await supabase
             .from('order_items')
-            .select('product_id, quantity')
+            .select('product_id, qty')
             .eq('order_id', req.params.id)
             .in('product_id', productIds);
 
@@ -825,7 +829,7 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
                     .single();
 
                 if (prod) {
-                    const newStock = Math.max(0, (prod.count_in_stock || 0) - item.quantity);
+                    const newStock = Math.max(0, (prod.count_in_stock || 0) - item.qty);
                     await supabase.from('products')
                         .update({ count_in_stock: newStock })
                         .eq('id', item.product_id);
@@ -842,7 +846,7 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
 
                 if (prod) {
                     await supabase.from('products')
-                        .update({ count_in_stock: (prod.count_in_stock || 0) + item.quantity })
+                        .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
                         .eq('id', item.product_id);
                 }
             }

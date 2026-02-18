@@ -48,22 +48,27 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   const initialHistory = [buildStatusHistoryEntry(STATUSES.PENDING, req.user.id, 'Order placed')];
 
   // Step 1: Insert order
+  // DB schema: shipping_address is JSONB, total_price is the original column
   const orderPayload = {
     user_id: req.user.id,
     order_number: orderNumber,
+    total_price: parseFloat(totalPrice) || 0,
     total_amount: parseFloat(totalPrice) || 0,
     stripe_session_id: stripeSessionId || null,
     payment_status: isCOD ? 'cod_pending' : 'pending',
-    shipping_name: shipping?.name || '',
-    shipping_address: shipping?.address || '',
-    shipping_city: shipping?.city || '',
-    shipping_state: shipping?.state || '',
-    shipping_zip: shipping?.zip || '',
-    shipping_country: shipping?.country || 'IN',
+    shipping_address: {
+      name: shipping?.name || '',
+      address: shipping?.address || '',
+      city: shipping?.city || '',
+      state: shipping?.state || '',
+      zip: shipping?.zip || '',
+      country: shipping?.country || 'IN',
+      phone: shipping?.phone || ''
+    },
+    payment_method: isCOD ? 'COD' : 'Razorpay',
     is_paid: false,
     is_delivered: false,
     status: STATUSES.PENDING,
-    payment_method: isCOD ? 'COD' : 'Razorpay',
     status_history: initialHistory,
   };
 
@@ -84,13 +89,14 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   console.log('[ORDER] ✅ Step 1 OK - Order created:', order.id);
 
   // Step 2: Create Order Items
+  // DB schema: columns are name, qty, image (NOT product_title, quantity, image_url)
   const orderItemsData = items.map(item => ({
     order_id: order.id,
     product_id: item.product_id || item.product || item.id,
-    product_title: item.title || item.name || 'Unknown Product',
+    name: item.title || item.name || 'Unknown Product',
     price: parseFloat(item.price) || 0,
-    quantity: parseInt(item.quantity || item.qty || 1, 10),
-    image_url: item.image || item.image_url || item.images?.[0] || null
+    qty: parseInt(item.quantity || item.qty || 1, 10),
+    image: item.image || item.image_url || item.images?.[0] || ''
   }));
 
   console.log('[ORDER] Step 2: Inserting', orderItemsData.length, 'order items');
@@ -160,7 +166,7 @@ router.get('/myorders', protect, asyncHandler(async (req, res) => {
 
   const { data: orders, error, count } = await supabase
     .from('orders')
-    .select('id,order_number,total_amount,payment_status,payment_method,status,is_paid,is_delivered,created_at', { count: 'exact' })
+    .select('id,order_number,total_amount,total_price,payment_status,payment_method,status,is_paid,is_delivered,created_at', { count: 'exact' })
     .eq('user_id', req.user.id)
     .order('created_at', { ascending: false })
     .range(from, to);
@@ -236,14 +242,14 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
     try {
       const { data: items } = await supabase
         .from('order_items')
-        .select('product_id, quantity')
+        .select('product_id, qty')
         .eq('order_id', order.id);
 
       if (items) {
         for (const item of items) {
           await supabase.rpc('increment_stock', {
             p_product_id: item.product_id,
-            p_amount: item.quantity,
+            p_amount: item.qty,
           }).catch(() => {
             // fallback: manual increment
             supabase.from('products')
@@ -253,7 +259,7 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
               .then(({ data: prod }) => {
                 if (prod) {
                   supabase.from('products')
-                    .update({ count_in_stock: (prod.count_in_stock || 0) + item.quantity })
+                    .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
                     .eq('id', item.product_id);
                 }
               });
@@ -328,8 +334,8 @@ router.get('/admin/stats', protect, asyncHandler(async (req, res) => {
   const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
   const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
   const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
-  const { data: salesData } = await supabase.from('orders').select('total_amount').eq('is_paid', true);
-  const totalSales = salesData ? salesData.reduce((acc, order) => acc + (order.total_amount || 0), 0) : 0;
+  const { data: salesData } = await supabase.from('orders').select('total_amount, total_price').eq('is_paid', true);
+  const totalSales = salesData ? salesData.reduce((acc, order) => acc + (order.total_amount || order.total_price || 0), 0) : 0;
 
   res.json({
     totalOrders: orderCount || 0,
