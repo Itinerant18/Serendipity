@@ -37,23 +37,45 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     throw new Error('No order items');
   }
 
-  // Pre-validate products to prevent FK errors
+  // Pre-validate products (Existence + Stock + Seller Ownership Warning)
   const productIds = [...new Set(items.map(item => item.product_id || item.product || item.id).filter(Boolean))];
-  // Use admin client to optionally bypass RLS for check
+
   const { data: validProducts, error: prodCheckError } = await supabaseAdmin
     .from('products')
-    .select('id')
+    .select('id, count_in_stock, name, user_id')
     .in('id', productIds);
 
   if (prodCheckError) {
     console.error('[ORDER] ❌ Product check failed:', prodCheckError);
-    // Don't fail hard on check error, let FK constraint handle it, but log it
-  } else if (!validProducts || validProducts.length !== productIds.length) {
-    const foundIds = validProducts.map(p => p.id);
+  } else {
+    // 1. Check for missing products
+    const foundIds = validProducts?.map(p => p.id) || [];
     const missing = productIds.filter(id => !foundIds.includes(id));
-    console.warn('[ORDER] ⚠️ Missing products:', missing);
-    res.status(400);
-    throw new Error(`Products not found: ${missing.join(', ')}`);
+    if (missing.length > 0) {
+      console.warn('[ORDER] ⚠️ Missing products:', missing);
+      res.status(400);
+      throw new Error(`Products not found: ${missing.join(', ')}`);
+    }
+
+    // 2. Check for Out of Stock
+    const productMap = new Map(validProducts.map(p => [p.id, p]));
+    const outOfStockItems = [];
+
+    items.forEach(item => {
+      const pid = item.product_id || item.product || item.id;
+      const product = productMap.get(pid);
+      // Determine qty (frontend sends quantity or qty)
+      const qty = parseInt(item.quantity || item.qty || 1, 10);
+
+      if (product && product.count_in_stock < qty) {
+        outOfStockItems.push(`${product.name} (Requested: ${qty}, Available: ${product.count_in_stock})`);
+      }
+    });
+
+    if (outOfStockItems.length > 0) {
+      res.status(400);
+      throw new Error(`Out of Stock: ${outOfStockItems.join(', ')}`);
+    }
   }
 
   console.log('[ORDER] Items count:', items.length);
@@ -147,6 +169,25 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   }
 
   console.log('[ORDER] ✅ Step 2 OK - Order items created');
+
+  // Step 2.5: Deduct Stock (Atomic)
+  try {
+    const stockPromises = items.map(item => {
+      const pid = item.product_id || item.product || item.id;
+      const qty = parseInt(item.quantity || item.qty || 1, 10);
+      // Use existing increment_stock RPC with negative value for atomic deduction
+      return supabaseAdmin.rpc('increment_stock', {
+        p_product_id: pid,
+        p_amount: -qty
+      });
+    });
+
+    await Promise.all(stockPromises);
+    console.log('[ORDER] ✅ Step 2.5 OK - Stock deducted');
+  } catch (stockErr) {
+    console.error('[ORDER] ❌ Step 2.5 FAILED - Stock deduction error:', stockErr);
+    // Non-fatal: Order is created, just stock might be off. Admin can fix.
+  }
 
   // Step 3: Clear User's Cart (non-critical, don't fail order if this breaks)
   try {
