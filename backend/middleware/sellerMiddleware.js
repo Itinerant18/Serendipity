@@ -45,16 +45,29 @@ const protectSeller = async (req, res, next) => {
             // STRICT CHECK: Always verify against the actual seller database
             // The is_seller flag in the main DB is just a cache/claim, the source of truth is the seller DB.
             console.log('🛡️ protectSeller: Querying seller_profiles...');
-            const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
-                ?.from('seller_profiles')
-                .select('id')
-                .eq('user_id', req.user.id)
-                .single();
-            
-            console.log('🛡️ protectSeller: Query result:', { 
-                found: !!sellerProfile, 
-                id: sellerProfile?.id, 
-                error: sellerError?.code 
+
+            let sellerProfile = null;
+            let sellerError = null;
+
+            if (supabaseSellerAdmin) {
+                const result = await supabaseSellerAdmin
+                    .from('seller_profiles')
+                    .select('id')
+                    .eq('user_id', req.user.id)
+                    .single();
+                sellerProfile = result.data;
+                sellerError = result.error;
+            } else {
+                console.warn('⚠️ protectSeller: supabaseSellerAdmin is not initialized. Using fallback/skip check.');
+                // Decide behavior: fail closed (secure) or fail open?
+                // For seller route protection, we must fail closed if we can't verify.
+                sellerError = { message: 'Seller database configuration missing' };
+            }
+
+            console.log('🛡️ protectSeller: Query result:', {
+                found: !!sellerProfile,
+                id: sellerProfile?.id,
+                error: sellerError?.code || sellerError?.message
             });
 
             const profileExists = sellerProfile && (!sellerError || sellerError.code === 'PGRST116') && sellerProfile.id;

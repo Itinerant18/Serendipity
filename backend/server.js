@@ -39,7 +39,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://*.unsplash.com", "https://img.freepik.com", "https://harvardindependent.com"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com"],
-            connectSrc: ["'self'", "ws://localhost:5000", "http://localhost:5000", "http://localhost:4000"],
+            connectSrc: ["'self'", "ws://localhost:5000", "http://localhost:5000", "http://localhost:4000", "https://serendipity-backend.up.railway.app", "wss://serendipity-backend.up.railway.app"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             fontSrc: ["'self'", "data:", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"]
         },
@@ -49,7 +49,7 @@ app.use(helmet({
 
 app.use(cors({
     origin: process.env.CORS_ORIGINS
-        ? process.env.CORS_ORIGINS.split(',')
+        ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
         : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

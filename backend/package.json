@@ -4,7 +4,7 @@
   "description": "MERN Stack E-commerce App Backend",
   "main": "server.js",
   "scripts": {
-    "start": "bun server.js",
+    "start": "node server.js",
     "server": "bun server.js",
     "dev": "concurrently \"bun run dev\" \"cd ../frontend/apps/web && npm run dev\"",
     "migrate:seller": "node migrations/migrateSellerData.js",

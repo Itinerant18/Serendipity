@@ -53,11 +53,18 @@ const protect = asyncHandler(async (req, res, next) => {
 
       if (!isSeller || !sellerProfileId) {
         // Check seller database for existing profile
-        const { data: sellerProfile, error: sellerError } = await supabaseSellerAdmin
-          ?.from('seller_profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
+        let sellerProfile = null;
+        let sellerError = null;
+
+        if (supabaseSellerAdmin) {
+          const result = await supabaseSellerAdmin
+            .from('seller_profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+          sellerProfile = result.data;
+          sellerError = result.error;
+        }
 
         // PGRST116 = no rows found (normal if not a seller)
         if (sellerProfile && (!sellerError || sellerError.code === 'PGRST116')) {
@@ -88,7 +95,7 @@ const protect = asyncHandler(async (req, res, next) => {
         }
       }
 
-       // Normalize role flags & seller profile id to camelCase while preserving originals
+      // Normalize role flags & seller profile id to camelCase while preserving originals
       const userPayload = {
         ...merged,
         isAdmin: merged.isAdmin ?? merged.is_admin ?? false,
