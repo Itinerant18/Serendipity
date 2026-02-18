@@ -16,6 +16,10 @@ const router = express.Router();
 // @route   POST /api/orders
 // @access  Private
 router.post('/', protect, asyncHandler(async (req, res) => {
+  console.log('[ORDER] === Order Creation Start ===');
+  console.log('[ORDER] User:', req.user?.id);
+  console.log('[ORDER] Body keys:', Object.keys(req.body));
+
   const {
     items,
     shippingAddress,
@@ -33,83 +37,115 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     throw new Error('No order items');
   }
 
+  console.log('[ORDER] Items count:', items.length);
+  console.log('[ORDER] Payment method:', paymentMethod);
+  console.log('[ORDER] Shipping:', JSON.stringify(shipping));
+  console.log('[ORDER] Total price:', totalPrice);
+
   const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
   const isCOD = paymentMethod === 'COD';
 
   const initialHistory = [buildStatusHistoryEntry(STATUSES.PENDING, req.user.id, 'Order placed')];
 
+  // Step 1: Insert order
+  const orderPayload = {
+    user_id: req.user.id,
+    order_number: orderNumber,
+    total_amount: parseFloat(totalPrice) || 0,
+    stripe_session_id: stripeSessionId || null,
+    payment_status: isCOD ? 'cod_pending' : 'pending',
+    shipping_name: shipping?.name || '',
+    shipping_address: shipping?.address || '',
+    shipping_city: shipping?.city || '',
+    shipping_state: shipping?.state || '',
+    shipping_zip: shipping?.zip || '',
+    shipping_country: shipping?.country || 'IN',
+    is_paid: false,
+    is_delivered: false,
+    status: STATUSES.PENDING,
+    payment_method: isCOD ? 'COD' : 'Razorpay',
+    status_history: initialHistory,
+  };
+
+  console.log('[ORDER] Step 1: Inserting order with columns:', Object.keys(orderPayload));
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .insert({
-      user_id: req.user.id,
-      order_number: orderNumber,
-      total_amount: totalPrice || 0,
-      stripe_session_id: stripeSessionId || null,
-      payment_status: isCOD ? 'cod_pending' : 'pending',
-      shipping_name: shipping?.name,
-      shipping_address: shipping?.address,
-      shipping_city: shipping?.city,
-      shipping_state: shipping?.state,
-      shipping_zip: shipping?.zip,
-      shipping_country: shipping?.country || 'IN',
-      is_paid: false,
-      is_delivered: false,
-      status: STATUSES.PENDING,
-      payment_method: isCOD ? 'COD' : 'Razorpay',
-      status_history: initialHistory,
-    })
+    .insert(orderPayload)
     .select()
     .single();
 
   if (orderError) {
-    console.error('Order creation error:', orderError);
+    console.error('[ORDER] ❌ Step 1 FAILED - Order insert error:', JSON.stringify(orderError));
     res.status(500);
-    throw new Error(orderError.message);
+    throw new Error(`Order creation failed: ${orderError.message} (code: ${orderError.code}, details: ${orderError.details})`);
   }
 
-  // Create Order Items
+  console.log('[ORDER] ✅ Step 1 OK - Order created:', order.id);
+
+  // Step 2: Create Order Items
   const orderItemsData = items.map(item => ({
     order_id: order.id,
-    product_id: item.product_id || item.product,
-    product_title: item.title || item.name,
-    price: item.price,
-    quantity: item.quantity || item.qty,
-    image_url: item.image
+    product_id: item.product_id || item.product || item.id,
+    product_title: item.title || item.name || 'Unknown Product',
+    price: parseFloat(item.price) || 0,
+    quantity: parseInt(item.quantity || item.qty || 1, 10),
+    image_url: item.image || item.image_url || item.images?.[0] || null
   }));
+
+  console.log('[ORDER] Step 2: Inserting', orderItemsData.length, 'order items');
+  console.log('[ORDER] Step 2: Item columns:', Object.keys(orderItemsData[0] || {}));
 
   const { error: itemsError } = await supabase
     .from('order_items')
     .insert(orderItemsData);
 
-  if (itemsError) throw new Error(itemsError.message);
-
-  // Clear User's Cart
-  await supabase.from('saved_carts').delete().eq('user_id', req.user.id);
-
-  // Real-time Notifications for Sellers
-  try {
-    const productIds = items.map(item => item.product_id || item.product);
-    const { data: productsData } = await supabase
-      .from('products')
-      .select('seller_profile:seller_profiles(user_id)')
-      .in('id', productIds);
-
-    if (productsData) {
-      const sellerUserIds = [...new Set(productsData.map(p => p.seller_profile?.user_id).filter(Boolean))];
-      sellerUserIds.forEach(sellerUserId => {
-        req.io.to(sellerUserId).emit('NEW_ORDER', {
-          orderId: order.id,
-          orderNumber: order.order_number,
-          totalAmount: order.total_amount,
-          paymentMethod: order.payment_method,
-          message: 'You have a new order!'
-        });
-      });
-    }
-  } catch (socketErr) {
-    console.error('Socket notification error:', socketErr);
+  if (itemsError) {
+    console.error('[ORDER] ❌ Step 2 FAILED - Order items insert error:', JSON.stringify(itemsError));
+    // Don't leave orphan order — clean up
+    await supabase.from('orders').delete().eq('id', order.id);
+    res.status(500);
+    throw new Error(`Order items creation failed: ${itemsError.message} (code: ${itemsError.code}, details: ${itemsError.details})`);
   }
 
+  console.log('[ORDER] ✅ Step 2 OK - Order items created');
+
+  // Step 3: Clear User's Cart (non-critical, don't fail order if this breaks)
+  try {
+    await supabase.from('saved_carts').delete().eq('user_id', req.user.id);
+    console.log('[ORDER] ✅ Step 3 OK - Cart cleared');
+  } catch (cartErr) {
+    console.warn('[ORDER] ⚠️ Step 3 - Cart clear failed (non-critical):', cartErr.message);
+  }
+
+  // Step 4: Real-time Notifications for Sellers (non-critical)
+  try {
+    const productIds = items.map(item => item.product_id || item.product || item.id).filter(Boolean);
+    if (productIds.length > 0) {
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('seller_profile:seller_profiles(user_id)')
+        .in('id', productIds);
+
+      if (productsData) {
+        const sellerUserIds = [...new Set(productsData.map(p => p.seller_profile?.user_id).filter(Boolean))];
+        sellerUserIds.forEach(sellerUserId => {
+          req.io?.to(sellerUserId).emit('NEW_ORDER', {
+            orderId: order.id,
+            orderNumber: order.order_number,
+            totalAmount: order.total_amount,
+            paymentMethod: order.payment_method,
+            message: 'You have a new order!'
+          });
+        });
+      }
+    }
+    console.log('[ORDER] ✅ Step 4 OK - Notifications sent');
+  } catch (socketErr) {
+    console.warn('[ORDER] ⚠️ Step 4 - Socket notification failed (non-critical):', socketErr.message);
+  }
+
+  console.log('[ORDER] === Order Creation Complete ===', order.id);
   res.status(201).json({ ...order, _id: order.id, orderNumber: order.order_number });
 }));
 
