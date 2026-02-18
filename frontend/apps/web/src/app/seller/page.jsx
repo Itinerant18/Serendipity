@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 // FontAwesome icons loaded globally
 
 import { API_URL } from '@/lib/api';
+import { formatCurrency } from "@/utils/format";
 import useAuth from "@/utils/useAuth";
 import useSocket from "@/utils/useSocket";
 import StatCard from "@/components/StatCard";
