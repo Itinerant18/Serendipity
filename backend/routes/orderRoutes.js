@@ -43,10 +43,10 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   // Check BOTH main database AND seller database for products
   const sellerClient = supabaseSellerAdmin || supabaseSeller;
-  
+
   const [mainProductsResult, sellerProductsResult] = await Promise.all([
     supabaseAdmin.from('products').select('id, count_in_stock, name, user_id').in('id', productIds),
-    sellerClient 
+    sellerClient
       ? sellerClient.from('products').select('id, count_in_stock, name, user_id').in('id', productIds)
       : Promise.resolve({ data: [], error: null })
   ]);
@@ -57,34 +57,34 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   ];
 
   console.log('[ORDER] Product check - Main DB:', mainProductsResult.data?.length || 0, 'Seller DB:', sellerProductsResult.data?.length || 0, 'Using admin:', !!supabaseSellerAdmin);
-    // 1. Check for missing products
-    const foundIds = validProducts?.map(p => p.id) || [];
-    const missing = productIds.filter(id => !foundIds.includes(id));
-    if (missing.length > 0) {
-      console.warn('[ORDER] ⚠️ Missing products:', missing);
-      res.status(400);
-      throw new Error(`Products not found: ${missing.join(', ')}`);
+  // 1. Check for missing products
+  const foundIds = validProducts?.map(p => p.id) || [];
+  const missing = productIds.filter(id => !foundIds.includes(id));
+  if (missing.length > 0) {
+    console.warn('[ORDER] ⚠️ Missing products:', missing);
+    res.status(400);
+    throw new Error(`Products not found: ${missing.join(', ')}`);
+  }
+
+  // 2. Check for Out of Stock
+  const productMap = new Map(validProducts.map(p => [p.id, p]));
+  const outOfStockItems = [];
+
+  items.forEach(item => {
+    const pid = item.product_id || item.product || item.id;
+    const product = productMap.get(pid);
+    // Determine qty (frontend sends quantity or qty)
+    const qty = parseInt(item.quantity || item.qty || 1, 10);
+
+    if (product && product.count_in_stock < qty) {
+      outOfStockItems.push(`${product.name} (Requested: ${qty}, Available: ${product.count_in_stock})`);
     }
+  });
 
-    // 2. Check for Out of Stock
-    const productMap = new Map(validProducts.map(p => [p.id, p]));
-    const outOfStockItems = [];
-
-    items.forEach(item => {
-      const pid = item.product_id || item.product || item.id;
-      const product = productMap.get(pid);
-      // Determine qty (frontend sends quantity or qty)
-      const qty = parseInt(item.quantity || item.qty || 1, 10);
-
-      if (product && product.count_in_stock < qty) {
-        outOfStockItems.push(`${product.name} (Requested: ${qty}, Available: ${product.count_in_stock})`);
-      }
-    });
-
-    if (outOfStockItems.length > 0) {
-      res.status(400);
-      throw new Error(`Out of Stock: ${outOfStockItems.join(', ')}`);
-    }
+  if (outOfStockItems.length > 0) {
+    res.status(400);
+    throw new Error(`Out of Stock: ${outOfStockItems.join(', ')}`);
+  }
 
   console.log('[ORDER] Items count:', items.length);
   console.log('[ORDER] Payment method:', paymentMethod);
@@ -178,20 +178,29 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   console.log('[ORDER] ✅ Step 2 OK - Order items created');
 
-  // Step 2.5: Deduct Stock (Atomic)
+  // Step 2.5: Deduct Stock from SELLER DB (where products live)
   try {
-    const stockPromises = items.map(item => {
+    const stockClient = supabaseSellerAdmin || supabaseSeller;
+    const stockPromises = items.map(async (item) => {
       const pid = item.product_id || item.product || item.id;
       const qty = parseInt(item.quantity || item.qty || 1, 10);
-      // Use existing increment_stock RPC with negative value for atomic deduction
-      return supabaseAdmin.rpc('increment_stock', {
-        p_product_id: pid,
-        p_amount: -qty
-      });
+      // Get current stock from Seller DB
+      const { data: prod } = await stockClient
+        .from('products')
+        .select('count_in_stock')
+        .eq('id', pid)
+        .single();
+      if (prod) {
+        const newStock = Math.max((prod.count_in_stock || 0) - qty, 0);
+        await stockClient
+          .from('products')
+          .update({ count_in_stock: newStock })
+          .eq('id', pid);
+      }
     });
 
     await Promise.all(stockPromises);
-    console.log('[ORDER] ✅ Step 2.5 OK - Stock deducted');
+    console.log('[ORDER] ✅ Step 2.5 OK - Stock deducted from Seller DB');
   } catch (stockErr) {
     console.error('[ORDER] ❌ Step 2.5 FAILED - Stock deduction error:', stockErr);
     // Non-fatal: Order is created, just stock might be off. Admin can fix.
@@ -322,9 +331,10 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
 
   if (updateErr) throw new Error(updateErr.message);
 
-  // Restore stock if the order was confirmed (stock was deducted)
+  // Restore stock in SELLER DB if the order was confirmed (stock was deducted)
   if (wasConfirmed) {
     try {
+      const stockClient = supabaseSellerAdmin || supabaseSeller;
       const { data: items } = await supabaseAdmin
         .from('order_items')
         .select('product_id, qty')
@@ -332,23 +342,17 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
 
       if (items) {
         for (const item of items) {
-          await supabaseAdmin.rpc('increment_stock', {
-            p_product_id: item.product_id,
-            p_amount: item.qty,
-          }).catch(() => {
-            // fallback: manual increment
-            supabaseAdmin.from('products')
-              .select('count_in_stock')
-              .eq('id', item.product_id)
-              .single()
-              .then(({ data: prod }) => {
-                if (prod) {
-                  supabaseAdmin.from('products')
-                    .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
-                    .eq('id', item.product_id);
-                }
-              });
-          });
+          const { data: prod } = await stockClient
+            .from('products')
+            .select('count_in_stock')
+            .eq('id', item.product_id)
+            .single();
+          if (prod) {
+            await stockClient
+              .from('products')
+              .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
+              .eq('id', item.product_id);
+          }
         }
       }
     } catch (stockErr) {

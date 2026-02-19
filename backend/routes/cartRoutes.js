@@ -24,9 +24,9 @@ router.post('/sync', protect, asyncHandler(async (req, res) => {
         const cartItems = items.map(item => ({
             user_id: userId,
             product_id: item.product_id,
-            product_title: item.title,
+            title: item.title,
             price: item.price,
-            image_url: item.image,
+            image: item.image,
             quantity: item.quantity
         }));
 
@@ -46,7 +46,7 @@ router.post('/sync', protect, asyncHandler(async (req, res) => {
 router.get('/', protect, asyncHandler(async (req, res) => {
     const { data: items, error } = await supabaseAdmin
         .from('saved_carts')
-        .select('product_id, product_title, price, image_url, quantity')
+        .select('product_id, title, price, image, quantity')
         .eq('user_id', req.user.id)
         .order('created_at', { ascending: false });
 
@@ -57,9 +57,9 @@ router.get('/', protect, asyncHandler(async (req, res) => {
     // Map to match frontend expected format
     const mappedItems = items.map(item => ({
         product_id: item.product_id,
-        title: item.product_title,
+        title: item.title,
         price: item.price,
-        image: item.image_url,
+        image: item.image,
         quantity: item.quantity
     }));
 
