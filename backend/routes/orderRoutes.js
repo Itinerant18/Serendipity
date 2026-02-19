@@ -147,14 +147,22 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   // Step 2: Create Order Items using ADMIN client
   // DB schema: columns are name, qty, image (NOT product_title, quantity, image_url)
-  const orderItemsData = items.map(item => ({
-    order_id: order.id,
-    product_id: item.product_id || item.product || item.id,
-    name: item.title || item.name || 'Unknown Product',
-    price: parseFloat(item.price) || 0,
-    qty: parseInt(item.quantity || item.qty || 1, 10),
-    image: item.image || item.image_url || item.images?.[0] || ''
-  }));
+  // Build seller map from validProducts (user_id = seller's auth ID)
+  const sellerMap = {};
+  validProducts.forEach(p => { if (p.user_id) sellerMap[p.id] = p.user_id; });
+
+  const orderItemsData = items.map(item => {
+    const pid = item.product_id || item.product || item.id;
+    return {
+      order_id: order.id,
+      product_id: pid,
+      seller_id: sellerMap[pid] || null,
+      name: item.title || item.name || 'Unknown Product',
+      price: parseFloat(item.price) || 0,
+      qty: parseInt(item.quantity || item.qty || 1, 10),
+      image: item.image || item.image_url || item.images?.[0] || ''
+    };
+  });
 
   console.log('[ORDER] Step 2: Inserting', orderItemsData.length, 'order items');
   console.log('[ORDER] Step 2: Item columns:', Object.keys(orderItemsData[0] || {}));
