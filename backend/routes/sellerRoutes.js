@@ -571,78 +571,109 @@ router.get('/products', protect, protectSeller, async (req, res) => {
 // @access  Private (Seller)
 router.get('/orders', protect, protectSeller, async (req, res) => {
     try {
-        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
-        const limit = parseInt(req.query.limit) || 10;
-        const statusFilter = (req.query.status || 'all').toLowerCase();
+        const sellerId = req.user.id;
+        const { status, limit = 50 } = req.query;
 
-        // 1. Get all product IDs for this seller from seller database
-        const { data: products } = await supabaseSeller
-            .from('products')
-            .select('id')
-            .eq('seller_profile_id', sellerProfileId);
-
-        if (!products || products.length === 0) {
-            return res.json([]);
-        }
-
-        const productIds = products.map(p => p.id);
-
-        // 2. Find order items for these products, get unique order IDs
-        const { data: orderItems } = await supabase
+        // Find all order IDs that contain this seller's products via seller_id
+        const { data: sellerItems, error: itemsError } = await supabaseAdmin
             .from('order_items')
-            .select('order_id, created_at')
-            .in('product_id', productIds)
-            .order('created_at', { ascending: false })
-            .limit(limit * 5); // Fetch more items to ensure we get enough unique orders
+            .select('order_id')
+            .eq('seller_id', sellerId);
 
-        if (!orderItems || orderItems.length === 0) {
-            return res.json([]);
+        if (itemsError) {
+            console.error('[SELLER ORDERS] Error fetching seller order items:', itemsError);
+            return res.status(500).json({ message: 'Failed to fetch orders' });
         }
 
-        const uniqueOrderIds = [...new Set(orderItems.map(item => item.order_id))].slice(0, limit);
+        if (!sellerItems || sellerItems.length === 0) {
+            // Fallback: try the old method (products → order_items.product_id)
+            const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+            const { data: products } = await supabaseSeller
+                .from('products')
+                .select('id')
+                .eq('seller_profile_id', sellerProfileId);
 
-        // 3. Fetch full order details for these IDs
-        const { data: orders, error } = await supabase
-            .from('orders')
-            .select('*, user:users(name, email)')
-            .in('id', uniqueOrderIds)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        // 4. Transform to match frontend expectations
-        const formattedOrders = orders.map(order => {
-            // Normalize status from DB; fallback to derived
-            const dbStatus = (order.status || '').toLowerCase();
-            let status = 'pending';
-            if (dbStatus === 'shipped' || dbStatus === 'delivered' || dbStatus === 'pending') {
-                status = dbStatus;
-            } else if (order.is_delivered) {
-                status = 'delivered';
-            } else if (order.is_paid) {
-                status = 'shipped'; // treat paid as shipped if no explicit status
-            } else {
-                status = 'pending';
+            if (!products || products.length === 0) {
+                return res.json([]);
             }
 
-            return {
+            const productIds = products.map(p => p.id);
+
+            const { data: itemsByProduct } = await supabaseAdmin
+                .from('order_items')
+                .select('order_id')
+                .in('product_id', productIds);
+
+            if (!itemsByProduct || itemsByProduct.length === 0) {
+                return res.json([]);
+            }
+
+            const orderIds = [...new Set(itemsByProduct.map(i => i.order_id))];
+
+            let ordersQuery = supabaseAdmin
+                .from('orders')
+                .select('id, order_number, total_amount, total_price, payment_method, payment_status, status, is_paid, is_delivered, created_at, shipping_address, user_id')
+                .in('id', orderIds)
+                .order('created_at', { ascending: false })
+                .limit(parseInt(limit));
+
+            if (status && status !== 'all') {
+                ordersQuery = ordersQuery.eq('status', status);
+            }
+
+            const { data: orders } = await ordersQuery;
+
+            // Format for frontend
+            const formatted = (orders || []).map(order => ({
                 _id: order.id,
                 id: order.id,
                 orderNumber: order.order_number,
-                user: {
-                    name: order.user?.name || 'Guest User',
-                    email: order.user?.email
-                },
                 totalAmount: order.total_amount || order.total_price,
-                status,
+                status: order.status || 'pending',
                 createdAt: order.created_at,
-                paymentStatus: order.is_paid ? 'Paid' : 'Unpaid'
-            };
-        }).filter(o => statusFilter === 'all' ? true : o.status === statusFilter);
+                paymentStatus: order.is_paid ? 'Paid' : 'Unpaid',
+                paymentMethod: order.payment_method,
+            }));
 
-        res.json(formattedOrders);
+            return res.json(formatted);
+        }
+
+        // Primary path: use seller_id
+        const orderIds = [...new Set(sellerItems.map(i => i.order_id))];
+
+        let ordersQuery = supabaseAdmin
+            .from('orders')
+            .select('id, order_number, total_amount, total_price, payment_method, payment_status, status, is_paid, is_delivered, created_at, shipping_address, user_id')
+            .in('id', orderIds)
+            .order('created_at', { ascending: false })
+            .limit(parseInt(limit));
+
+        if (status && status !== 'all') {
+            ordersQuery = ordersQuery.eq('status', status);
+        }
+
+        const { data: orders, error: ordersError } = await ordersQuery;
+
+        if (ordersError) {
+            console.error('[SELLER ORDERS] Error fetching orders:', ordersError);
+            return res.status(500).json({ message: 'Failed to fetch orders' });
+        }
+
+        // Format for frontend
+        const formatted = (orders || []).map(order => ({
+            _id: order.id,
+            id: order.id,
+            orderNumber: order.order_number,
+            totalAmount: order.total_amount || order.total_price,
+            status: order.status || 'pending',
+            createdAt: order.created_at,
+            paymentStatus: order.is_paid ? 'Paid' : 'Unpaid',
+            paymentMethod: order.payment_method,
+        }));
+
+        res.json(formatted);
     } catch (error) {
-        console.error('Get Seller Orders Error:', error);
+        console.error('[SELLER ORDERS] Unexpected error:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
@@ -652,43 +683,57 @@ router.get('/orders', protect, protectSeller, async (req, res) => {
 // @access  Private (Seller)
 router.get('/orders/:id', protect, protectSeller, async (req, res) => {
     try {
-        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+        const sellerId = req.user.id;
+        const orderId = req.params.id;
 
-        // 1. Get seller's product IDs
-        const { data: products } = await supabaseSeller
-            .from('products')
-            .select('id')
-            .eq('seller_profile_id', sellerProfileId);
-
-        if (!products || products.length === 0) {
-            return res.status(404).json({ message: 'No products found for this seller' });
-        }
-
-        const productIds = products.map(p => p.id);
-
-        // 2. Verify this order contains at least one of seller's products
-        const { data: orderItems } = await supabase
+        // Verify this seller has items in this order (try seller_id first, fallback to product match)
+        let { data: sellerItems } = await supabaseAdmin
             .from('order_items')
             .select('*')
-            .eq('order_id', req.params.id)
-            .in('product_id', productIds);
+            .eq('order_id', orderId)
+            .eq('seller_id', sellerId);
 
-        if (!orderItems || orderItems.length === 0) {
+        if (!sellerItems || sellerItems.length === 0) {
+            // Fallback: match by product_id
+            const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+            const { data: products } = await supabaseSeller
+                .from('products')
+                .select('id')
+                .eq('seller_profile_id', sellerProfileId);
+
+            if (products && products.length > 0) {
+                const productIds = products.map(p => p.id);
+                const { data: itemsByProduct } = await supabaseAdmin
+                    .from('order_items')
+                    .select('*')
+                    .eq('order_id', orderId)
+                    .in('product_id', productIds);
+                sellerItems = itemsByProduct;
+            }
+        }
+
+        if (!sellerItems || sellerItems.length === 0) {
             return res.status(404).json({ message: 'Order not found or does not contain your products' });
         }
 
-        // 3. Get full order details
-        const { data: order, error } = await supabase
+        // Fetch full order
+        const { data: order, error: orderError } = await supabaseAdmin
             .from('orders')
-            .select('*, user:users(name, email)')
-            .eq('id', req.params.id)
+            .select('*')
+            .eq('id', orderId)
             .single();
 
-        if (error || !order) {
+        if (orderError || !order) {
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        // shipping_address is JSONB in DB
+        // Fetch customer info
+        const { data: customer } = await supabaseAdmin
+            .from('users')
+            .select('name, email')
+            .eq('id', order.user_id)
+            .single();
+
         const shippingAddr = order.shipping_address || {};
 
         res.json({
@@ -702,10 +747,7 @@ router.get('/orders/:id', protect, protectSeller, async (req, res) => {
             isDelivered: order.is_delivered,
             totalAmount: order.total_amount || order.total_price,
             createdAt: order.created_at,
-            customer: {
-                name: order.user?.name || 'Guest',
-                email: order.user?.email || '',
-            },
+            customer: customer || { name: 'Guest', email: '' },
             shippingAddress: {
                 name: shippingAddr.name || '',
                 address: shippingAddr.address || '',
@@ -714,8 +756,7 @@ router.get('/orders/:id', protect, protectSeller, async (req, res) => {
                 zip: shippingAddr.zip || '',
                 country: shippingAddr.country || '',
             },
-            // order_items use DB columns: name, qty, image
-            items: orderItems.map(item => ({
+            items: sellerItems.map(item => ({
                 id: item.id,
                 productId: item.product_id,
                 title: item.name,
@@ -725,7 +766,7 @@ router.get('/orders/:id', protect, protectSeller, async (req, res) => {
             })),
         });
     } catch (error) {
-        console.error('Get Seller Order Detail Error:', error);
+        console.error('[SELLER ORDER DETAIL] Error:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
@@ -736,36 +777,44 @@ router.get('/orders/:id', protect, protectSeller, async (req, res) => {
 router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
     try {
         const { status: newStatus, note } = req.body;
-        const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+        const sellerId = req.user.id;
 
         if (!newStatus) {
             return res.status(400).json({ message: 'Status is required' });
         }
 
-        // 1. Verify seller owns products in this order
-        const { data: products } = await supabaseSeller
-            .from('products')
-            .select('id')
-            .eq('seller_profile_id', sellerProfileId);
-
-        if (!products || products.length === 0) {
-            return res.status(403).json({ message: 'No products found for this seller' });
-        }
-
-        const productIds = products.map(p => p.id);
-
-        const { data: orderItems } = await supabase
+        // Verify seller owns items in this order
+        let { data: orderItems } = await supabaseAdmin
             .from('order_items')
             .select('product_id, qty')
             .eq('order_id', req.params.id)
-            .in('product_id', productIds);
+            .eq('seller_id', sellerId);
+
+        if (!orderItems || orderItems.length === 0) {
+            // Fallback: match by product_id
+            const sellerProfileId = req.seller.profileId || req.user.sellerProfileId;
+            const { data: products } = await supabaseSeller
+                .from('products')
+                .select('id')
+                .eq('seller_profile_id', sellerProfileId);
+
+            if (products && products.length > 0) {
+                const productIds = products.map(p => p.id);
+                const { data: itemsByProduct } = await supabaseAdmin
+                    .from('order_items')
+                    .select('product_id, qty')
+                    .eq('order_id', req.params.id)
+                    .in('product_id', productIds);
+                orderItems = itemsByProduct;
+            }
+        }
 
         if (!orderItems || orderItems.length === 0) {
             return res.status(403).json({ message: 'Not authorized to update this order' });
         }
 
-        // 2. Get current order
-        const { data: order, error: orderErr } = await supabase
+        // Get current order
+        const { data: order, error: orderErr } = await supabaseAdmin
             .from('orders')
             .select('*')
             .eq('id', req.params.id)
@@ -777,14 +826,14 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
 
         const currentStatus = order.status || 'pending';
 
-        // 3. Validate transition
+        // Validate transition
         if (!isValidTransition(currentStatus, newStatus)) {
             return res.status(400).json({
                 message: `Cannot change status from "${statusLabel(currentStatus)}" to "${statusLabel(newStatus)}"`,
             });
         }
 
-        // 4. Build update payload
+        // Build update payload
         const history = Array.isArray(order.status_history) ? [...order.status_history] : [];
         history.push(buildStatusHistoryEntry(newStatus, req.user.id, note));
 
@@ -793,13 +842,11 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
             status_history: history,
         };
 
-        // Extra fields based on new status
         if (newStatus === STATUSES.SHIPPED) {
             updateData.shipped_at = new Date().toISOString();
         } else if (newStatus === STATUSES.DELIVERED) {
             updateData.is_delivered = true;
             updateData.delivered_at = new Date().toISOString();
-            // COD: mark as paid on delivery
             if (order.payment_method === 'COD') {
                 updateData.is_paid = true;
                 updateData.paid_at = new Date().toISOString();
@@ -810,56 +857,55 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
             updateData.cancellation_reason = note || 'Cancelled by seller';
         }
 
-        // 5. Update order
-        const { error: updateErr } = await supabase
+        // Update order
+        const { error: updateErr } = await supabaseAdmin
             .from('orders')
             .update(updateData)
             .eq('id', order.id);
 
         if (updateErr) throw updateErr;
 
-        // 6. Stock management
+        // Stock management (use seller DB for products)
+        const stockClient = supabaseSellerAdmin || supabaseSeller;
         if (newStatus === STOCK_DEDUCT_ON) {
-            // Deduct stock on confirmation
             for (const item of orderItems) {
-                const { data: prod } = await supabase
+                const { data: prod } = await stockClient
                     .from('products')
                     .select('count_in_stock')
                     .eq('id', item.product_id)
                     .single();
-
                 if (prod) {
                     const newStock = Math.max(0, (prod.count_in_stock || 0) - item.qty);
-                    await supabase.from('products')
+                    await stockClient.from('products')
                         .update({ count_in_stock: newStock })
                         .eq('id', item.product_id);
                 }
             }
         } else if (STOCK_RESTORE_ON.includes(newStatus)) {
-            // Restore stock on cancel/return
             for (const item of orderItems) {
-                const { data: prod } = await supabase
+                const { data: prod } = await stockClient
                     .from('products')
                     .select('count_in_stock')
                     .eq('id', item.product_id)
                     .single();
-
                 if (prod) {
-                    await supabase.from('products')
+                    await stockClient.from('products')
                         .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
                         .eq('id', item.product_id);
                 }
             }
         }
 
-        // 7. Notify buyer via socket
+        // Notify buyer via socket
         try {
-            req.io.to(order.user_id).emit('ORDER_STATUS_UPDATED', {
-                orderId: order.id,
-                orderNumber: order.order_number,
-                newStatus,
-                message: `Your order #${order.order_number} is now ${statusLabel(newStatus)}`,
-            });
+            if (req.io && order.user_id) {
+                req.io.to(order.user_id).emit('ORDER_STATUS_UPDATED', {
+                    orderId: order.id,
+                    orderNumber: order.order_number,
+                    newStatus,
+                    message: `Your order #${order.order_number} is now ${statusLabel(newStatus)}`,
+                });
+            }
         } catch (socketErr) {
             console.error('Socket notification error:', socketErr);
         }
@@ -870,7 +916,7 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
             status: newStatus,
         });
     } catch (error) {
-        console.error('Update Order Status Error:', error);
+        console.error('[SELLER STATUS UPDATE] Error:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
@@ -1017,299 +1063,6 @@ router.post('/sync-status', protect, async (req, res) => {
             message: 'Failed to sync seller status',
             error: error.message
         });
-    }
-});
-
-// =============================================
-// SELLER ORDER MANAGEMENT ENDPOINTS
-// =============================================
-
-// @desc    Get orders for a seller (orders containing their products)
-// @route   GET /api/seller/orders
-// @access  Private (Seller)
-router.get('/orders', protect, protectSeller, async (req, res) => {
-    try {
-        const sellerId = req.user.id;
-        const { status, limit = 50 } = req.query;
-
-        // Find all order IDs that contain this seller's products
-        let orderItemsQuery = supabaseAdmin
-            .from('order_items')
-            .select('order_id')
-            .eq('seller_id', sellerId);
-
-        const { data: sellerItems, error: itemsError } = await orderItemsQuery;
-
-        if (itemsError) {
-            console.error('[SELLER ORDERS] Error fetching seller order items:', itemsError);
-            return res.status(500).json({ message: 'Failed to fetch orders' });
-        }
-
-        if (!sellerItems || sellerItems.length === 0) {
-            return res.json([]);
-        }
-
-        // Get unique order IDs
-        const orderIds = [...new Set(sellerItems.map(i => i.order_id))];
-
-        // Fetch full order details
-        let ordersQuery = supabaseAdmin
-            .from('orders')
-            .select('id, order_number, total_amount, total_price, payment_method, payment_status, status, is_paid, is_delivered, created_at, shipping_address, user_id')
-            .in('id', orderIds)
-            .order('created_at', { ascending: false })
-            .limit(parseInt(limit));
-
-        if (status && status !== 'all') {
-            ordersQuery = ordersQuery.eq('status', status);
-        }
-
-        const { data: orders, error: ordersError } = await ordersQuery;
-
-        if (ordersError) {
-            console.error('[SELLER ORDERS] Error fetching orders:', ordersError);
-            return res.status(500).json({ message: 'Failed to fetch orders' });
-        }
-
-        res.json(orders || []);
-    } catch (error) {
-        console.error('[SELLER ORDERS] Unexpected error:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// @desc    Get single order detail for seller
-// @route   GET /api/seller/orders/:id
-// @access  Private (Seller)
-router.get('/orders/:id', protect, protectSeller, async (req, res) => {
-    try {
-        const sellerId = req.user.id;
-        const orderId = req.params.id;
-
-        // Verify this seller has items in this order
-        const { data: sellerItems, error: checkError } = await supabaseAdmin
-            .from('order_items')
-            .select('id')
-            .eq('order_id', orderId)
-            .eq('seller_id', sellerId)
-            .limit(1);
-
-        if (checkError || !sellerItems || sellerItems.length === 0) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-        // Fetch full order
-        const { data: order, error: orderError } = await supabaseAdmin
-            .from('orders')
-            .select('*')
-            .eq('id', orderId)
-            .single();
-
-        if (orderError || !order) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-        // Fetch order items (only this seller's items)
-        const { data: items } = await supabaseAdmin
-            .from('order_items')
-            .select('*')
-            .eq('order_id', orderId)
-            .eq('seller_id', sellerId);
-
-        // Fetch customer info
-        const { data: customer } = await supabaseAdmin
-            .from('users')
-            .select('name, email')
-            .eq('id', order.user_id)
-            .single();
-
-        // Format response to match frontend expectations
-        res.json({
-            id: order.id,
-            orderNumber: order.order_number,
-            status: order.status || 'pending',
-            statusHistory: order.status_history || [],
-            customer: customer || { name: 'Guest', email: 'N/A' },
-            items: (items || []).map(item => ({
-                id: item.id,
-                title: item.name,
-                quantity: item.qty,
-                price: parseFloat(item.price),
-                image: item.image,
-            })),
-            shippingAddress: order.shipping_address || {},
-            paymentMethod: order.payment_method || 'N/A',
-            paymentStatus: order.payment_status || 'pending',
-            isPaid: order.is_paid || false,
-            totalAmount: parseFloat(order.total_amount || order.total_price || 0),
-            createdAt: order.created_at,
-        });
-    } catch (error) {
-        console.error('[SELLER ORDER DETAIL] Error:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// @desc    Update order status (seller)
-// @route   PATCH /api/seller/orders/:id/status
-// @access  Private (Seller)
-router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
-    try {
-        const sellerId = req.user.id;
-        const orderId = req.params.id;
-        const { status: newStatus, note } = req.body;
-
-        if (!newStatus) {
-            return res.status(400).json({ message: 'Status is required' });
-        }
-
-        // Verify seller owns items in this order
-        const { data: sellerItems, error: checkError } = await supabaseAdmin
-            .from('order_items')
-            .select('id')
-            .eq('order_id', orderId)
-            .eq('seller_id', sellerId)
-            .limit(1);
-
-        if (checkError || !sellerItems || sellerItems.length === 0) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-        // Fetch current order
-        const { data: order, error: fetchError } = await supabaseAdmin
-            .from('orders')
-            .select('id, status, status_history, user_id')
-            .eq('id', orderId)
-            .single();
-
-        if (fetchError || !order) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-        // Validate status transition
-        if (!isValidTransition(order.status, newStatus)) {
-            return res.status(400).json({
-                message: `Cannot transition from "${statusLabel(order.status)}" to "${statusLabel(newStatus)}"`
-            });
-        }
-
-        // Build updated history
-        const history = Array.isArray(order.status_history) ? [...order.status_history] : [];
-        history.push(buildStatusHistoryEntry(newStatus, sellerId, note || `Updated by seller`));
-
-        // Build update payload
-        const updatePayload = {
-            status: newStatus,
-            status_history: history,
-        };
-
-        if (newStatus === STATUSES.DELIVERED) {
-            updatePayload.is_delivered = true;
-            updatePayload.delivered_at = new Date().toISOString();
-        }
-        if (newStatus === STATUSES.SHIPPED) {
-            updatePayload.shipped_at = new Date().toISOString();
-        }
-        if (newStatus === STATUSES.CANCELLED) {
-            updatePayload.cancelled_at = new Date().toISOString();
-            updatePayload.cancellation_reason = note || 'Cancelled by seller';
-        }
-
-        // Update order
-        const { error: updateError } = await supabaseAdmin
-            .from('orders')
-            .update(updatePayload)
-            .eq('id', orderId);
-
-        if (updateError) {
-            console.error('[SELLER STATUS UPDATE] Error:', updateError);
-            return res.status(500).json({ message: 'Failed to update status' });
-        }
-
-        // Stock deduction on confirm, restore on cancel
-        if (newStatus === STOCK_DEDUCT_ON) {
-            try {
-                const stockClient = supabaseSellerAdmin || supabaseSeller;
-                const { data: orderItems } = await supabaseAdmin
-                    .from('order_items')
-                    .select('product_id, qty')
-                    .eq('order_id', orderId)
-                    .eq('seller_id', sellerId);
-
-                if (stockClient && orderItems) {
-                    for (const item of orderItems) {
-                        await stockClient
-                            .from('products')
-                            .update({ count_in_stock: supabaseAdmin.rpc ? undefined : undefined })
-                            .eq('id', item.product_id);
-                        // Use RPC or manual decrement
-                        const { data: product } = await stockClient
-                            .from('products')
-                            .select('count_in_stock')
-                            .eq('id', item.product_id)
-                            .single();
-                        if (product) {
-                            await stockClient
-                                .from('products')
-                                .update({ count_in_stock: Math.max(0, (product.count_in_stock || 0) - item.qty) })
-                                .eq('id', item.product_id);
-                        }
-                    }
-                }
-            } catch (stockErr) {
-                console.error('[SELLER STATUS] Stock deduction error (non-critical):', stockErr);
-            }
-        }
-
-        if (STOCK_RESTORE_ON.includes(newStatus)) {
-            try {
-                const stockClient = supabaseSellerAdmin || supabaseSeller;
-                const { data: orderItems } = await supabaseAdmin
-                    .from('order_items')
-                    .select('product_id, qty')
-                    .eq('order_id', orderId)
-                    .eq('seller_id', sellerId);
-
-                if (stockClient && orderItems) {
-                    for (const item of orderItems) {
-                        const { data: product } = await stockClient
-                            .from('products')
-                            .select('count_in_stock')
-                            .eq('id', item.product_id)
-                            .single();
-                        if (product) {
-                            await stockClient
-                                .from('products')
-                                .update({ count_in_stock: (product.count_in_stock || 0) + item.qty })
-                                .eq('id', item.product_id);
-                        }
-                    }
-                }
-            } catch (stockErr) {
-                console.error('[SELLER STATUS] Stock restore error (non-critical):', stockErr);
-            }
-        }
-
-        // Notify buyer via socket
-        try {
-            if (req.io && order.user_id) {
-                req.io.to(order.user_id).emit('ORDER_STATUS_UPDATED', {
-                    orderId: order.id,
-                    newStatus,
-                    message: `Your order status has been updated to ${statusLabel(newStatus)}`
-                });
-            }
-        } catch (socketErr) {
-            console.warn('[SELLER STATUS] Socket notification failed:', socketErr.message);
-        }
-
-        res.json({
-            message: `Order status updated to ${statusLabel(newStatus)}`,
-            status: newStatus
-        });
-    } catch (error) {
-        console.error('[SELLER STATUS UPDATE] Unexpected error:', error);
-        res.status(500).json({ message: 'Server error' });
     }
 });
 
