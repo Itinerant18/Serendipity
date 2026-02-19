@@ -32,7 +32,6 @@ function useAuth() {
         return { success: false, error: data.message || 'Login failed' };
       }
 
-      // Map backend response to user object
       const userData = {
         id: data._id,
         name: data.name,
@@ -45,6 +44,14 @@ function useAuth() {
       };
 
       login(userData, data.token, data.refreshToken);
+
+      // Restore cart from server after successful login
+      try {
+        await useCartStore.getState().restoreFromServer(data.token);
+      } catch (e) {
+        console.warn('Cart restore after login failed:', e);
+      }
+
       return { success: true, user: userData };
     } catch (error) {
       console.error('Login error:', error);
@@ -68,7 +75,6 @@ function useAuth() {
         return { success: false, error: data.message || 'Registration failed' };
       }
 
-      // Map backend response to user object
       const userData = {
         id: data._id,
         name: data.name,
@@ -80,7 +86,6 @@ function useAuth() {
         sellerProfileId: data.sellerProfileId,
       };
 
-      // Automatically login after register (if token is available)
       if (data.token) {
         login(userData, data.token, data.refreshToken);
       }
@@ -109,7 +114,6 @@ function useAuth() {
         return { success: false, error: data.message || 'Seller login failed' };
       }
 
-      // Map backend response to user object
       const userData = {
         id: data._id,
         name: data.name,
@@ -129,10 +133,8 @@ function useAuth() {
     }
   }, [login]);
 
-  // Mock implementations for social auth to prevent crashes if used
   const signInWithGoogle = useCallback(async (role = 'customer') => {
     try {
-      // Store intent in localStorage to survive OAuth redirect
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_intent_role', role);
       }
@@ -174,6 +176,13 @@ function useAuth() {
     signInWithFacebook,
     signInWithTwitter,
     signOut: async () => {
+      // Sync cart to server BEFORE clearing local state
+      try {
+        await useCartStore.getState().syncToServer();
+      } catch (e) {
+        console.warn('Cart sync before logout failed:', e);
+      }
+
       try {
         await supabase.auth.signOut();
       } catch (error) {
@@ -181,13 +190,10 @@ function useAuth() {
       }
       logout();
       useCartStore.getState().clearCart();
-      // Force synchronous localStorage clear to prevent race condition
-      // (persist middleware is async, redirect might happen before it writes)
       localStorage.removeItem('cart-storage');
       window.location.href = '/account/signin';
     },
     updateUser,
-    // Expose setters for manual auth (used by seller login page)
     setUser: (userData) => useAuthStore.setState({ user: userData }),
     setToken: (token) => useAuthStore.setState({ token }),
     setIsAuthenticated: (val) => useAuthStore.setState({ isAuthenticated: val }),

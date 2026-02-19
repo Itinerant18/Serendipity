@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import useAuthStore from "@/utils/authStore";
+import useCartStore from "@/utils/cartStore";
 
 import { API_URL } from '@/lib/api';
 
@@ -87,6 +88,13 @@ export default function AuthCallbackPage() {
                     console.log("Profile fetched for user:", user.email, "isSeller:", isSeller, "ID:", user.id);
                     console.log("Avatar source:", dbAvatar ? "database" : "google", "URL:", user.avatar?.substring(0, 50));
                     login(user, session.access_token);
+
+                    // Restore cart from server after Google login
+                    try {
+                        await useCartStore.getState().restoreFromServer(session.access_token);
+                    } catch (e) {
+                        console.warn('Cart restore after Google login failed:', e);
+                    }
 
                     // Check for role-based intent stored in localStorage
                     const intentRole = localStorage.getItem('auth_intent_role');

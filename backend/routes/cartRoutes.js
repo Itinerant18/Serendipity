@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { supabase } = require('../config/supabase');
+const { supabaseAdmin } = require('../config/supabase');
 const { protect } = require('../middleware/authMiddleware');
 const asyncHandler = require('express-async-handler');
 
@@ -10,7 +10,7 @@ router.post('/sync', protect, asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
     // Clear existing cart items for this user
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseAdmin
         .from('saved_carts')
         .delete()
         .eq('user_id', userId);
@@ -30,7 +30,7 @@ router.post('/sync', protect, asyncHandler(async (req, res) => {
             quantity: item.quantity
         }));
 
-        const { error: insertError } = await supabase
+        const { error: insertError } = await supabaseAdmin
             .from('saved_carts')
             .insert(cartItems);
 
@@ -44,7 +44,7 @@ router.post('/sync', protect, asyncHandler(async (req, res) => {
 
 // GET /api/cart
 router.get('/', protect, asyncHandler(async (req, res) => {
-    const { data: items, error } = await supabase
+    const { data: items, error } = await supabaseAdmin
         .from('saved_carts')
         .select('product_id, product_title, price, image_url, quantity')
         .eq('user_id', req.user.id)
