@@ -348,19 +348,25 @@ router.post('/:id/cancel', protect, asyncHandler(async (req, res) => {
         .select('product_id, qty')
         .eq('order_id', order.id);
 
-      if (items) {
-        for (const item of items) {
-          const { data: prod } = await stockClient
+      if (items && items.length > 0) {
+        const productIds = items.map(i => i.product_id);
+        const { data: products } = await stockClient
+          .from('products')
+          .select('id, count_in_stock')
+          .in('id', productIds);
+
+        if (products && products.length > 0) {
+          const updates = products.map(prod => {
+            const item = items.find(i => i.product_id === prod.id);
+            return {
+              id: prod.id,
+              count_in_stock: (prod.count_in_stock || 0) + (item ? item.qty : 0)
+            };
+          });
+
+          await stockClient
             .from('products')
-            .select('count_in_stock')
-            .eq('id', item.product_id)
-            .single();
-          if (prod) {
-            await stockClient
-              .from('products')
-              .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
-              .eq('id', item.product_id);
-          }
+            .upsert(updates);
         }
       }
     } catch (stockErr) {
