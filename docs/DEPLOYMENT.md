@@ -1,120 +1,102 @@
-# Deployment Guide - Railway via GitHub
+# Deployment Guide - Backend on Render
 
-Deploy the Serendipity application to Railway using GitHub integration.
+Deploy the Serendipity backend to Render using GitHub integration and Docker.
 
 ## Architecture
 
 ```
 GitHub Repo
-    │
-    ├─► Railway Backend  ──► Supabase
-    │   (Express + Bun)
-    │
-    └─► Railway Frontend ──► Backend API
-        (React Router SSR)
+    |
+    +--> Render Web Service (backend/Dockerfile)
+            |
+            +--> Supabase (main + seller DB)
+            +--> Optional Redis
 ```
 
----
+## Option A (Recommended): Blueprint via render.yaml
 
-## Step 1: Push to GitHub
+1. Push repository changes to GitHub.
+2. In Render, click **New +** -> **Blueprint**.
+3. Select this repository and branch.
+4. Render will detect `render.yaml` in repository root and propose a `serendipity-backend` service.
+5. Add secret values for all environment variables marked `sync: false`.
+6. Create the service.
 
-```bash
-git add .
-git commit -m "Production ready deployment"
-git push origin main
-```
+## Option B: Manual Service Setup
 
----
+1. In Render, click **New +** -> **Web Service**.
+2. Connect the repository.
+3. Configure:
+   - **Runtime**: Docker
+   - **Dockerfile Path**: `./backend/Dockerfile`
+   - **Docker Context**: `./backend`
+   - **Health Check Path**: `/api/health`
+   - **Auto-Deploy**: Enabled
 
-## Step 2: Deploy Backend
+## Required Environment Variables
 
-1. Go to [railway.app](https://railway.app) → **New Project**
-2. Select **Deploy from GitHub repo**
-3. Choose your repository
-4. Configure:
-   - **Root Directory**: `backend`
-   - Railway auto-detects `railway.toml`
-
-5. **Add Environment Variables** (Settings → Variables):
+Set these in Render Dashboard -> Environment:
 
 | Variable | Value |
 |----------|-------|
 | `NODE_ENV` | `production` |
 | `PORT` | `5000` |
-| `CORS_ORIGINS` | `https://your-frontend.up.railway.app` |
-| `SUPABASE_URL` | Your Supabase URL |
-| `SUPABASE_KEY` | Your anon key |
-| `SUPABASE_SERVICE_KEY` | Your service key |
-| `SELLER_SUPABASE_URL` | Seller DB URL |
-| `SELLER_SUPABASE_KEY` | Seller anon key |
-| `SELLER_SUPABASE_SERVICE_KEY` | Seller service key |
-| `RAZORPAY_KEY_ID` | Your Razorpay key |
-| `RAZORPAY_KEY_SECRET` | Your Razorpay secret |
-| `REDIS_URL` | (Optional) Redis URL |
+| `CORS_ORIGINS` | Frontend domain(s), comma-separated |
+| `SUPABASE_URL` | Main Supabase URL |
+| `SUPABASE_KEY` | Main anon/public key |
+| `SUPABASE_SERVICE_KEY` | Main service role key |
+| `SELLER_SUPABASE_URL` | Seller Supabase URL |
+| `SELLER_SUPABASE_KEY` | Seller anon/public key |
+| `SELLER_SUPABASE_SERVICE_KEY` | Seller service role key |
+| `RAZORPAY_KEY_ID` | Razorpay key id |
+| `RAZORPAY_KEY_SECRET` | Razorpay secret |
+| `STRIPE_SECRET_KEY` | Stripe secret key |
+| `REDIS_URL` | Optional external Redis URL |
 
-1. Click **Deploy** → Note the generated URL (e.g., `backend-xxx.up.railway.app`)
+Notes:
+- Keep secrets only in Render, never in repository.
+- If hosting frontend elsewhere, include that exact domain in `CORS_ORIGINS`.
+- Multiple origins must be comma-separated with no spaces.
 
----
+## Cutover Checklist (Railway -> Render)
 
-## Step 3: Deploy Frontend
-
-1. In the same Railway project, click **+ New Service**
-2. Select **Deploy from GitHub repo** (same repo)
-3. Configure:
-   - **Root Directory**: `frontend/apps/web`
-   - Railway auto-detects `railway.toml`
-
-4. **Add Environment Variables**:
-
-| Variable | Value |
-|----------|-------|
-| `NODE_ENV` | `production` |
-| `VITE_API_URL` | `https://your-backend.up.railway.app` |
-| `VITE_SUPABASE_URL` | Your Supabase URL |
-| `VITE_SUPABASE_ANON_KEY` | Your anon key |
-| `VITE_SOCKET_URL` | `https://your-backend.up.railway.app` |
-| `AUTH_SECRET` | Generate: `openssl rand -base64 32` |
-
-1. Click **Deploy**
-
----
-
-## Step 4: Update Backend CORS
-
-After frontend deploys, update backend's `CORS_ORIGINS`:
-
-```
-CORS_ORIGINS=https://frontend-xxx.up.railway.app
-```
-
----
-
-## Verify Deployment
-
-**Backend Health:**
+1. Deploy backend to Render and wait for **Live** status.
+2. Verify health endpoint:
 
 ```bash
-curl https://your-backend.up.railway.app/api/health
-# {"status":"ok","timestamp":"...","service":"serendipity-backend"}
+curl https://your-render-backend.onrender.com/api/health
 ```
 
-**Frontend:**
-Open `https://your-frontend.up.railway.app` in browser.
+3. Update frontend environment values:
+   - `VITE_API_URL=https://your-render-backend.onrender.com`
+   - `VITE_SOCKET_URL=https://your-render-backend.onrender.com`
+4. Update `CORS_ORIGINS` in Render to include your production frontend domain.
+5. Run a smoke test:
+   - Auth login/signup
+   - Product listing
+   - Cart and checkout flow
+   - Seller endpoints (if enabled)
+6. Keep Railway backend running during validation window.
+7. After successful validation, disable Railway backend service.
 
----
+## Verification
+
+Expected health response:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "...",
+  "service": "serendipity-backend"
+}
+```
 
 ## Auto-Deploy
 
-Railway automatically redeploys when you push to GitHub:
-
-```bash
-git push origin main  # Triggers deploy
-```
-
----
+Render redeploys automatically on push to the connected branch.
 
 ## Custom Domain (Optional)
 
-1. Railway Dashboard → Service → Settings → Domains
-2. Add custom domain
-3. Configure DNS with provided CNAME
+1. Render Dashboard -> Service -> Settings -> Custom Domains
+2. Add domain
+3. Configure DNS records per Render instructions
