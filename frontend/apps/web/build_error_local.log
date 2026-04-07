@@ -1,0 +1,92 @@
+
+> build
+> react-router build
+
+[36mvite v6.4.1 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 141 modules transformed.
+Γ£ù Build failed in 3.31s
+[react-router:route-exports] SPA Mode: 1 invalid route export(s) in `./__create/not-found.tsx`: `loader`. See https://reactrouter.com/how-to/spa for more information.
+file: C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/__create/not-found.tsx
+    at Object.transform (C:\workspace\New folder\New folder\Serendipity\frontend\apps\web\node_modules\@react-router\dev\dist\vite.js:3958:19)
+    at Object.handler (file:///C:/workspace/New%20folder/New%20folder/Serendipity/frontend/apps/web/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46537:15)
+    at file:///C:/workspace/New%20folder/New%20folder/Serendipity/frontend/apps/web/node_modules/rollup/dist/es/shared/node-entry.js:22239:40
+    at processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  code: 'PLUGIN_ERROR',
+  plugin: 'react-router:route-exports',
+  hook: 'transform',
+  id: 'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/__create/not-found.tsx',
+  watchFiles: [
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/@react-router/dev/dist/config/defaults/entry.client.tsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/root.tsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/account/signin/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/account/logout/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/account/signup/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/admin/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/admin/products/[id]/edit/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/admin/products/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/auth/callback/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/cart/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/category/[id]/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/checkout/shipping/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/cookies/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/privacy/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/checkout/success/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/product/[id]/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/products/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/profile/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/orders/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/profile/addresses/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/profile/edit/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/profile/payment-methods/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/profile/orders/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/profile/security/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/search/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/profile/settings/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/login/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/orders/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/inventory/edit/[id]/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/policies/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/orders/[id]/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/inventory/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/settings/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/inventory/new/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/terms/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/signup/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/__create/not-found.tsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/wishlist/page.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react-dom/client.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react/index.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react/jsx-runtime.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react-router/dist/development/dom-export.mjs',
+    'C:\\workspace\\New folder\\New folder\\Serendipity\\frontend\\apps\\web\\package.json',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react/cjs/react.production.min.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react-dom/index.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react/cjs/react-jsx-runtime.production.min.js',
+    'C:\\workspace\\New folder\\New folder\\Serendipity\\frontend\\apps\\web\\src\\app\\layout.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react-router/dist/development/chunk-4LKRSAEJ.mjs',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react-router/dist/development/chunk-JZWAC4HX.mjs',
+    'C:\\workspace\\New folder\\New folder\\Serendipity\\frontend\\apps\\web\\src\\app\\seller\\layout.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/react-dom/cjs/react-dom.production.min.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/layout.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/cookie/dist/index.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/set-cookie-parser/lib/set-cookie.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/app/seller/layout.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/node_modules/scheduler/index.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/__create/PolymorphicComponent.tsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/lib/supabase.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/utils/useAuth.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/lib/apiClient.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/utils/authStore.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/components/Header.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/components/Footer.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/utils/format.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/components/layout/PolicyLayout.jsx',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/utils/categories.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/utils/cartStore.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/lib/api.js',
+    'C:/workspace/New folder/New folder/Serendipity/frontend/apps/web/src/components/ui/lumina-interactive-list.tsx'
+  ]
+}

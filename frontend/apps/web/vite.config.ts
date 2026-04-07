@@ -2,7 +2,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import { reactRouter } from '@react-router/dev/vite';
-import { reactRouterHonoServer } from 'react-router-hono-server/dev';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -21,16 +20,7 @@ export default defineConfig({
   envPrefix: ['NEXT_PUBLIC_', 'VITE_'],
   build: {
     target: 'es2022', // Support top-level await
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-slot'],
-          'three-vendor': ['three', '@paper-design/shaders-react'], // Heavy 3D libs
-          'fetch-utils': ['./src/__create/fetch.ts']
-        }
-      }
-    }
+    rollupOptions: {}
   },
   optimizeDeps: {
     // Explicitly include fast-glob, since it gets dynamically imported and we
@@ -50,10 +40,6 @@ export default defineConfig({
     nextPublicProcessEnv(),
     tailwindcss(),
     restartEnvFileChange(),
-    reactRouterHonoServer({
-      serverEntryPoint: './__create/index.ts',
-      runtime: 'node',
-    }),
     babel({
       include: ['src/**/*.{js,jsx,ts,tsx}'], // or RegExp: /src\/.*\.[tj]sx?$/
       exclude: /node_modules/, // skip everything else
