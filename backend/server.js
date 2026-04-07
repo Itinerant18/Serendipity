@@ -18,8 +18,8 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
     cors: {
         origin: process.env.CORS_ORIGINS
-            ? process.env.CORS_ORIGINS.split(',')
-            : ["http://localhost:4000", "http://localhost:5173"],
+            ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
+            : ["http://localhost:4000", "http://localhost:5173", "https://serendipity-frontend-v1.netlify.app"],
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -50,7 +50,7 @@ app.use(helmet({
 app.use(cors({
     origin: process.env.CORS_ORIGINS
         ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-        : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"],
+        : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000", "https://serendipity-frontend-v1.netlify.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
