@@ -15,11 +15,20 @@ dotenv.config();
 
 const app = express();
 const server = require('http').createServer(app);
+const socketAllowedOrigins = process.env.CORS_ORIGINS
+            ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
+            : ["http://localhost:4000", "http://localhost:5173", "https://serendipity-frontend-v1.netlify.app"];
+socketAllowedOrigins.push("https://serendipity-frontend-v1.netlify.app");
+
 const io = require('socket.io')(server, {
     cors: {
-        origin: process.env.CORS_ORIGINS
-            ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-            : ["http://localhost:4000", "http://localhost:5173", "https://serendipity-frontend-v1.netlify.app"],
+        origin: function (origin, callback) {
+            if (!origin || socketAllowedOrigins.includes(origin) || origin.endsWith('.netlify.app')) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -47,10 +56,25 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false,
 }));
 
+const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
+    : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"];
+
+allowedOrigins.push("https://serendipity-frontend-v1.netlify.app");
+
 app.use(cors({
-    origin: process.env.CORS_ORIGINS
-        ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-        : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000", "https://serendipity-frontend-v1.netlify.app"],
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            // Also allow any netlify preview branches just in case
+            if (origin.endsWith('.netlify.app')) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
