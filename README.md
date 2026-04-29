@@ -966,6 +966,6 @@ This project is licensed under the [MIT License](./LICENSE).
 
 **Serendipity** — *Discovering great products you didn't know you needed.*
 
-Made with ❤️ · [Report a Bug](https://github.com/Itinerant18/Serendipity/issues) · [Request a Feature](https://github.com/Itinerant18/Serendipity/issues)
+Made with · [Report a Bug](https://github.com/Itinerant18/Serendipity/issues) · [Request a Feature](https://github.com/Itinerant18/Serendipity/issues)
 
 </div>
