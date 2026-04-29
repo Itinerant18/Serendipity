@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = "build/client" # React Router v7 default build output
+
+[build.environment]
+  VITE_API_URL = "https://serendipity-backend-13vi.onrender.com"
+  VITE_SOCKET_URL = "https://serendipity-backend-13vi.onrender.com"
+  NODE_VERSION = "18"
