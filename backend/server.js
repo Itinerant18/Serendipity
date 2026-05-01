@@ -17,8 +17,9 @@ const app = express();
 const server = require('http').createServer(app);
 const socketAllowedOrigins = process.env.CORS_ORIGINS
             ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-            : ["http://localhost:4000", "http://localhost:5173", "https://serendipity-frontend-v1.netlify.app"];
+            : ["http://localhost:4000", "http://localhost:5173", "https://serendipity-frontend-v1.netlify.app", "https://serendipity.aniket.site"];
 socketAllowedOrigins.push("https://serendipity-frontend-v1.netlify.app");
+socketAllowedOrigins.push("https://serendipity.aniket.site");
 
 const io = require('socket.io')(server, {
     cors: {
@@ -48,7 +49,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://*.unsplash.com", "https://img.freepik.com", "https://harvardindependent.com"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com"],
-            connectSrc: ["'self'", "ws://localhost:5000", "http://localhost:5000", "http://localhost:4000", "https://serendipity-backend.up.railway.app", "wss://serendipity-backend.up.railway.app"],
+            connectSrc: ["'self'", "ws://localhost:5000", "http://localhost:5000", "http://localhost:4000", "https://serendipity-backend.up.railway.app", "wss://serendipity-backend.up.railway.app", "https://serendipity-backend-13vi.onrender.com", "wss://serendipity-backend-13vi.onrender.com", "https://serendipity.aniket.site"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             fontSrc: ["'self'", "data:", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"]
         },
@@ -61,6 +62,7 @@ const allowedOrigins = process.env.CORS_ORIGINS
     : ["http://localhost:4000", "http://localhost:5173", "http://127.0.0.1:4000"];
 
 allowedOrigins.push("https://serendipity-frontend-v1.netlify.app");
+allowedOrigins.push("https://serendipity.aniket.site");
 
 app.use(cors({
     origin: function (origin, callback) {

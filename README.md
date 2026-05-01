@@ -16,7 +16,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-[Live Demo](https://serendipity-frontend-v1.netlify.app) · [API Docs](./docs/API_DOCUMENTATION.md) · [Deployment Guide](./docs/DEPLOYMENT.md) · [Environment Setup](./docs/ENV_SETUP.md)
+[Live Demo](https://serendipity.aniket.site) · [API Docs](./docs/API_DOCUMENTATION.md) · [Deployment Guide](./docs/DEPLOYMENT.md) · [Environment Setup](./docs/ENV_SETUP.md)
 
 </div>
 
@@ -767,8 +767,8 @@ Client                         Server (Socket.IO)
 ```
 
 **Deployed URLs:**
-- Frontend: `https://serendipity-frontend-v1.netlify.app`
-- Backend: `https://serendipity-backend.up.railway.app`
+- Frontend: `https://serendipity.aniket.site`
+- Backend: `https://serendipity-backend-13vi.onrender.com`
 
 ---
 
