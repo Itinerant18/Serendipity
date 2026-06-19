@@ -16,12 +16,22 @@ export async function POST(request) {
 
     // Insert new cart items
     if (items && items.length > 0) {
-      for (const item of items) {
-        await sql`
-          INSERT INTO saved_carts (user_id, product_id, product_title, price, image_url, quantity)
-          VALUES (${userId}, ${item.product_id}, ${item.title}, ${item.price}, ${item.image}, ${item.quantity})
-        `;
-      }
+      const productIds = items.map((item) => item.product_id);
+      const titles = items.map((item) => item.title);
+      const prices = items.map((item) => item.price);
+      const images = items.map((item) => item.image);
+      const quantities = items.map((item) => item.quantity);
+
+      await sql`
+        INSERT INTO saved_carts (user_id, product_id, product_title, price, image_url, quantity)
+        SELECT ${userId}, * FROM UNNEST(
+          ${productIds}::text[],
+          ${titles}::text[],
+          ${prices}::text[],
+          ${images}::text[],
+          ${quantities}::int[]
+        )
+      `;
     }
 
     return Response.json({ success: true });
