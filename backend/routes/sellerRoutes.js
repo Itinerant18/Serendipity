@@ -867,32 +867,36 @@ router.patch('/orders/:id/status', protect, protectSeller, async (req, res) => {
 
         // Stock management (use seller DB for products)
         const stockClient = supabaseSellerAdmin || supabaseSeller;
-        if (newStatus === STOCK_DEDUCT_ON) {
-            for (const item of orderItems) {
-                const { data: prod } = await stockClient
-                    .from('products')
-                    .select('count_in_stock')
-                    .eq('id', item.product_id)
-                    .single();
-                if (prod) {
-                    const newStock = Math.max(0, (prod.count_in_stock || 0) - item.qty);
-                    await stockClient.from('products')
-                        .update({ count_in_stock: newStock })
-                        .eq('id', item.product_id);
+        if (newStatus === STOCK_DEDUCT_ON || STOCK_RESTORE_ON.includes(newStatus)) {
+            const productIds = orderItems.map(item => item.product_id);
+            const { data: products } = await stockClient
+                .from('products')
+                .select('id, count_in_stock')
+                .in('id', productIds);
+
+            if (products) {
+                const stockMap = {};
+                products.forEach(p => {
+                    stockMap[p.id] = p.count_in_stock || 0;
+                });
+
+                const updatePromises = [];
+                for (const item of orderItems) {
+                    if (stockMap[item.product_id] !== undefined) {
+                        let newStock;
+                        if (newStatus === STOCK_DEDUCT_ON) {
+                            newStock = Math.max(0, stockMap[item.product_id] - item.qty);
+                        } else {
+                            newStock = stockMap[item.product_id] + item.qty;
+                        }
+                        updatePromises.push(
+                            stockClient.from('products')
+                                .update({ count_in_stock: newStock })
+                                .eq('id', item.product_id)
+                        );
+                    }
                 }
-            }
-        } else if (STOCK_RESTORE_ON.includes(newStatus)) {
-            for (const item of orderItems) {
-                const { data: prod } = await stockClient
-                    .from('products')
-                    .select('count_in_stock')
-                    .eq('id', item.product_id)
-                    .single();
-                if (prod) {
-                    await stockClient.from('products')
-                        .update({ count_in_stock: (prod.count_in_stock || 0) + item.qty })
-                        .eq('id', item.product_id);
-                }
+                await Promise.all(updatePromises);
             }
         }
 
